@@ -138,6 +138,92 @@
             background: #c0392b;
         }
         
+        button.voice-btn {
+            background: #9b59b6;
+            width: auto;
+            padding: 12px 20px;
+        }
+        
+        button.voice-btn:hover {
+            background: #8e44ad;
+        }
+        
+        button.voice-btn.listening {
+            background: #e74c3c;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .voice-status {
+            display: none;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f3e5f5;
+            border-left: 4px solid #9b59b6;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .voice-status.show {
+            display: flex;
+        }
+        
+        .voice-status .status-text {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .voice-status .status-icon {
+            font-size: 1.5rem;
+            animation: pulse 1s infinite;
+        }
+        
+        .voice-status .status-close {
+            background: none;
+            border: none;
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: auto;
+            padding: 5px 10px;
+        }
+        
+        .voice-status .status-close:hover {
+            color: #e74c3c;
+            transform: none;
+        }
+        
+        .voice-feedback {
+            background: #f0f9ff;
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            display: none;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .voice-feedback.show {
+            display: block;
+        }
+        
+        .voice-feedback strong {
+            color: #3498db;
+        }
+        
+        .voice-feedback .highlight {
+            background: #e3f2fd;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
         .summary {
             margin: 25px 0;
             padding: 20px;
@@ -480,6 +566,17 @@
             to { transform: translateY(0); opacity: 1; }
         }
         
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-group button {
+            flex: 1;
+            min-width: 120px;
+        }
+        
         @media (max-width: 768px) {
             .form-row {
                 flex-direction: column;
@@ -533,6 +630,14 @@
             .install-banner {
                 flex-direction: column;
                 text-align: center;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn-group button {
+                min-width: auto;
             }
             
             /* Melhorias para mobile */
@@ -630,6 +735,22 @@
         <div class="tab-content active" id="transactions-tab">
             <div class="form-container">
                 <h2>Adicionar Nova Transação</h2>
+                
+                <!-- Status do reconhecimento de voz -->
+                <div class="voice-status" id="voiceStatus">
+                    <span class="status-icon">🎤</span>
+                    <span class="status-text" id="voiceStatusText">Ouvindo... Fale agora</span>
+                    <button class="status-close" id="voiceStatusClose">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <!-- Feedback do reconhecimento -->
+                <div class="voice-feedback" id="voiceFeedback">
+                    <strong>📝 Reconhecido:</strong>
+                    <span id="voiceFeedbackText"></span>
+                </div>
+                
                 <form id="transaction-form">
                     <div class="form-row">
                         <div class="form-group">
@@ -669,7 +790,12 @@
                         </div>
                     </div>
                     
-                    <button type="submit"><i class="fas fa-plus"></i> Adicionar</button>
+                    <div class="btn-group">
+                        <button type="submit"><i class="fas fa-plus"></i> Adicionar</button>
+                        <button type="button" class="voice-btn" id="voiceBtn">
+                            <i class="fas fa-microphone"></i> Falar
+                        </button>
+                    </div>
                 </form>
             </div>
 
@@ -764,7 +890,7 @@
     </div>
 
     <script>
-        // 🔷 CÓDIGO JAVASCRIPT ATUALIZADO COM PERÍODO PERSONALIZADO E GRÁFICO INTERATIVO
+        // 🔷 CÓDIGO JAVASCRIPT COMPLETO COM RECONHECIMENTO DE VOZ
         document.addEventListener('DOMContentLoaded', function() {
             // Elementos do DOM
             const form = document.getElementById('transaction-form');
@@ -796,6 +922,14 @@
             const detailTransactionsList = document.getElementById('detail-transactions-list');
             const detailTotal = document.getElementById('detail-total');
             const closeDetailBtn = document.getElementById('close-detail');
+            
+            // Elementos de voz
+            const voiceBtn = document.getElementById('voiceBtn');
+            const voiceStatus = document.getElementById('voiceStatus');
+            const voiceStatusText = document.getElementById('voiceStatusText');
+            const voiceStatusClose = document.getElementById('voiceStatusClose');
+            const voiceFeedback = document.getElementById('voiceFeedback');
+            const voiceFeedbackText = document.getElementById('voiceFeedbackText');
             
             const transactionDateInput = document.getElementById('transaction-date');
             
@@ -830,6 +964,10 @@
             let customStartDate = null;
             let customEndDate = null;
             
+            // Variáveis de voz
+            let recognition = null;
+            let isListening = false;
+            
             // Inicialização
             init();
             
@@ -854,6 +992,7 @@
                 setupEventListeners();
                 setupTabs();
                 setupPWA();
+                setupVoiceRecognition();
             }
             
             function setupStandardPeriod() {
@@ -883,23 +1022,6 @@
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
-            }
-            
-            function setupPeriodControls() {
-                // Preencher anos (de 2020 a 2030)
-                const currentYear = new Date().getFullYear();
-                for (let year = 2020; year <= 2030; year++) {
-                    const option = document.createElement('option');
-                    option.value = year;
-                    option.textContent = year;
-                    if (year === currentYear) {
-                        option.selected = true;
-                    }
-                    yearSelect.appendChild(option);
-                }
-                
-                // Configurar mês atual
-                monthSelect.value = currentMonth;
             }
             
             function updatePeriodDisplay() {
@@ -977,6 +1099,327 @@
                     installBanner.classList.remove('show');
                     deferredPrompt = null;
                 });
+            }
+            
+            function setupVoiceRecognition() {
+                // Verificar se o navegador suporta reconhecimento de voz
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    voiceBtn.style.display = 'none';
+                    console.warn('Reconhecimento de voz não suportado neste navegador.');
+                    return;
+                }
+                
+                // Inicializar reconhecimento
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'pt-BR';
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+                
+                // Evento: resultado do reconhecimento
+                recognition.onresult = function(event) {
+                    let finalTranscript = '';
+                    let interimTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    // Mostrar feedback
+                    const text = finalTranscript || interimTranscript;
+                    if (text) {
+                        showVoiceFeedback(text, finalTranscript ? 'final' : 'interim');
+                        
+                        if (finalTranscript) {
+                            // Processar o texto final
+                            processVoiceCommand(finalTranscript);
+                        }
+                    }
+                };
+                
+                // Evento: fim do reconhecimento
+                recognition.onend = function() {
+                    stopListening();
+                    
+                    // Se não houve resultado, mostrar mensagem
+                    if (voiceStatus.classList.contains('show')) {
+                        voiceStatusText.textContent = '⏱️ Nada foi ouvido. Tente novamente.';
+                        setTimeout(() => {
+                            hideVoiceStatus();
+                        }, 3000);
+                    }
+                };
+                
+                // Evento: erro
+                recognition.onerror = function(event) {
+                    console.error('Erro no reconhecimento de voz:', event.error);
+                    
+                    let errorMessage = 'Erro ao capturar áudio. ';
+                    switch(event.error) {
+                        case 'not-allowed':
+                            errorMessage += 'Permissão do microfone negada.';
+                            break;
+                        case 'no-speech':
+                            errorMessage += 'Nenhuma fala detectada.';
+                            break;
+                        case 'audio-capture':
+                            errorMessage += 'Microfone não encontrado.';
+                            break;
+                        case 'network':
+                            errorMessage += 'Erro de rede.';
+                            break;
+                        default:
+                            errorMessage += 'Tente novamente.';
+                    }
+                    
+                    voiceStatusText.textContent = '❌ ' + errorMessage;
+                    setTimeout(() => {
+                        hideVoiceStatus();
+                    }, 3000);
+                    
+                    stopListening();
+                };
+            }
+            
+            function startListening() {
+                if (!recognition) {
+                    alert('Reconhecimento de voz não disponível.');
+                    return;
+                }
+                
+                try {
+                    recognition.start();
+                    isListening = true;
+                    
+                    // Atualizar UI
+                    voiceBtn.classList.add('listening');
+                    voiceBtn.innerHTML = '<i class="fas fa-stop"></i> Parar';
+                    
+                    voiceStatus.classList.add('show');
+                    voiceStatusText.textContent = '🎤 Ouvindo... Fale agora';
+                    
+                    // Esconder feedback anterior
+                    voiceFeedback.classList.remove('show');
+                    
+                } catch (error) {
+                    console.error('Erro ao iniciar reconhecimento:', error);
+                    alert('Erro ao iniciar o microfone. Verifique as permissões.');
+                }
+            }
+            
+            function stopListening() {
+                if (recognition && isListening) {
+                    try {
+                        recognition.stop();
+                    } catch (error) {
+                        console.error('Erro ao parar reconhecimento:', error);
+                    }
+                }
+                
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Falar';
+            }
+            
+            function toggleListening() {
+                if (isListening) {
+                    stopListening();
+                } else {
+                    startListening();
+                }
+            }
+            
+            function hideVoiceStatus() {
+                voiceStatus.classList.remove('show');
+                voiceBtn.classList.remove('listening');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Falar';
+                isListening = false;
+            }
+            
+            function showVoiceFeedback(text, type) {
+                voiceFeedback.classList.add('show');
+                
+                if (type === 'final') {
+                    voiceFeedbackText.innerHTML = `<span class="highlight">${text}</span>`;
+                    voiceFeedback.style.borderColor = '#27ae60';
+                    voiceFeedback.style.background = '#f0fdf4';
+                } else {
+                    voiceFeedbackText.textContent = text + ' (processando...)';
+                    voiceFeedback.style.borderColor = '#f1c40f';
+                    voiceFeedback.style.background = '#fef9e7';
+                }
+            }
+            
+            function processVoiceCommand(text) {
+                const lowerText = text.toLowerCase().trim();
+                
+                // Extrair informações
+                let tipo = null;
+                let valor = null;
+                let descricao = '';
+                let categoria = null;
+                let data = null;
+                let parcelas = 1;
+                
+                // Detectar tipo
+                if (lowerText.includes('receita') || lowerText.includes('ganhei') || lowerText.includes('salário') || lowerText.includes('salario')) {
+                    tipo = 'receita';
+                } else if (lowerText.includes('despesa') || lowerText.includes('gastei') || lowerText.includes('paguei')) {
+                    tipo = 'despesa';
+                }
+                
+                // Detectar valor (número com R$ ou reais)
+                const valorMatch = lowerText.match(/(\d+[\.,]\d+|\d+)\s*(reais|r\$|real)/i) || lowerText.match(/(\d+[\.,]\d+|\d+)/);
+                if (valorMatch) {
+                    let valorStr = valorMatch[1].replace(',', '.');
+                    valor = parseFloat(valorStr);
+                }
+                
+                // Detectar categoria
+                const categoriasDisponiveis = categories.map(c => c.name.toLowerCase());
+                for (const cat of categoriasDisponiveis) {
+                    if (lowerText.includes(cat)) {
+                        const catObj = categories.find(c => c.name.toLowerCase() === cat);
+                        if (catObj) categoria = catObj.id;
+                        break;
+                    }
+                }
+                
+                // Se não encontrou categoria pelo nome, tentar por palavras-chave
+                if (!categoria) {
+                    const keywords = {
+                        'alimentação': 'alimentacao',
+                        'mercado': 'alimentacao',
+                        'comida': 'alimentacao',
+                        'transporte': 'transporte',
+                        'uber': 'transporte',
+                        'gasolina': 'transporte',
+                        'moradia': 'moradia',
+                        'aluguel': 'moradia',
+                        'saúde': 'saude',
+                        'médico': 'saude',
+                        'lazer': 'lazer',
+                        'cinema': 'lazer',
+                        'educação': 'educacao',
+                        'curso': 'educacao',
+                        'vestuário': 'vestuario',
+                        'roupa': 'vestuario',
+                        'serviços': 'servicos',
+                        'salário': 'salario',
+                        'freelance': 'freelance',
+                        'investimentos': 'investimentos',
+                        'presentes': 'presentes'
+                    };
+                    
+                    for (const [key, value] of Object.entries(keywords)) {
+                        if (lowerText.includes(key)) {
+                            const catObj = categories.find(c => c.id === value);
+                            if (catObj) {
+                                categoria = catObj.id;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Detectar descrição (o que sobrar)
+                let descricaoParts = [];
+                const palavrasRemover = ['receita', 'despesa', 'gastei', 'paguei', 'ganhei', 'reais', 'real', 'r$'];
+                
+                // Remover palavras-chave da descrição
+                let descricaoRaw = text;
+                palavrasRemover.forEach(palavra => {
+                    descricaoRaw = descricaoRaw.replace(new RegExp(palavra, 'gi'), '');
+                });
+                
+                // Remover valores
+                descricaoRaw = descricaoRaw.replace(/\d+[\.,]\d+|\d+/g, '');
+                
+                // Remover categorias
+                categoriasDisponiveis.forEach(cat => {
+                    descricaoRaw = descricaoRaw.replace(new RegExp(cat, 'gi'), '');
+                });
+                
+                // Limpar espaços extras
+                descricao = descricaoRaw.trim();
+                
+                // Se não tiver descrição, usar texto genérico
+                if (!descricao) {
+                    descricao = tipo === 'receita' ? 'Receita' : 'Despesa';
+                }
+                
+                // Detectar data (dia)
+                const diaMatch = lowerText.match(/dia\s*(\d+)/i);
+                if (diaMatch) {
+                    const dia = parseInt(diaMatch[1]);
+                    const hoje = new Date();
+                    const mesAtual = hoje.getMonth();
+                    const anoAtual = hoje.getFullYear();
+                    
+                    // Verificar se o dia é no mês atual ou anterior
+                    let dataObj = new Date(anoAtual, mesAtual, dia);
+                    if (dataObj > hoje) {
+                        // Se for maior que hoje, provavelmente é do mês anterior
+                        dataObj = new Date(anoAtual, mesAtual - 1, dia);
+                    }
+                    data = dataObj;
+                }
+                
+                // Detectar parcelas
+                const parcelasMatch = lowerText.match(/(\d+)\s*(x|vezes|parcela|parcelas)/i);
+                if (parcelasMatch) {
+                    parcelas = parseInt(parcelasMatch[1]);
+                }
+                
+                // Preencher campos
+                const descInput = document.getElementById('description');
+                const amountInput = document.getElementById('amount');
+                const typeSelect = document.getElementById('type');
+                const categorySelectEl = document.getElementById('category');
+                const dateInput = document.getElementById('transaction-date');
+                const parcelasInput = document.getElementById('parcelas');
+                
+                if (descricao) descInput.value = descricao;
+                if (valor) amountInput.value = valor;
+                if (tipo) typeSelect.value = tipo;
+                if (categoria) categorySelectEl.value = categoria;
+                if (data) dateInput.value = formatDateInput(data);
+                if (parcelas > 1) parcelasInput.value = parcelas;
+                
+                // Feedback visual de campos preenchidos
+                highlightField(descInput, descricao);
+                highlightField(amountInput, valor);
+                highlightField(typeSelect, tipo);
+                highlightField(categorySelectEl, categoria);
+                highlightField(dateInput, data);
+                
+                // Mensagem de sucesso
+                voiceStatusText.textContent = '✅ Transação preenchida! Verifique os campos e clique em Adicionar.';
+                voiceStatusText.style.color = '#27ae60';
+                
+                // Esconder status após 3 segundos
+                setTimeout(() => {
+                    hideVoiceStatus();
+                    voiceStatusText.style.color = '';
+                }, 4000);
+            }
+            
+            function highlightField(element, value) {
+                if (value) {
+                    element.style.borderColor = '#27ae60';
+                    element.style.backgroundColor = '#f0fdf4';
+                    
+                    setTimeout(() => {
+                        element.style.borderColor = '';
+                        element.style.backgroundColor = '';
+                    }, 3000);
+                }
             }
             
             function setupEventListeners() {
@@ -1106,6 +1549,15 @@
                 // Fechar detalhe da categoria
                 closeDetailBtn.addEventListener('click', function() {
                     categoryDetail.classList.remove('show');
+                });
+                
+                // Botão de voz
+                voiceBtn.addEventListener('click', toggleListening);
+                
+                // Fechar status de voz
+                voiceStatusClose.addEventListener('click', function() {
+                    stopListening();
+                    hideVoiceStatus();
                 });
             }
             
