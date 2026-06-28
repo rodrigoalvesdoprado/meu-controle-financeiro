@@ -57,6 +57,11 @@
             border-bottom: 2px solid #eee;
         }
         
+        h3 {
+            color: #2c3e50;
+            margin: 15px 0 10px 0;
+        }
+        
         .form-container {
             background: #f8f9fa;
             padding: 20px;
@@ -234,6 +239,16 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         
+        .chart-wrapper.clickable {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-wrapper.clickable:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
         .category-badge {
             display: inline-block;
             padding: 4px 10px;
@@ -325,17 +340,56 @@
             color: #bdc3c7;
         }
         
-        /* CONTROLE DE PERÍODO */
+        /* CONTROLE DE PERÍODO - ATUALIZADO */
         .period-control {
             background: #f8f9fa;
             padding: 15px;
             border-radius: 12px;
             margin-bottom: 20px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
             flex-wrap: wrap;
             gap: 15px;
+            align-items: center;
+        }
+        
+        .period-mode {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .period-mode button {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .period-mode button.active-mode {
+            background: #3498db;
+            transform: scale(1.05);
+        }
+        
+        .period-mode button.active-mode:hover {
+            background: #2980b9;
+        }
+        
+        .period-date-inputs {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+        
+        .period-date-inputs .form-group {
+            min-width: 150px;
+            flex: 0 1 auto;
+        }
+        
+        .period-date-inputs input {
+            width: auto;
+            min-width: 150px;
         }
         
         .period-navigation {
@@ -362,15 +416,37 @@
             background: #2980b9;
         }
         
-        .month-selector {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        /* Detalhes da categoria no gráfico */
+        .category-detail {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #3498db;
+            display: none;
         }
         
-        .month-selector select {
+        .category-detail.show {
+            display: block;
+        }
+        
+        .category-detail h3 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .category-detail .close-detail {
+            margin-left: auto;
             width: auto;
-            min-width: 120px;
+            padding: 5px 15px;
+            background: #e74c3c;
+            font-size: 14px;
+        }
+        
+        .category-detail .close-detail:hover {
+            background: #c0392b;
         }
         
         /* Instalar App Banner */
@@ -440,8 +516,18 @@
                 justify-content: center;
             }
             
-            .month-selector {
-                justify-content: center;
+            .period-date-inputs {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .period-date-inputs .form-group {
+                min-width: auto;
+            }
+            
+            .period-date-inputs input {
+                width: 100%;
+                min-width: auto;
             }
             
             .install-banner {
@@ -502,38 +588,34 @@
     <div class="container">
         <h1><i class="fas fa-wallet"></i> Meu Controle Financeiro</h1>
         
-        <!-- CONTROLE DE PERÍODO -->
+        <!-- CONTROLE DE PERÍODO ATUALIZADO -->
         <div class="period-control">
-            <div class="period-navigation">
+            <div class="period-mode">
+                <button class="secondary active-mode" id="period-standard">Padrão (14/14)</button>
+                <button class="secondary" id="period-custom">Personalizado</button>
+            </div>
+            
+            <div class="period-date-inputs" id="date-inputs">
+                <div class="form-group">
+                    <label for="start-date">Data Início</label>
+                    <input type="date" id="start-date">
+                </div>
+                <div class="form-group">
+                    <label for="end-date">Data Fim</label>
+                    <input type="date" id="end-date">
+                </div>
+                <button class="secondary" id="apply-period" style="width: auto; margin-top: 22px;">
+                    <i class="fas fa-check"></i> Aplicar
+                </button>
+            </div>
+            
+            <div class="period-navigation" id="period-nav">
                 <button class="period-btn secondary" id="prev-period">
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <div class="period-display" id="current-period">Junho 2024</div>
                 <button class="period-btn secondary" id="next-period">
                     <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-            
-            <div class="month-selector">
-                <select id="month-select">
-                    <option value="0">Janeiro</option>
-                    <option value="1">Fevereiro</option>
-                    <option value="2">Março</option>
-                    <option value="3">Abril</option>
-                    <option value="4">Maio</option>
-                    <option value="5" selected>Junho</option>
-                    <option value="6">Julho</option>
-                    <option value="7">Agosto</option>
-                    <option value="8">Setembro</option>
-                    <option value="9">Outubro</option>
-                    <option value="10">Novembro</option>
-                    <option value="11">Dezembro</option>
-                </select>
-                <select id="year-select">
-                    <!-- Os anos serão preenchidos via JavaScript -->
-                </select>
-                <button class="secondary" id="go-to-period">
-                    <i class="fas fa-calendar-alt"></i> Ir
                 </button>
             </div>
         </div>
@@ -653,7 +735,7 @@
         <div class="tab-content" id="reports-tab">
             <h2>Relatórios Financeiros</h2>
             <div class="charts-container">
-                <div class="chart-wrapper">
+                <div class="chart-wrapper clickable" id="expenses-chart-wrapper">
                     <h3>Despesas por Categoria</h3>
                     <canvas id="expenses-chart"></canvas>
                 </div>
@@ -662,11 +744,27 @@
                     <canvas id="income-vs-expenses-chart"></canvas>
                 </div>
             </div>
+            
+            <!-- Detalhes da categoria clicada -->
+            <div class="category-detail" id="category-detail">
+                <h3>
+                    <span id="detail-category-name">Categoria</span>
+                    <button class="close-detail" id="close-detail">
+                        <i class="fas fa-times"></i> Fechar
+                    </button>
+                </h3>
+                <div id="detail-transactions-list">
+                    <!-- Lista de transações será inserida aqui -->
+                </div>
+                <p style="margin-top: 10px; font-weight: bold;">
+                    Total: <span id="detail-total">R$ 0,00</span>
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
-        // 🔷 CÓDIGO JAVASCRIPT ATUALIZADO COM PWA
+        // 🔷 CÓDIGO JAVASCRIPT ATUALIZADO COM PERÍODO PERSONALIZADO E GRÁFICO INTERATIVO
         document.addEventListener('DOMContentLoaded', function() {
             // Elementos do DOM
             const form = document.getElementById('transaction-form');
@@ -684,9 +782,21 @@
             const prevPeriodBtn = document.getElementById('prev-period');
             const nextPeriodBtn = document.getElementById('next-period');
             const currentPeriodElement = document.getElementById('current-period');
-            const monthSelect = document.getElementById('month-select');
-            const yearSelect = document.getElementById('year-select');
-            const goToPeriodBtn = document.getElementById('go-to-period');
+            const startDateInput = document.getElementById('start-date');
+            const endDateInput = document.getElementById('end-date');
+            const applyPeriodBtn = document.getElementById('apply-period');
+            const periodStandardBtn = document.getElementById('period-standard');
+            const periodCustomBtn = document.getElementById('period-custom');
+            const periodNav = document.getElementById('period-nav');
+            
+            // Elementos do gráfico interativo
+            const expensesChartWrapper = document.getElementById('expenses-chart-wrapper');
+            const categoryDetail = document.getElementById('category-detail');
+            const detailCategoryName = document.getElementById('detail-category-name');
+            const detailTransactionsList = document.getElementById('detail-transactions-list');
+            const detailTotal = document.getElementById('detail-total');
+            const closeDetailBtn = document.getElementById('close-detail');
+            
             const transactionDateInput = document.getElementById('transaction-date');
             
             // Elementos PWA
@@ -712,10 +822,13 @@
                 { id: 'outros', name: 'Outros', type: 'despesa', color: '#95a5a6' }
             ];
             
-            // Controle de período atual
+            // Controle de período
             let currentDate = new Date();
             let currentMonth = currentDate.getMonth();
             let currentYear = currentDate.getFullYear();
+            let periodMode = 'standard'; // 'standard' ou 'custom'
+            let customStartDate = null;
+            let customEndDate = null;
             
             // Inicialização
             init();
@@ -731,9 +844,8 @@
                 // Configurar data atual no formulário
                 transactionDateInput.valueAsDate = new Date();
                 
-                // Inicializar controles de período
-                initializePeriodControls();
-                updatePeriodDisplay();
+                // Configurar período padrão (14 do mês anterior até 14 do mês atual)
+                setupStandardPeriod();
                 
                 updateCategoriesDropdown();
                 renderCategories();
@@ -744,7 +856,36 @@
                 setupPWA();
             }
             
-            function initializePeriodControls() {
+            function setupStandardPeriod() {
+                const today = new Date();
+                let startDate = new Date(today.getFullYear(), today.getMonth(), 14);
+                let endDate = new Date(today.getFullYear(), today.getMonth() + 1, 14);
+                
+                // Se hoje for antes do dia 14, o período começa no dia 14 do mês anterior
+                if (today.getDate() < 14) {
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 14);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 14);
+                }
+                
+                customStartDate = startDate;
+                customEndDate = endDate;
+                
+                // Atualizar inputs de data
+                startDateInput.value = formatDateInput(startDate);
+                endDateInput.value = formatDateInput(endDate);
+                
+                // Atualizar display do período
+                updatePeriodDisplay();
+            }
+            
+            function formatDateInput(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            function setupPeriodControls() {
                 // Preencher anos (de 2020 a 2030)
                 const currentYear = new Date().getFullYear();
                 for (let year = 2020; year <= 2030; year++) {
@@ -762,16 +903,47 @@
             }
             
             function updatePeriodDisplay() {
-                const monthNames = [
-                    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-                ];
+                if (periodMode === 'standard') {
+                    const start = new Date(customStartDate);
+                    const end = new Date(customEndDate);
+                    const monthNames = [
+                        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+                    ];
+                    
+                    const startStr = `${start.getDate()} ${monthNames[start.getMonth()]}`;
+                    const endStr = `${end.getDate()} ${monthNames[end.getMonth()]}`;
+                    currentPeriodElement.textContent = `${startStr} - ${endStr} ${end.getFullYear()}`;
+                } else {
+                    const start = new Date(customStartDate);
+                    const end = new Date(customEndDate);
+                    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+                    currentPeriodElement.textContent = `${start.toLocaleDateString('pt-BR', options)} - ${end.toLocaleDateString('pt-BR', options)}`;
+                }
                 
-                currentPeriodElement.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-                
-                // Atualizar transações e resumo para o período atual
+                // Atualizar transações e resumo
                 updateSummary();
                 renderTransactions();
+                
+                // Atualizar gráficos se a aba de relatórios estiver ativa
+                const reportsTab = document.getElementById('reports-tab');
+                if (reportsTab.classList.contains('active')) {
+                    renderCharts();
+                }
+            }
+            
+            function getPeriodTransactions() {
+                const start = new Date(customStartDate);
+                const end = new Date(customEndDate);
+                
+                // Ajustar para incluir o dia inteiro
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                
+                return transactions.filter(transaction => {
+                    const transDate = new Date(transaction.timestamp);
+                    return transDate >= start && transDate <= end;
+                });
             }
             
             function setupPWA() {
@@ -859,27 +1031,81 @@
                 
                 // Controles de período
                 prevPeriodBtn.addEventListener('click', function() {
-                    currentMonth--;
-                    if (currentMonth < 0) {
-                        currentMonth = 11;
-                        currentYear--;
+                    if (periodMode === 'standard') {
+                        // Mover período um mês para trás
+                        const start = new Date(customStartDate);
+                        const end = new Date(customEndDate);
+                        start.setMonth(start.getMonth() - 1);
+                        end.setMonth(end.getMonth() - 1);
+                        customStartDate = start;
+                        customEndDate = end;
+                        startDateInput.value = formatDateInput(start);
+                        endDateInput.value = formatDateInput(end);
+                        updatePeriodDisplay();
                     }
-                    updatePeriodDisplay();
                 });
                 
                 nextPeriodBtn.addEventListener('click', function() {
-                    currentMonth++;
-                    if (currentMonth > 11) {
-                        currentMonth = 0;
-                        currentYear++;
+                    if (periodMode === 'standard') {
+                        // Mover período um mês para frente
+                        const start = new Date(customStartDate);
+                        const end = new Date(customEndDate);
+                        start.setMonth(start.getMonth() + 1);
+                        end.setMonth(end.getMonth() + 1);
+                        customStartDate = start;
+                        customEndDate = end;
+                        startDateInput.value = formatDateInput(start);
+                        endDateInput.value = formatDateInput(end);
+                        updatePeriodDisplay();
                     }
-                    updatePeriodDisplay();
                 });
                 
-                goToPeriodBtn.addEventListener('click', function() {
-                    currentMonth = parseInt(monthSelect.value);
-                    currentYear = parseInt(yearSelect.value);
+                // Alternar entre período padrão e personalizado
+                periodStandardBtn.addEventListener('click', function() {
+                    periodMode = 'standard';
+                    periodStandardBtn.classList.add('active-mode');
+                    periodCustomBtn.classList.remove('active-mode');
+                    
+                    // Recalcular período padrão baseado na data atual
+                    setupStandardPeriod();
+                    
+                    // Habilitar navegação mensal
+                    periodNav.style.display = 'flex';
+                });
+                
+                periodCustomBtn.addEventListener('click', function() {
+                    periodMode = 'custom';
+                    periodCustomBtn.classList.add('active-mode');
+                    periodStandardBtn.classList.remove('active-mode');
+                    
+                    // Usar as datas atuais dos inputs
+                    customStartDate = new Date(startDateInput.value);
+                    customEndDate = new Date(endDateInput.value);
                     updatePeriodDisplay();
+                    
+                    // Desabilitar navegação mensal
+                    periodNav.style.display = 'none';
+                });
+                
+                // Aplicar período personalizado
+                applyPeriodBtn.addEventListener('click', function() {
+                    if (periodMode === 'custom') {
+                        const start = new Date(startDateInput.value);
+                        const end = new Date(endDateInput.value);
+                        
+                        if (start && end && start <= end) {
+                            customStartDate = start;
+                            customEndDate = end;
+                            updatePeriodDisplay();
+                        } else {
+                            alert('Por favor, selecione um período válido (data início menor ou igual à data fim).');
+                        }
+                    }
+                });
+                
+                // Fechar detalhe da categoria
+                closeDetailBtn.addEventListener('click', function() {
+                    categoryDetail.classList.remove('show');
                 });
             }
             
@@ -1083,9 +1309,7 @@
                 transactionsList.innerHTML = '';
                 
                 // Filtrar transações pelo período atual
-                const periodTransactions = transactions.filter(transaction => {
-                    return transaction.month === currentMonth && transaction.year === currentYear;
-                });
+                const periodTransactions = getPeriodTransactions();
                 
                 if (periodTransactions.length === 0) {
                     transactionsList.innerHTML = `
@@ -1134,9 +1358,7 @@
             
             function updateSummary() {
                 // Filtrar transações pelo período atual
-                const periodTransactions = transactions.filter(transaction => {
-                    return transaction.month === currentMonth && transaction.year === currentYear;
-                });
+                const periodTransactions = getPeriodTransactions();
                 
                 const totalIncome = periodTransactions
                     .filter(t => t.type === 'receita')
@@ -1164,10 +1386,11 @@
                 const ctx = document.getElementById('expenses-chart').getContext('2d');
                 
                 // Agrupar despesas por categoria (apenas do período atual)
+                const periodTransactions = getPeriodTransactions();
                 const expensesByCategory = {};
                 
-                transactions
-                    .filter(t => t.type === 'despesa' && t.month === currentMonth && t.year === currentYear)
+                periodTransactions
+                    .filter(t => t.type === 'despesa')
                     .forEach(transaction => {
                         if (!expensesByCategory[transaction.category]) {
                             expensesByCategory[transaction.category] = 0;
@@ -1179,6 +1402,7 @@
                 const labels = [];
                 const data = [];
                 const backgroundColors = [];
+                const categoryIds = [];
                 
                 Object.keys(expensesByCategory).forEach(categoryId => {
                     const category = categories.find(cat => cat.id === categoryId);
@@ -1186,6 +1410,7 @@
                         labels.push(category.name);
                         data.push(expensesByCategory[categoryId]);
                         backgroundColors.push(category.color);
+                        categoryIds.push(categoryId);
                     }
                 });
                 
@@ -1211,6 +1436,13 @@
                                 legend: {
                                     position: 'bottom'
                                 }
+                            },
+                            onClick: function(event, elements) {
+                                if (elements.length > 0) {
+                                    const index = elements[0].index;
+                                    const categoryId = categoryIds[index];
+                                    showCategoryDetails(categoryId);
+                                }
                             }
                         }
                     });
@@ -1223,6 +1455,69 @@
                 }
             }
             
+            function showCategoryDetails(categoryId) {
+                const periodTransactions = getPeriodTransactions();
+                const category = categories.find(cat => cat.id === categoryId);
+                
+                if (!category) {
+                    alert('Categoria não encontrada!');
+                    return;
+                }
+                
+                // Filtrar transações da categoria
+                const categoryTransactions = periodTransactions
+                    .filter(t => t.category === categoryId && t.type === 'despesa')
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                
+                if (categoryTransactions.length === 0) {
+                    alert('Nenhuma transação encontrada para esta categoria.');
+                    return;
+                }
+                
+                // Calcular total
+                const total = categoryTransactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+                
+                // Atualizar detalhes
+                detailCategoryName.textContent = `${category.name} (Despesas)`;
+                detailTotal.textContent = `R$ ${total.toFixed(2)}`;
+                
+                // Construir lista de transações
+                detailTransactionsList.innerHTML = '';
+                const ul = document.createElement('ul');
+                ul.style.listStyle = 'none';
+                ul.style.padding = '0';
+                
+                categoryTransactions.forEach(transaction => {
+                    const li = document.createElement('li');
+                    li.style.padding = '10px';
+                    li.style.borderBottom = '1px solid #eee';
+                    li.style.display = 'flex';
+                    li.style.justifyContent = 'space-between';
+                    li.style.alignItems = 'center';
+                    
+                    li.innerHTML = `
+                        <div>
+                            <strong>${transaction.description}</strong>
+                            <br>
+                            <small>${transaction.date}</small>
+                        </div>
+                        <div style="font-weight: bold; color: #e74c3c;">
+                            - R$ ${transaction.amount.toFixed(2)}
+                        </div>
+                    `;
+                    
+                    ul.appendChild(li);
+                });
+                
+                detailTransactionsList.appendChild(ul);
+                
+                // Mostrar detalhe
+                categoryDetail.classList.add('show');
+                
+                // Scroll para o detalhe
+                categoryDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            
             function renderIncomeVsExpensesChart() {
                 const ctx = document.getElementById('income-vs-expenses-chart').getContext('2d');
                 
@@ -1230,8 +1525,14 @@
                 const monthlyData = {};
                 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
                 
+                // Usar o período atual para determinar os meses
+                const startDate = new Date(customStartDate);
+                const endDate = new Date(customEndDate);
+                
+                // Pegar os últimos 6 meses a partir do mês atual
+                const today = new Date();
                 for (let i = 5; i >= 0; i--) {
-                    const date = new Date(currentYear, currentMonth - i, 1);
+                    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
                     const month = date.getMonth();
                     const year = date.getFullYear();
                     const label = `${monthNames[month]}/${year}`;
