@@ -890,7 +890,7 @@
     </div>
 
     <script>
-        // 🔷 CÓDIGO JAVASCRIPT COMPLETO COM RECONHECIMENTO DE VOZ
+        // 🔷 CÓDIGO JAVASCRIPT COMPLETO COM RECONHECIMENTO DE VOZ E CORREÇÃO DE TIMEZONE
         document.addEventListener('DOMContentLoaded', function() {
             // Elementos do DOM
             const form = document.getElementById('transaction-form');
@@ -968,6 +968,79 @@
             let recognition = null;
             let isListening = false;
             
+            // ========== FUNÇÕES DE UTILIDADE PARA DATAS ==========
+            
+            /**
+             * Cria um objeto Date a partir de uma string de data (YYYY-MM-DD)
+             * Garantindo que a data seja interpretada corretamente no timezone local
+             */
+            function createDateFromString(dateString) {
+                if (!dateString) return null;
+                
+                // Divide a string em partes: ano, mês, dia
+                const parts = dateString.split('-');
+                if (parts.length !== 3) return null;
+                
+                const year = parseInt(parts[0]);
+                const month = parseInt(parts[1]) - 1; // Mês em JS é 0-indexado
+                const day = parseInt(parts[2]);
+                
+                // Cria a data no timezone local
+                return new Date(year, month, day);
+            }
+            
+            /**
+             * Formata uma data para string YYYY-MM-DD (padrão input date)
+             */
+            function formatDateToString(date) {
+                if (!date || isNaN(date.getTime())) return '';
+                
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                
+                return `${year}-${month}-${day}`;
+            }
+            
+            /**
+             * Compara duas datas considerando apenas dia, mês e ano (sem timezone)
+             */
+            function isSameDate(date1, date2) {
+                if (!date1 || !date2) return false;
+                return date1.getFullYear() === date2.getFullYear() &&
+                       date1.getMonth() === date2.getMonth() &&
+                       date1.getDate() === date2.getDate();
+            }
+            
+            /**
+             * Formata data para exibição no formato brasileiro
+             */
+            function formatDateToDisplay(date) {
+                if (!date || isNaN(date.getTime())) return '';
+                
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                
+                return `${day}/${month}/${year}`;
+            }
+            
+            /**
+             * Retorna o timestamp no início do dia (00:00:00) no timezone local
+             */
+            function getStartOfDay(date) {
+                return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            }
+            
+            /**
+             * Retorna o timestamp no final do dia (23:59:59.999) no timezone local
+             */
+            function getEndOfDay(date) {
+                return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+            }
+            
+            // ========== FIM DAS FUNÇÕES DE UTILIDADE ==========
+            
             // Inicialização
             init();
             
@@ -980,7 +1053,8 @@
                 }
                 
                 // Configurar data atual no formulário
-                transactionDateInput.valueAsDate = new Date();
+                const today = new Date();
+                transactionDateInput.value = formatDateToString(today);
                 
                 // Configurar período padrão (14 do mês anterior até 14 do mês atual)
                 setupStandardPeriod();
@@ -1010,18 +1084,11 @@
                 customEndDate = endDate;
                 
                 // Atualizar inputs de data
-                startDateInput.value = formatDateInput(startDate);
-                endDateInput.value = formatDateInput(endDate);
+                startDateInput.value = formatDateToString(startDate);
+                endDateInput.value = formatDateToString(endDate);
                 
                 // Atualizar display do período
                 updatePeriodDisplay();
-            }
-            
-            function formatDateInput(date) {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
             }
             
             function updatePeriodDisplay() {
@@ -1039,8 +1106,7 @@
                 } else {
                     const start = new Date(customStartDate);
                     const end = new Date(customEndDate);
-                    const options = { day: '2-digit', month: 'short', year: 'numeric' };
-                    currentPeriodElement.textContent = `${start.toLocaleDateString('pt-BR', options)} - ${end.toLocaleDateString('pt-BR', options)}`;
+                    currentPeriodElement.textContent = `${formatDateToDisplay(start)} - ${formatDateToDisplay(end)}`;
                 }
                 
                 // Atualizar transações e resumo
@@ -1055,12 +1121,8 @@
             }
             
             function getPeriodTransactions() {
-                const start = new Date(customStartDate);
-                const end = new Date(customEndDate);
-                
-                // Ajustar para incluir o dia inteiro
-                start.setHours(0, 0, 0, 0);
-                end.setHours(23, 59, 59, 999);
+                const start = getStartOfDay(new Date(customStartDate));
+                const end = getEndOfDay(new Date(customEndDate));
                 
                 return transactions.filter(transaction => {
                     const transDate = new Date(transaction.timestamp);
@@ -1354,7 +1416,7 @@
                     descricao = tipo === 'receita' ? 'Receita' : 'Despesa';
                 }
                 
-                // Detectar data (dia)
+                // Detectar data (dia) - CORRIGIDO: usa a função createDateFromString
                 const diaMatch = lowerText.match(/dia\s*(\d+)/i);
                 if (diaMatch) {
                     const dia = parseInt(diaMatch[1]);
@@ -1389,7 +1451,7 @@
                 if (valor) amountInput.value = valor;
                 if (tipo) typeSelect.value = tipo;
                 if (categoria) categorySelectEl.value = categoria;
-                if (data) dateInput.value = formatDateInput(data);
+                if (data) dateInput.value = formatDateToString(data);
                 if (parcelas > 1) parcelasInput.value = parcelas;
                 
                 // Feedback visual de campos preenchidos
@@ -1423,7 +1485,7 @@
             }
             
             function setupEventListeners() {
-                // Formulário de transação
+                // Formulário de transação - CORRIGIDO com a função createDateFromString
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
@@ -1431,7 +1493,16 @@
                     const amount = parseFloat(document.getElementById('amount').value);
                     const type = document.getElementById('type').value;
                     const category = document.getElementById('category').value;
-                    const date = new Date(document.getElementById('transaction-date').value);
+                    
+                    // CORREÇÃO: Usa createDateFromString para evitar problema de timezone
+                    const dateString = document.getElementById('transaction-date').value;
+                    const date = createDateFromString(dateString);
+                    
+                    if (!date) {
+                        alert('Data inválida!');
+                        return;
+                    }
+                    
                     const parcelas = parseInt(document.getElementById('parcelas').value) || 1;
                     
                     if (parcelas > 1) {
@@ -1454,7 +1525,8 @@
                     
                     // Reset do formulário
                     form.reset();
-                    transactionDateInput.valueAsDate = new Date();
+                    const today = new Date();
+                    transactionDateInput.value = formatDateToString(today);
                 });
                 
                 // Formulário de categoria
@@ -1472,7 +1544,7 @@
                     document.getElementById('new-category-color').value = '#3498db';
                 });
                 
-                // Controles de período
+                // Controles de período - CORRIGIDOS para usar dates sem timezone
                 prevPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'standard') {
                         // Mover período um mês para trás
@@ -1482,8 +1554,8 @@
                         end.setMonth(end.getMonth() - 1);
                         customStartDate = start;
                         customEndDate = end;
-                        startDateInput.value = formatDateInput(start);
-                        endDateInput.value = formatDateInput(end);
+                        startDateInput.value = formatDateToString(start);
+                        endDateInput.value = formatDateToString(end);
                         updatePeriodDisplay();
                     }
                 });
@@ -1497,8 +1569,8 @@
                         end.setMonth(end.getMonth() + 1);
                         customStartDate = start;
                         customEndDate = end;
-                        startDateInput.value = formatDateInput(start);
-                        endDateInput.value = formatDateInput(end);
+                        startDateInput.value = formatDateToString(start);
+                        endDateInput.value = formatDateToString(end);
                         updatePeriodDisplay();
                     }
                 });
@@ -1522,19 +1594,19 @@
                     periodStandardBtn.classList.remove('active-mode');
                     
                     // Usar as datas atuais dos inputs
-                    customStartDate = new Date(startDateInput.value);
-                    customEndDate = new Date(endDateInput.value);
+                    customStartDate = createDateFromString(startDateInput.value);
+                    customEndDate = createDateFromString(endDateInput.value);
                     updatePeriodDisplay();
                     
                     // Desabilitar navegação mensal
                     periodNav.style.display = 'none';
                 });
                 
-                // Aplicar período personalizado
+                // Aplicar período personalizado - CORRIGIDO
                 applyPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'custom') {
-                        const start = new Date(startDateInput.value);
-                        const end = new Date(endDateInput.value);
+                        const start = createDateFromString(startDateInput.value);
+                        const end = createDateFromString(endDateInput.value);
                         
                         if (start && end && start <= end) {
                             customStartDate = start;
@@ -1583,13 +1655,14 @@
             }
             
             function addTransaction(description, amount, type, category, date) {
+                // O timestamp é criado a partir da data já corrigida
                 const transaction = {
                     id: Date.now() + Math.random(), // ID único
                     description,
                     amount,
                     type,
                     category,
-                    date: date.toLocaleDateString('pt-BR'),
+                    date: formatDateToDisplay(date),
                     timestamp: date.getTime(),
                     month: date.getMonth(),
                     year: date.getFullYear()
@@ -1748,7 +1821,7 @@
                 element.innerHTML = `
                     <div class="category-color" style="background-color: ${category.color}"></div>
                     <div class="category-name">${category.name}</div>
-                    <button class="danger" onclick="deleteCategory('${category.id}')">
+                    <button class="danger" onclick="window.deleteCategory('${category.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 `;
@@ -1798,7 +1871,7 @@
                             ${transaction.type === 'receita' ? '+' : '-'} R$ ${transaction.amount.toFixed(2)}
                         </div>
                         <div class="transaction-actions">
-                            <button class="danger" onclick="deleteTransaction(${transaction.id})">
+                            <button class="danger" onclick="window.deleteTransaction(${transaction.id})">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
