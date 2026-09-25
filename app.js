@@ -34,6 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const detailTotal = document.getElementById('detail-total');
     const closeDetailBtn = document.getElementById('close-detail');
 
+    const holderTotalsContainer = document.getElementById('holder-totals-container');
+    const holderDetail = document.getElementById('holder-detail');
+    const holderDetailTitle = document.getElementById('holder-detail-title');
+    const holderDetailList = document.getElementById('holder-detail-list');
+    const holderDetailTotal = document.getElementById('holder-detail-total');
+    const holderDetailClose = document.getElementById('holder-detail-close');
+
     const voiceBtn = document.getElementById('voiceBtn');
     const voiceStatus = document.getElementById('voiceStatus');
     const voiceStatusText = document.getElementById('voiceStatusText');
@@ -80,8 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'outros', name: 'Outros', type: 'despesa', color: '#95a5a6' }
     ];
 
-    // Portadores base (pré-cadastro fixo).
-    // O primeiro é o padrão (isDefault: true). Os demais entram como ativos.
     const DEFAULT_HOLDERS = [
         { id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true },
         { id: 'gisela-pinto-a-prado', name: 'Gisela Pinto A Prado', active: true, isDefault: false },
@@ -130,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const reportsTab = document.getElementById('reports-tab');
         if (reportsTab && reportsTab.classList.contains('active')) {
-            setTimeout(() => renderCharts(), 50);
+            setTimeout(() => { renderCharts(); renderHolderTotals(); }, 50);
         }
     }
     function toggleTheme() {
@@ -175,7 +180,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ========== UTILITÁRIOS DE PORTADOR ==========
-    // Normaliza nome: remove acentos, colapsa espaços, coloca em maiúsculas.
     function normalizeName(name) {
         if (!name) return '';
         return name
@@ -186,7 +190,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .toUpperCase();
     }
 
-    // Gera chave de casamento: PRIMEIRO|ULTIMO (ignora nomes do meio).
     function holderKeyFromName(name) {
         const n = normalizeName(name);
         if (!n) return '';
@@ -196,7 +199,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${parts[0]}|${parts[parts.length - 1]}`;
     }
 
-    // Cria um id estável a partir do nome (para novos portadores).
     function makeHolderIdFromName(name) {
         return normalizeName(name)
             .toLowerCase()
@@ -204,22 +206,17 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/^-|-$/g, '');
     }
 
-    // Procura portador existente por chave; se não achar, cria.
-    // Retorna o objeto portador.
     function ensureHolderFromFatura(name, cardNumber) {
         const key = holderKeyFromName(name);
         if (!key) return null;
 
-        // 1) casar por chave (primeiro|último)
         let found = holders.find(h => holderKeyFromName(h.name) === key);
         if (found) return found;
 
-        // 2) casar por id derivado do nome exato
         const idFromName = makeHolderIdFromName(name);
         found = holders.find(h => h.id === idFromName);
         if (found) return found;
 
-        // 3) criar novo
         let newId = idFromName;
         let suffix = 2;
         while (holders.find(h => h.id === newId)) {
@@ -236,13 +233,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return novo;
     }
 
-    // Garante que todos os portadores base existam (sem sobrescrever os que o usuário editou).
     function ensureDefaultHolders() {
         let changed = false;
         DEFAULT_HOLDERS.forEach(def => {
             const exists = holders.find(h => h.id === def.id);
             if (!exists) {
-                // se já existe alguém com a mesma chave, não cria duplicado
                 const sameKey = holders.find(h => holderKeyFromName(h.name) === holderKeyFromName(def.name));
                 if (!sameKey) {
                     holders.push({ ...def });
@@ -250,7 +245,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-        // garantir exatamente um isDefault
         const defaults = holders.filter(h => h.isDefault);
         if (defaults.length === 0 && holders.length > 0) {
             holders[0].isDefault = true;
@@ -288,6 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderHolders();
         updateSummary();
         renderTransactions();
+        renderHolderTotals();
         setupEventListeners();
         setupTabs();
         setupPWA();
@@ -319,6 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         updateSummary();
         renderTransactions();
+        renderHolderTotals();
         const rt = document.getElementById('reports-tab');
         if (rt.classList.contains('active')) renderCharts();
     }
@@ -533,10 +529,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return { description, installment: null };
     }
 
-    // Rejeita cabeçalhos de seção que têm o formato "TEXTO (Cartão NNNN)".
     function parseHolderLine(line) {
         const l = line.trim();
-        // Cabeçalhos de seção que NÃO são nomes de portador
         if (/^(COMPRAS|COMPRAS\s+PARCELADAS|ANUIDADE|DEMONSTRATIVO)\b/i.test(l)) return null;
         const m = l.match(/^(.+?)\s*\(Cartão\s+(\d+)\)\s*$/i);
         if (!m) return null;
@@ -608,14 +602,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let currentHolder = null;
         let currentCard = null;
-        // 'demonstrativo' até o primeiro (Cartão NNNN); depois disso é sempre 'card'.
         let currentScope = 'demonstrativo';
 
-        // Ano e mês do vencimento da fatura
         const anoVenc = currentDueDate.year;
-        const mesVenc = currentDueDate.month; // 0-indexado
+        const mesVenc = currentDueDate.month;
 
-        // Mês anterior ao vencimento (com ajuste de ano se necessário)
         const mesAnteriorVenc = mesVenc === 0 ? 11 : mesVenc - 1;
         const anoMesAnteriorVenc = mesVenc === 0 ? anoVenc - 1 : anoVenc;
 
@@ -635,7 +626,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const upper = line.toUpperCase();
-            // Cabeçalhos de seção (com ou sem "(Cartão NNNN)")
             if (/^COMPRAS(\s*\(Cartão\s*\d+\))?\s*$/i.test(line)) continue;
             if (/^COMPRAS\s+PARCELADAS(\s*\(Cartão\s*\d+\))?\s*$/i.test(line)) continue;
             if (upper === 'ANUIDADE') continue;
@@ -665,7 +655,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!tx) continue;
             if (isNoiseTransaction(tx.description)) continue;
 
-            // Créditos/estornos do primeiro bloco "Demonstrativo" (antes do primeiro cartão)
             if (currentScope === 'demonstrativo') {
                 if (tx.type === 'receita') validation.creditsTotal += tx.amount;
                 continue;
@@ -682,11 +671,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const dataCompraStr = `${diaStr}/${mesStr}`;
 
             if (installment) {
-                // PARCELA: data = 13 do mês do vencimento
                 date = new Date(anoVenc, mesVenc, 13);
                 finalDescription = `${cleanDesc} (${dataCompraStr} - ${installment})`;
             } else {
-                // COMPRA À VISTA
                 if (tx.month === mesVenc) {
                     date = new Date(anoVenc, mesVenc, 2);
                 } else {
@@ -828,7 +815,6 @@ document.addEventListener('DOMContentLoaded', function() {
         html += '</tbody></table>';
         reviewTableContainer.innerHTML = html;
 
-        // Pré-seleciona o portador de cada linha, criando o portador se necessário.
         transactions.forEach((tx, idx) => {
             const sel = reviewTableContainer.querySelector(`.review-holder[data-idx="${idx}"]`);
             if (!sel || !tx.holder) return;
@@ -836,7 +822,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const holder = ensureHolderFromFatura(tx.holder, tx.cardNumber);
             if (!holder) return;
 
-            // Se o option ainda não existe no select, adiciona.
             if (!sel.querySelector(`option[value="${holder.id}"]`)) {
                 const o = document.createElement('option');
                 o.value = holder.id;
@@ -845,7 +830,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             sel.value = holder.id;
 
-            // Atualiza também todos os outros selects da tabela que ainda não têm esse option.
             reviewTableContainer.querySelectorAll('.review-holder').forEach(s => {
                 if (!s.querySelector(`option[value="${holder.id}"]`)) {
                     const o = document.createElement('option');
@@ -931,10 +915,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function confirmImport() {
         try {
-            console.log('[DEBUG] confirmImport iniciado');
             const collected = collectReviewData();
-            console.log('[DEBUG] Lançamentos coletados:', collected.length);
-
             if (collected.length === 0) {
                 alert('Nenhum lançamento válido para salvar.');
                 return;
@@ -942,15 +923,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             collected.forEach(tx => transactions.push(tx));
             saveTransactions();
-            console.log('[DEBUG] Total de transações agora:', transactions.length);
 
             renderTransactions();
             updateSummary();
             renderHolders();
             updateHoldersDropdown();
+            renderHolderTotals();
             closeReviewModal();
             showImportFeedback('success', `${collected.length} lançamentos importados com sucesso!`);
-            console.log('[DEBUG] confirmImport finalizado com sucesso');
         } catch(err) {
             console.error('[ERRO em confirmImport]:', err);
             alert('Erro ao salvar: ' + err.message);
@@ -1074,6 +1054,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         closeDetailBtn.addEventListener('click', () => categoryDetail.classList.remove('show'));
+        if (holderDetailClose) {
+            holderDetailClose.addEventListener('click', () => holderDetail.classList.remove('show'));
+        }
         voiceBtn.addEventListener('click', toggleListening);
         voiceStatusClose.addEventListener('click', () => { stopListening(); hideVoiceStatus(); });
         document.addEventListener('keydown', (e) => {
@@ -1089,7 +1072,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 tabContents.forEach(tc => tc.classList.remove('active'));
                 tab.classList.add('active');
                 document.getElementById(`${tabId}-tab`).classList.add('active');
-                if (tabId === 'reports') renderCharts();
+                if (tabId === 'reports') {
+                    renderCharts();
+                    renderHolderTotals();
+                }
             });
         });
     }
@@ -1110,6 +1096,7 @@ document.addEventListener('DOMContentLoaded', function() {
         saveTransactions();
         renderTransactions();
         updateSummary();
+        renderHolderTotals();
     }
 
     function deleteTransaction(id) {
@@ -1117,6 +1104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         saveTransactions();
         renderTransactions();
         updateSummary();
+        renderHolderTotals();
     }
 
     function saveTransactions() { localStorage.setItem('transactions', JSON.stringify(transactions)); }
@@ -1177,12 +1165,209 @@ document.addEventListener('DOMContentLoaded', function() {
         countTotalEl.textContent = totalCount === 1 ? '(1 lançamento no total)' : `(${totalCount} lançamentos no total)`;
     }
 
+    // ========== TOTAIS POR PORTADOR ==========
+    function renderHolderTotals() {
+        if (!holderTotalsContainer) return;
+        holderTotalsContainer.innerHTML = '';
+
+        const period = getPeriodTransactions();
+        if (period.length === 0) {
+            holderTotalsContainer.innerHTML = `
+                <div class="holder-totals-empty">
+                    <i class="fas fa-users"></i>
+                    Nenhum lançamento no período selecionado.
+                </div>
+            `;
+            return;
+        }
+
+        // Agrupar por portador (usa holderId se existir; senão casa por nome)
+        const byHolder = new Map(); // holderId -> { holder, cards: Map(cardNumber -> {despesas, receitas, txs}) }
+
+        function resolveHolderId(tx) {
+            if (tx.holderId && holders.find(h => h.id === tx.holderId)) return tx.holderId;
+            if (tx.holder) {
+                const key = holderKeyFromName(tx.holder);
+                const found = holders.find(h => holderKeyFromName(h.name) === key);
+                if (found) return found.id;
+            }
+            return null; // sem portador identificado
+        }
+
+        period.forEach(tx => {
+            const hid = resolveHolderId(tx);
+            const holderObj = hid ? holders.find(h => h.id === hid) : null;
+            const groupKey = hid || '__sem_portador__';
+            if (!byHolder.has(groupKey)) {
+                byHolder.set(groupKey, {
+                    holder: holderObj || { id: '__sem_portador__', name: 'Sem portador', active: true, isDefault: false },
+                    cards: new Map()
+                });
+            }
+            const entry = byHolder.get(groupKey);
+            const cardKey = tx.cardNumber || '__sem_cartao__';
+            if (!entry.cards.has(cardKey)) {
+                entry.cards.set(cardKey, { despesas: 0, receitas: 0, count: 0, txs: [] });
+            }
+            const cardEntry = entry.cards.get(cardKey);
+            if (tx.type === 'receita') cardEntry.receitas += parseFloat(tx.amount);
+            else cardEntry.despesas += parseFloat(tx.amount);
+            cardEntry.count++;
+            cardEntry.txs.push(tx);
+        });
+
+        // Ordenar: portadores ativos primeiro, "Sem portador" por último
+        const sortedEntries = [...byHolder.entries()].sort((a, b) => {
+            const ha = a[1].holder, hb = b[1].holder;
+            if (ha.id === '__sem_portador__') return 1;
+            if (hb.id === '__sem_portador__') return -1;
+            return ha.name.localeCompare(hb.name, 'pt-BR');
+        });
+
+        sortedEntries.forEach(([holderId, data]) => {
+            const card = document.createElement('div');
+            card.className = 'holder-totals-card' + (data.holder.active === false ? ' inactive' : '');
+
+            // Soma total do portador
+            let totalDesp = 0, totalRec = 0;
+            data.cards.forEach(c => { totalDesp += c.despesas; totalRec += c.receitas; });
+            const totalLiquido = totalDesp - totalRec;
+
+            const badges = [];
+            if (data.holder.isDefault) badges.push('<span class="holder-badge" style="background:var(--accent-blue);color:white;border:none">padrão</span>');
+            if (data.holder.active === false) badges.push('<span class="holder-badge">excluído</span>');
+
+            // Cabeçalho
+            const header = document.createElement('div');
+            header.className = 'holder-card-header';
+            header.innerHTML = `
+                <i class="fas fa-user-circle"></i>
+                <div class="holder-name">${escapeHtml(data.holder.name)} ${badges.join(' ')}</div>
+            `;
+            card.appendChild(header);
+
+            // Resumo do portador
+            const summary = document.createElement('div');
+            summary.className = 'holder-card-summary';
+            const summaryValueClass = (totalRec > 0 && totalDesp === 0) ? 'summary-value receita-only' : 'summary-value';
+            let summaryHtml = `<span class="summary-label">Total no período</span>`;
+            if (totalRec > 0) {
+                summaryHtml += `<span class="${summaryValueClass}">${fmtBRL(totalLiquido)}</span>`;
+            } else {
+                summaryHtml += `<span class="${summaryValueClass}">${fmtBRL(totalDesp)}</span>`;
+            }
+            summary.innerHTML = summaryHtml;
+            card.appendChild(summary);
+
+            // Lista de cartões
+            const cardsList = document.createElement('div');
+            cardsList.className = 'holder-card-cards-list';
+
+            // Ordenar cartões: com número primeiro (asc), "Sem cartão" por último
+            const sortedCards = [...data.cards.entries()].sort((a, b) => {
+                if (a[0] === '__sem_cartao__') return 1;
+                if (b[0] === '__sem_cartao__') return -1;
+                return a[0].localeCompare(b[0]);
+            });
+
+            sortedCards.forEach(([cardNumber, cdata]) => {
+                const chip = document.createElement('div');
+                chip.className = 'card-chip';
+                chip.setAttribute('role', 'button');
+                chip.setAttribute('tabindex', '0');
+
+                const label = cardNumber === '__sem_cartao__' ? 'Sem cartão' : `Cartão ${cardNumber}`;
+                const icon = cardNumber === '__sem_cartao__' ? 'fa-tag' : 'fa-credit-card';
+
+                const total = cdata.despesas - cdata.receitas;
+                const valueClass = (cdata.receitas > 0 && cdata.despesas === 0) ? 'chip-value receita' : 'chip-value';
+                const countLabel = cdata.count === 1 ? '1 lançamento' : `${cdata.count} lançamentos`;
+
+                chip.innerHTML = `
+                    <div class="chip-left">
+                        <i class="fas ${icon}"></i>
+                        <span class="chip-label">${escapeHtml(label)}</span>
+                    </div>
+                    <div class="chip-right">
+                        <span class="${valueClass}">${fmtBRL(total)}</span>
+                        <span class="chip-count">${countLabel}</span>
+                    </div>
+                `;
+
+                chip.addEventListener('click', () => {
+                    showCardDetails(data.holder, cardNumber, cdata.txs);
+                });
+                chip.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        showCardDetails(data.holder, cardNumber, cdata.txs);
+                    }
+                });
+
+                cardsList.appendChild(chip);
+            });
+
+            card.appendChild(cardsList);
+            holderTotalsContainer.appendChild(card);
+        });
+    }
+
+    function showCardDetails(holder, cardNumber, txs) {
+        if (!holderDetail || !holderDetailTitle || !holderDetailList || !holderDetailTotal) return;
+
+        const cardLabel = cardNumber === '__sem_cartao__' ? 'Sem cartão' : `Cartão ${cardNumber}`;
+        holderDetailTitle.textContent = `${holder.name} — ${cardLabel}`;
+
+        const sorted = [...txs].sort((a, b) => b.timestamp - a.timestamp);
+
+        let totalDesp = 0, totalRec = 0;
+        sorted.forEach(tx => {
+            if (tx.type === 'receita') totalRec += parseFloat(tx.amount);
+            else totalDesp += parseFloat(tx.amount);
+        });
+        const liquido = totalDesp - totalRec;
+
+        const ul = document.createElement('ul');
+        sorted.forEach(tx => {
+            const li = document.createElement('li');
+            const cat = categories.find(c => c.id === tx.category);
+            const catColor = cat ? cat.color : '#95a5a6';
+            const catName = cat ? cat.name : tx.category;
+            const valueClass = tx.type === 'receita' ? 'tx-value receita' : 'tx-value despesa';
+            const sign = tx.type === 'receita' ? '+' : '-';
+
+            li.innerHTML = `
+                <div class="tx-info">
+                    <strong>${escapeHtml(tx.description)}</strong>
+                    <small>
+                        <span class="category-badge" style="background-color: ${catColor}">${catName}</span>
+                        • ${tx.date}
+                        ${tx.installment ? ' • Parcela ' + escapeHtml(tx.installment) : ''}
+                    </small>
+                </div>
+                <div class="${valueClass}">${sign} ${fmtBRL(parseFloat(tx.amount))}</div>
+            `;
+            ul.appendChild(li);
+        });
+
+        holderDetailList.innerHTML = '';
+        holderDetailList.appendChild(ul);
+
+        let totalHtml = `Total: <strong>${fmtBRL(liquido)}</strong>`;
+        if (totalRec > 0) {
+            totalHtml += ` <small style="color:var(--text-secondary);font-weight:normal;">(despesas ${fmtBRL(totalDesp)} − receitas ${fmtBRL(totalRec)})</small>`;
+        }
+        holderDetailTotal.innerHTML = totalHtml;
+
+        holderDetail.classList.add('show');
+        holderDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     // ========== PORTADORES ==========
     function addHolder(name) {
         const id = makeHolderIdFromName(name);
         if (!id) return;
         if (holders.find(h => h.id === id)) { alert('Já existe!'); return; }
-        // checar duplicidade por chave (primeiro|último)
         const key = holderKeyFromName(name);
         if (key && holders.find(h => holderKeyFromName(h.name) === key)) {
             alert('Já existe um portador com esse nome (mesmo primeiro e último nome).');
@@ -1192,6 +1377,7 @@ document.addEventListener('DOMContentLoaded', function() {
         saveHolders();
         updateHoldersDropdown();
         renderHolders();
+        renderHolderTotals();
     }
     function editHolder(id, newName) {
         const h = holders.find(x => x.id === id);
@@ -1205,6 +1391,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateHoldersDropdown();
         renderHolders();
         renderTransactions();
+        renderHolderTotals();
     }
     function deleteHolder(id) {
         const h = holders.find(x => x.id === id);
@@ -1216,6 +1403,7 @@ document.addEventListener('DOMContentLoaded', function() {
         saveHolders();
         updateHoldersDropdown();
         renderHolders();
+        renderHolderTotals();
     }
     function saveHolders() { localStorage.setItem('holders', JSON.stringify(holders)); }
     function updateHoldersDropdown() {
