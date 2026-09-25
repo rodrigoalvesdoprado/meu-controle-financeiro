@@ -786,17 +786,20 @@
             let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
             let categories = JSON.parse(localStorage.getItem('categories')) || [
                 { id: 'alimentacao', name: 'Alimentação', type: 'despesa', color: '#e74c3c' },
+                { id: 'restaurante', name: 'Restaurante', type: 'despesa', color: '#d35400' },
+                { id: 'padaria', name: 'Padaria', type: 'despesa', color: '#e67e22' },
                 { id: 'transporte', name: 'Transporte', type: 'despesa', color: '#3498db' },
                 { id: 'moradia', name: 'Moradia', type: 'despesa', color: '#2ecc71' },
                 { id: 'saude', name: 'Saúde', type: 'despesa', color: '#9b59b6' },
                 { id: 'lazer', name: 'Lazer', type: 'despesa', color: '#f1c40f' },
                 { id: 'educacao', name: 'Educação', type: 'despesa', color: '#1abc9c' },
-                { id: 'vestuario', name: 'Vestuário', type: 'despesa', color: '#d35400' },
+                { id: 'vestuario', name: 'Vestuário', type: 'despesa', color: '#c0392b' },
                 { id: 'servicos', name: 'Serviços', type: 'despesa', color: '#7f8c8d' },
+                { id: 'compra-online', name: 'Compra Online', type: 'despesa', color: '#8e44ad' },
                 { id: 'salario', name: 'Salário', type: 'receita', color: '#27ae60' },
                 { id: 'freelance', name: 'Freelance', type: 'receita', color: '#2980b9' },
-                { id: 'investimentos', name: 'Investimentos', type: 'receita', color: '#8e44ad' },
-                { id: 'presentes', name: 'Presentes', type: 'receita', color: '#e67e22' },
+                { id: 'investimentos', name: 'Investimentos', type: 'receita', color: '#16a085' },
+                { id: 'presentes', name: 'Presentes', type: 'receita', color: '#f39c12' },
                 { id: 'outros', name: 'Outros', type: 'despesa', color: '#95a5a6' }
             ];
             
@@ -810,18 +813,150 @@
             }
             
             const CATEGORY_TAGS = {
-                'transporte': ['posto', 'auto posto', 'autoposto', 'autopostodatorre', 'auto-posto', 'combustivel', 'gasolina', 'etanol', 'uber', '99 ', 'taxi', 'estacionamento', 'pedagio', 'sem parar', 'semparar', 'veloe', 'lr transportes', 'l r transportes'],
-                'alimentacao': ['supermercado', 'supermercad', 'mercado', 'hipermerc', 'atacad', 'atacado', 'padaria', 'panificad', 'restaurante', 'restaur', 'lanchonet', 'pizzaria', 'pizza', 'ifood', 'ifd ', 'food', 'comida', 'cheiro', 'cheirin', 'sabor', 'assaggiare', 'churrasc', 'churrasco', 'peixe', 'sushi', 'nippon', 'mcdonald', 'burger', 'bar ', 'bar', 'cerveja', 'bebida', 'mineirinha', 'velhote', 'mach enio', 'machenio', 'jim com', 'madrugadao', 'bfs alimentacao', 'bfs aliment', 'gri', 'grill', 'fe bar', 'espartanos', 'fuganti'],
-                'saude': ['drogasil', 'drogaria', 'farmacia', 'farmácia', 'farmac', 'manipulacao', 'manipulação', 'manipulac', 'laborat', 'clinica', 'clínica', 'hospital', 'medic', 'médic', 'odonto', 'dentista', 'otica', 'ótica', 'academia', 'wellhub', 'smart fit', 'smartfit'],
-                'moradia': ['casa ', 'construc', 'construção', 'material', 'leroy', 'telha', 'tinta', 'moveis', 'móveis', 'eletro', 'compensados', 'guara compensados', 'casa petropolis', 'casa do tapec', 'tapec'],
-                'educacao': ['curso', 'escola', 'faculdade', 'universidade', 'colegio', 'colégio', 'ensino', 'hotmart', 'udemy', 'alura', 'livraria', 'livro'],
-                'lazer': ['cinema', 'cinemark', 'netflix', 'spotify', 'deezer', 'amazon music', 'amazon prime', 'disney', 'hbo', 'max ', 'prime video', 'paramount', 'globoplay', 'crunchyroll', 'streaming', 'game', 'playstation', 'xbox', 'nintendo', 'ingresso', 'show ', 'teatro', 'hotel', 'pousada', 'viagem', 'elegance', 'ks eventos'],
-                'vestuario': ['riachuelo', 'renner', 'c&a', 'ce a', 'zara', 'hering', 'colcci', 'oakley', 'nike', 'adidas', 'puma', 'calcado', 'calçado', 'sapat', 'tenis', 'tênis', 'roupa', 'moda', 'mercado da moda', 'edegenius', 'jeans', 'loja unanime', 'unanime', 'hortela tricot', 'hortelã tricot', 'basari'],
-                'servicos': ['net ', 'net pgt', 'claro', 'vivo', 'tim ', 'oi ', 'internet', 'telefone', 'celular', 'conta ', 'fatura', 'seguro', 'mapfre', 'porto seguro', 'cpfl', 'energia', 'agua', 'água', 'gas ', 'gás ', 'iptu', 'condominio', 'condomínio', 'anuidade', 'google', 'apple com', 'apple.com', 'microsoft', 'adobe'],
-                'presentes': ['presente', 'etc e tal', 'etc e tal presentes', 'flor', 'floresta'],
-                'investimentos': ['investimento', 'cdb', 'tesouro', 'poupanca', 'poupança', 'acao', 'ação', 'fundo'],
-                'salario': ['salario', 'salário', 'holerite', 'pagamento salario'],
-                'freelance': ['freelance', 'freela', 'servico prestado', 'serviço prestado']
+                // ========== TRANSPORTE ==========
+                'transporte': [
+                    'posto', 'auto posto', 'autoposto', 'autopostodatorre', 'auto-posto',
+                    'posto super tigre', 'posto vila paiva', 'auto posto abc', 'auto posto 500',
+                    'autopostotreviso', 'combustivel', 'gasolina', 'etanol', 'alcool',
+                    'uber', '99 ', '99app', 'taxi', 'estacionamento', 'pedagio',
+                    'sem parar', 'semparar', 'veloe', 'lr transportes', 'l r transportes',
+                    'cptm', 'metro', 'onibus', 'passagem', 'bilhete unico'
+                ],
+                
+                // ========== RESTAURANTE ==========
+                'restaurante': [
+                    // Tags específicas (nomes literais citados por você)
+                    'serve pronto', 'machenio', 'jim com', 'jim com top',
+                    'ifd ', 'ifood', 'peixe e cia', 'peixe & cia',
+                    'madrugadao', 'espartanos', 'churrasdopern', 'churrasco do pern',
+                    'mineirinha', 'a mineirinha', 'velhote', 'velhote rock bar',
+                    'assaggiare', 'fe bar', 'da fe bar', 'fuganti', 'fugantistore',
+                    'giancarlo', 'giancarlo grill',
+                    // Tags genéricas
+                    'restaurante', 'restaur', 'lanchonet', 'pizzaria', 'pizza',
+                    'food', 'comida', 'cheiro', 'cheirin', 'sabor',
+                    'churrasc', 'churrasco', 'churrascaria',
+                    'peixe', 'sushi', 'nippon', 'japones', 'temaki',
+                    'burger', 'hamburguer', 'mcdonald', 'burguer',
+                    'bar ', 'bar', 'cerveja', 'bebida', 'chopp', 'drink',
+                    'gri', 'grill', 'grelhado', 'chapa',
+                    'esfiha', 'esfirra', 'acai', 'sorvete', 'gelato',
+                    'cafe ', 'cafeteria', 'starbucks', 'bistro'
+                ],
+                
+                // ========== PADARIA ==========
+                'padaria': [
+                    'padaria', 'panificad', 'panificadora', 'pao de acucar',
+                    'pao ', 'confeitaria', 'doceria', 'bolo', 'pastelaria'
+                ],
+                
+                // ========== ALIMENTAÇÃO (só supermercado) ==========
+                'alimentacao': [
+                    // Nomes específicos citados por você
+                    'maiolini', 'nosso maiolini', 'solmar', 'supermercado solmar',
+                    'bueno', 'supermercado bueno', 'alvorada', 'supermercados alvorada',
+                    'supermercado bh', 'supermercados bh', 'supermercado abc',
+                    'supermercado extra', 'abc atacado', 'atacado e varejo',
+                    'mercadinho', 'hortifruti', 'hortifruti', 'sacolao',
+                    // Tags genéricas (cuidado com falsos positivos)
+                    'supermercado', 'supermercad', 'hipermerc', 'hipermercado',
+                    'atacad', 'atacadao', 'atacado ', 'atacarejo',
+                    'minimercado', 'mercadinho', 'empório', 'emporio'
+                ],
+                
+                // ========== COMPRA ONLINE ==========
+                'compra-online': [
+                    'mercadolivre', 'mercado livre', 'mp mercadolivre',
+                    'amazon', 'amazon prime', 'amazon br',
+                    'magazineluiza', 'magazine luiza', 'magalu',
+                    'americanas', 'submarino', 'shopee', 'aliexpress',
+                    'shein', 'netshoes', 'kabum', 'pichau', 'terabyte',
+                    'dafiti', 'centauro', 'nike.com', 'adidas.com'
+                ],
+                
+                // ========== SAÚDE ==========
+                'saude': [
+                    'drogasil', 'drogaria', 'farmacia', 'farmácia', 'farmac',
+                    'manipulacao', 'manipulação', 'manipulac',
+                    'laborat', 'clinica', 'clínica', 'hospital',
+                    'medic', 'médic', 'odonto', 'dentista',
+                    'otica', 'ótica', 'academia', 'wellhub',
+                    'smart fit', 'smartfit', 'bodytech', 'bluefit'
+                ],
+                
+                // ========== MORADIA ==========
+                'moradia': [
+                    'casa ', 'construc', 'construção', 'material',
+                    'leroy', 'telha', 'tinta', 'moveis', 'móveis',
+                    'eletro', 'compensados', 'guara compensados',
+                    'casa petropolis', 'casa do tapec', 'a casa do tapec',
+                    'madeireira', 'ferramentas', 'lider ferramentas'
+                ],
+                
+                // ========== EDUCAÇÃO ==========
+                'educacao': [
+                    'curso', 'escola', 'faculdade', 'universidade',
+                    'colegio', 'colégio', 'ensino', 'hotmart',
+                    'udemy', 'alura', 'livraria', 'livro'
+                ],
+                
+                // ========== LAZER ==========
+                'lazer': [
+                    'cinema', 'cinemark', 'netflix', 'spotify',
+                    'deezer', 'dl google deezer', 'amazon music',
+                    'disney', 'hbo', 'max ', 'prime video',
+                    'paramount', 'globoplay', 'crunchyroll', 'streaming',
+                    'game', 'playstation', 'xbox', 'nintendo',
+                    'ingresso', 'show ', 'teatro', 'hotel', 'pousada',
+                    'viagem', 'elegance', 'ks eventos', 'eventos'
+                ],
+                
+                // ========== VESTUÁRIO ==========
+                'vestuario': [
+                    'riachuelo', 'renner', 'c&a', 'ce a', 'zara',
+                    'hering', 'colcci', 'oakley', 'nike', 'adidas',
+                    'puma', 'calcado', 'calçado', 'sapat', 'tenis', 'tênis',
+                    'roupa', 'moda', 'mercado da moda', 'edegenius',
+                    'jeans', 'loja unanime', 'unanime', 'hortela tricot',
+                    'hortelã tricot', 'basari', 'morale perfumaria',
+                    'perfumaria', 'havan', 'jocko'
+                ],
+                
+                // ========== SERVIÇOS ==========
+                'servicos': [
+                    'net ', 'net pgt', 'claro', 'vivo', 'tim ', 'oi ',
+                    'internet', 'telefone', 'celular', 'conta ',
+                    'fatura', 'seguro', 'mapfre', 'porto seguro',
+                    'cpfl', 'energia', 'agua', 'água', 'gas ', 'gás ',
+                    'iptu', 'condominio', 'condomínio', 'anuidade',
+                    'apple com', 'apple.com', 'microsoft', 'adobe',
+                    'lavajatomega', 'lavajato', 'lavagem', 'estacionamento',
+                    'guara compensados', 'ipg associacaodepe'
+                ],
+                
+                // ========== PRESENTES ==========
+                'presentes': [
+                    'presente', 'etc e tal', 'etc e tal presentes',
+                    'flor', 'floresta', 'floricultura'
+                ],
+                
+                // ========== INVESTIMENTOS ==========
+                'investimentos': [
+                    'investimento', 'cdb', 'tesouro', 'poupanca', 'poupança',
+                    'acao', 'ação', 'fundo', 'corretora', 'rico', 'xp investimentos'
+                ],
+                
+                // ========== SALÁRIO ==========
+                'salario': [
+                    'salario', 'salário', 'holerite', 'pagamento salario',
+                    'pagamento de salario', 'provento'
+                ],
+                
+                // ========== FREELANCE ==========
+                'freelance': [
+                    'freelance', 'freela', 'servico prestado', 'serviço prestado',
+                    'pagamento de servico', 'pagamento de serviço'
+                ]
             };
             
             // Cores fixas para portadores no gráfico
