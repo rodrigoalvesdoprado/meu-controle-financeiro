@@ -936,6 +936,18 @@
             const reviewTotal = document.getElementById('reviewTotal');
             const cancelImportBtn = document.getElementById('cancelImportBtn');
             const confirmImportBtn = document.getElementById('confirmImportBtn');
+                        // Elementos do modal de edição
+            const editModal = document.getElementById('editModal');
+            const editForm = document.getElementById('editForm');
+            const editDescription = document.getElementById('edit-description');
+            const editAmount = document.getElementById('edit-amount');
+            const editType = document.getElementById('edit-type');
+            const editCategory = document.getElementById('edit-category');
+            const editHolder = document.getElementById('edit-holder');
+            const editDate = document.getElementById('edit-date');
+            const editSaveBtn = document.getElementById('editSaveBtn');
+            const editCancelBtn = document.getElementById('editCancelBtn');
+            const editCloseBtn = document.getElementById('editCloseBtn');
             
             // Filtros de portador
             const holderFilterTx = document.getElementById('holder-filter-transactions');
@@ -1132,6 +1144,7 @@
             let currentDueDate = null;
             let currentHolderFilterTx = 'all';       // filtro da aba Lançamentos
             let currentHolderFilterReports = 'all';  // filtro da aba Relatórios
+            let editingTransactionId = null;
             
             // ========== TEMA ==========
             function applyTheme(theme) {
@@ -2102,7 +2115,8 @@
                             ${tx.type === 'receita' ? '+' : '-'} R$ ${tx.amount.toFixed(2)}
                         </div>
                         <div class="transaction-actions">
-                            <button class="danger" onclick="window.deleteTransaction(${tx.id})"><i class="fas fa-trash"></i></button>
+                            <button class="btn-edit" onclick="window.openEditModal(${tx.id})" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="danger" onclick="window.deleteTransaction(${tx.id})" title="Excluir"><i class="fas fa-trash"></i></button>
                         </div>
                     `;
                     transactionsList.appendChild(li);
