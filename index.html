@@ -164,7 +164,6 @@
         .transactions-header h2 { margin-bottom: 0; }
         .transactions-header .count-badge { background: var(--accent-blue); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; }
         
-        /* Filtro de portador (reutilizável nas abas Lançamentos e Relatórios) */
         .holder-filter-bar {
             background: var(--surface-alt);
             padding: 12px 15px;
@@ -247,7 +246,6 @@
         .category-detail .close-detail { margin-left: auto; width: auto; padding: 5px 15px; background: var(--accent-red); font-size: 14px; }
         .category-detail .close-detail:hover { background: var(--accent-red-hover); }
         
-        /* Resumo por portador */
         .holder-summary-section {
             margin: 25px 0;
             padding: 20px;
@@ -404,6 +402,108 @@
         .validation-info .v-header { font-weight: 700; color: var(--text-primary); padding-bottom: 5px; border-bottom: 1px solid var(--border-light); margin-bottom: 5px; }
         .validation-info .v-divider { border-top: 1px dashed var(--border); margin: 8px 0; }
         
+        /* ============================================
+           MODAL DE EDIÇÃO DE TRANSAÇÃO
+           ============================================ */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2100;
+            padding: 15px;
+            overflow-y: auto;
+            backdrop-filter: blur(3px);
+            align-items: center;
+            justify-content: center;
+        }
+        .edit-modal.show { display: flex; }
+        
+        .edit-panel {
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .edit-header {
+            background: var(--surface-alt);
+            padding: 18px 22px;
+            border-bottom: 2px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .edit-header h2 {
+            margin: 0;
+            border: none;
+            padding: 0;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .edit-header .edit-close {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 50%;
+            font-size: 1rem;
+            margin: 0;
+            flex-shrink: 0;
+        }
+        .edit-header .edit-close:hover {
+            background: var(--accent-red);
+            color: white;
+            transform: none;
+        }
+        
+        .edit-body {
+            padding: 20px 22px;
+        }
+        .edit-body .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .edit-body .form-row:last-child { margin-bottom: 0; }
+        .edit-body .form-group {
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .edit-footer {
+            padding: 15px 22px;
+            background: var(--surface-alt);
+            border-top: 2px solid var(--border-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .edit-footer button {
+            width: auto;
+            min-width: 140px;
+            flex: 0 1 auto;
+        }
+        
+        /* Botão de editar na lista de transações */
+        .transaction-actions .btn-edit {
+            background: var(--accent-blue);
+        }
+        .transaction-actions .btn-edit:hover {
+            background: var(--accent-blue-hover);
+        }
+        
         @media (max-width: 768px) {
             .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; font-size: 1rem; }
             .form-row { flex-direction: column; }
@@ -452,6 +552,14 @@
             .holder-summary-table tr { background: var(--surface); border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-light); }
             .holder-summary-table td { border: none; padding: 5px 0; display: flex; justify-content: space-between; align-items: center; }
             .holder-summary-table td::before { content: attr(data-label); font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
+            
+            .edit-panel { border-radius: 12px; max-width: 100%; }
+            .edit-body { padding: 15px; }
+            .edit-body .form-row { flex-direction: column; gap: 10px; }
+            .edit-body .form-group { min-width: auto; }
+            .edit-footer { flex-direction: column-reverse; }
+            .edit-footer button { width: 100%; min-width: auto; }
+            .edit-header .edit-close { width: 32px; height: 32px; }
         }
         
         @media (display-mode: standalone) {
