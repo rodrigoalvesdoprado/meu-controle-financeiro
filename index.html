@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Controle Financeiro</title>
     
-    <!-- Configurações PWA para App Nativo -->
     <meta name="theme-color" content="#3498db" id="themeColorMeta">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,35 +13,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ============================================
-           VARIÁVEIS DE TEMA (CLARO PADRÃO)
-           ============================================ */
         :root {
-            /* Fundo geral */
             --bg-gradient-1: #f5f7fa;
             --bg-gradient-2: #c3cfe2;
-            
-            /* Superfícies */
             --surface: #ffffff;
             --surface-alt: #f8f9fa;
             --surface-hover: #f9f9f9;
-            
-            /* Texto */
             --text-primary: #2c3e50;
             --text-secondary: #7f8c8d;
             --text-muted: #bdc3c7;
-            
-            /* Bordas */
             --border: #ddd;
             --border-light: #eee;
-            
-            /* Sombras */
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
             --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
             --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
             --shadow-xl: 0 6px 12px rgba(0,0,0,0.15);
-            
-            /* Cores de destaque (iguais nos dois temas) */
             --accent-blue: #3498db;
             --accent-blue-hover: #2980b9;
             --accent-green: #27ae60;
@@ -51,42 +36,29 @@
             --accent-red-hover: #c0392b;
             --accent-purple: #9b59b6;
             --accent-purple-hover: #8e44ad;
-            
-            /* Feedback de voz */
+            --accent-orange: #e67e22;
             --voice-bg: #f3e5f5;
             --voice-feedback-bg: #f0f9ff;
-            --voice-feedback-bg-success: #f0fdf4;
-            --voice-feedback-bg-interim: #fef9e7;
             --voice-highlight: #e3f2fd;
-            
-            /* Theme color (para meta tag) */
-            --theme-color: #3498db;
+            --warn-bg: #fff8e1;
+            --warn-border: #f1c40f;
         }
         
-        /* ============================================
-           TEMA ESCURO
-           ============================================ */
         body.dark-mode {
             --bg-gradient-1: #1a1d23;
             --bg-gradient-2: #2c313a;
-            
             --surface: #242830;
             --surface-alt: #2c313a;
             --surface-hover: #31363f;
-            
             --text-primary: #e8eaed;
             --text-secondary: #a0a4ab;
             --text-muted: #6b7078;
-            
             --border: #3a3f47;
             --border-light: #31363f;
-            
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
             --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
             --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
             --shadow-xl: 0 6px 12px rgba(0,0,0,0.4);
-            
-            /* Cores de destaque ajustadas para melhor contraste no escuro */
             --accent-blue: #4aa3e0;
             --accent-blue-hover: #5cb0ec;
             --accent-green: #2ecc71;
@@ -95,26 +67,19 @@
             --accent-red-hover: #f05b4a;
             --accent-purple: #b07cc6;
             --accent-purple-hover: #c18fd6;
-            
+            --accent-orange: #e8a55d;
             --voice-bg: #3a2c45;
             --voice-feedback-bg: #1e2a36;
-            --voice-feedback-bg-success: #1e3628;
-            --voice-feedback-bg-interim: #3d3520;
             --voice-highlight: #2c3e50;
-            
-            --theme-color: #1a1d23;
+            --warn-bg: #3d3520;
+            --warn-border: #d4a017;
         }
         
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
-            margin: 0;
             padding: 15px;
             color: var(--text-primary);
             min-height: 100vh;
@@ -132,9 +97,6 @@
             transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         
-        /* ============================================
-           BOTÃO DE ALTERNÂNCIA DE TEMA
-           ============================================ */
         .theme-toggle {
             position: fixed;
             top: 20px;
@@ -157,65 +119,17 @@
             margin: 0;
         }
         
-        .theme-toggle:hover {
-            transform: scale(1.1) rotate(15deg);
-            box-shadow: var(--shadow-lg);
-        }
+        .theme-toggle:hover { transform: scale(1.1) rotate(15deg); box-shadow: var(--shadow-lg); }
+        .theme-toggle i { transition: transform 0.4s ease; }
         
-        .theme-toggle i {
-            transition: transform 0.4s ease;
-        }
+        h1 { text-align: center; color: var(--text-primary); margin-bottom: 25px; font-size: 2.2rem; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        h2 { color: var(--accent-blue); margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--border-light); }
+        h3 { color: var(--text-primary); margin: 15px 0 10px 0; }
         
-        h1 {
-            text-align: center;
-            color: var(--text-primary);
-            margin-bottom: 25px;
-            font-size: 2.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-        }
-        
-        h2 {
-            color: var(--accent-blue);
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--border-light);
-        }
-        
-        h3 {
-            color: var(--text-primary);
-            margin: 15px 0 10px 0;
-        }
-        
-        .form-container {
-            background: var(--surface-alt);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            box-shadow: var(--shadow-md);
-            transition: background 0.3s ease;
-        }
-        
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .form-group {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
+        .form-container { background: var(--surface-alt); padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: var(--shadow-md); transition: background 0.3s ease; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+        .form-group { flex: 1; min-width: 200px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-primary); }
         
         input, select, button {
             width: 100%;
@@ -230,630 +144,384 @@
             font-family: inherit;
         }
         
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-        }
+        input:focus, select:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0); cursor: pointer; }
+        body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        input[type="color"] { padding: 4px; height: 46px; cursor: pointer; }
         
-        /* Corrige aparência do input date no dark mode */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(0);
-            cursor: pointer;
-        }
+        button { background: var(--accent-green); color: white; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        button:hover { background: var(--accent-green-hover); transform: translateY(-2px); }
+        button.secondary { background: var(--accent-blue); }
+        button.secondary:hover { background: var(--accent-blue-hover); }
+        button.danger { background: var(--accent-red); }
+        button.danger:hover { background: var(--accent-red-hover); }
+        button.warning { background: var(--accent-orange); }
+        button.warning:hover { background: #d35400; }
         
-        body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-        }
+        button.voice-btn { background: var(--accent-purple); width: auto; padding: 12px 20px; }
+        button.voice-btn:hover { background: var(--accent-purple-hover); }
+        button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s infinite; }
         
-        /* Corrige input color no dark mode */
-        input[type="color"] {
-            padding: 4px;
-            height: 46px;
-            cursor: pointer;
-        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         
-        button {
-            background: var(--accent-green);
+        .voice-status { display: none; padding: 10px 15px; margin: 10px 0; border-radius: 8px; background: var(--voice-bg); border-left: 4px solid var(--accent-purple); align-items: center; gap: 10px; color: var(--text-primary); }
+        .voice-status.show { display: flex; }
+        .voice-status .status-text { flex: 1; font-weight: 500; }
+        .voice-status .status-icon { font-size: 1.5rem; animation: pulse 1s infinite; }
+        .voice-status .status-close { background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; width: auto; padding: 5px 10px; }
+        .voice-status .status-close:hover { color: var(--accent-red); transform: none; }
+        
+        .voice-feedback { background: var(--voice-feedback-bg); border: 1px solid var(--accent-blue); border-radius: 8px; padding: 12px; margin: 10px 0; display: none; color: var(--text-primary); font-size: 14px; }
+        .voice-feedback.show { display: block; }
+        .voice-feedback strong { color: var(--accent-blue); }
+        .voice-feedback .highlight { background: var(--voice-highlight); padding: 2px 6px; border-radius: 4px; }
+        
+        .summary { margin: 25px 0; padding: 20px; background: var(--surface-alt); border-radius: 12px; border-left: 4px solid var(--accent-blue); display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; transition: background 0.3s ease; }
+        .summary-item { text-align: center; padding: 15px; border-radius: 8px; background: var(--surface); box-shadow: var(--shadow-sm); transition: background 0.3s ease; }
+        .summary-item h3 { font-size: 1rem; margin-bottom: 10px; color: var(--text-secondary); }
+        .summary-item p { font-size: 1.5rem; font-weight: bold; }
+        .positive { color: var(--accent-green); }
+        .negative { color: var(--accent-red); }
+        
+        .transactions ul { list-style: none; padding: 0; }
+        .transactions li { padding: 15px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; transition: background 0.3s ease; color: var(--text-primary); }
+        .transactions li:hover { background: var(--surface-hover); }
+        .transaction-info { flex: 1; }
+        .transaction-info strong { display: block; margin-bottom: 5px; color: var(--text-primary); }
+        .transaction-info small { color: var(--text-secondary); display: block; margin-top: 3px; }
+        .transaction-amount { font-weight: bold; margin-right: 15px; }
+        .transaction-actions { display: flex; gap: 8px; }
+        .transaction-actions button { width: auto; padding: 8px 12px; font-size: 14px; }
+        
+        .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 25px 0; }
+        .chart-wrapper { background: var(--surface); padding: 20px; border-radius: 12px; box-shadow: var(--shadow-md); transition: background 0.3s ease; }
+        .chart-wrapper.clickable { cursor: pointer; transition: all 0.3s ease; }
+        .chart-wrapper.clickable:hover { transform: scale(1.02); box-shadow: var(--shadow-xl); }
+        
+        .category-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-right: 5px; color: white; }
+        
+        .holder-badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; background: var(--surface-hover); color: var(--text-secondary); border: 1px solid var(--border); margin-left: 5px; }
+        
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--accent-blue); background: var(--surface-alt); border-radius: 12px 12px 0 0; overflow: hidden; transition: background 0.3s ease; }
+        .tab { padding: 15px 25px; cursor: pointer; background: var(--surface-alt); border: none; font-weight: 600; flex: 1; text-align: center; transition: all 0.3s ease; color: var(--text-secondary); border-radius: 0; }
+        .tab.active { background: var(--accent-blue); color: white; box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3); }
+        .tab:hover:not(.active) { background: var(--surface-hover); color: var(--accent-blue); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .category-card { background: var(--surface); padding: 15px; border-radius: 8px; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 10px; transition: background 0.3s ease; color: var(--text-primary); }
+        .category-color { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+        .category-name { flex: 1; font-weight: 600; }
+        
+        .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
+        .empty-state i { font-size: 3rem; margin-bottom: 15px; color: var(--text-muted); }
+        
+        .period-control { background: var(--surface-alt); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; transition: background 0.3s ease; }
+        .period-mode { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .period-mode button { width: auto; padding: 8px 16px; font-size: 14px; }
+        .period-mode button.active-mode { background: var(--accent-blue); transform: scale(1.05); }
+        .period-mode button.active-mode:hover { background: var(--accent-blue-hover); }
+        .period-date-inputs { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; flex: 1; }
+        .period-date-inputs .form-group { min-width: 150px; flex: 0 1 auto; }
+        .period-date-inputs input { width: auto; min-width: 150px; }
+        .period-navigation { display: flex; align-items: center; gap: 10px; }
+        .period-display { font-size: 1.2rem; font-weight: bold; color: var(--text-primary); min-width: 180px; text-align: center; }
+        .period-btn { width: auto; padding: 10px 15px; background: var(--accent-blue); }
+        .period-btn:hover { background: var(--accent-blue-hover); }
+        
+        .category-detail { margin-top: 20px; padding: 15px; background: var(--surface-alt); border-radius: 12px; border-left: 4px solid var(--accent-blue); display: none; color: var(--text-primary); }
+        .category-detail.show { display: block; }
+        .category-detail h3 { margin-top: 0; display: flex; align-items: center; gap: 10px; }
+        .category-detail .close-detail { margin-left: auto; width: auto; padding: 5px 15px; background: var(--accent-red); font-size: 14px; }
+        .category-detail .close-detail:hover { background: var(--accent-red-hover); }
+        
+        .install-banner { background: var(--accent-green); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; animation: slideDown 0.5s ease; }
+        .install-banner.show { display: flex; }
+        .install-banner button { width: auto; background: white; color: var(--accent-green); padding: 8px 16px; }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-group button { flex: 1; min-width: 120px; }
+        
+        /* ============================================
+           IMPORTAÇÃO DE FATURA
+           ============================================ */
+        .import-section {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
             color: white;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        button:hover {
-            background: var(--accent-green-hover);
-            transform: translateY(-2px);
-        }
-        
-        button.secondary {
-            background: var(--accent-blue);
-        }
-        
-        button.secondary:hover {
-            background: var(--accent-blue-hover);
-        }
-        
-        button.danger {
-            background: var(--accent-red);
-        }
-        
-        button.danger:hover {
-            background: var(--accent-red-hover);
-        }
-        
-        button.voice-btn {
-            background: var(--accent-purple);
-            width: auto;
-            padding: 12px 20px;
-        }
-        
-        button.voice-btn:hover {
-            background: var(--accent-purple-hover);
-        }
-        
-        button.voice-btn.listening {
-            background: var(--accent-red);
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        .voice-status {
-            display: none;
-            padding: 10px 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            background: var(--voice-bg);
-            border-left: 4px solid var(--accent-purple);
-            align-items: center;
-            gap: 10px;
-            color: var(--text-primary);
-        }
-        
-        .voice-status.show {
-            display: flex;
-        }
-        
-        .voice-status .status-text {
-            flex: 1;
-            font-weight: 500;
-        }
-        
-        .voice-status .status-icon {
-            font-size: 1.5rem;
-            animation: pulse 1s infinite;
-        }
-        
-        .voice-status .status-close {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.2rem;
-            cursor: pointer;
-            width: auto;
-            padding: 5px 10px;
-        }
-        
-        .voice-status .status-close:hover {
-            color: var(--accent-red);
-            transform: none;
-        }
-        
-        .voice-feedback {
-            background: var(--voice-feedback-bg);
-            border: 1px solid var(--accent-blue);
-            border-radius: 8px;
-            padding: 12px;
-            margin: 10px 0;
-            display: none;
-            color: var(--text-primary);
-            font-size: 14px;
-        }
-        
-        .voice-feedback.show {
-            display: block;
-        }
-        
-        .voice-feedback strong {
-            color: var(--accent-blue);
-        }
-        
-        .voice-feedback .highlight {
-            background: var(--voice-highlight);
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-        
-        .summary {
-            margin: 25px 0;
-            padding: 20px;
-            background: var(--surface-alt);
+            padding: 18px 20px;
             border-radius: 12px;
-            border-left: 4px solid var(--accent-blue);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            transition: background 0.3s ease;
-        }
-        
-        .summary-item {
-            text-align: center;
-            padding: 15px;
-            border-radius: 8px;
-            background: var(--surface);
-            box-shadow: var(--shadow-sm);
-            transition: background 0.3s ease;
-        }
-        
-        .summary-item h3 {
-            font-size: 1rem;
-            margin-bottom: 10px;
-            color: var(--text-secondary);
-        }
-        
-        .summary-item p {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        
-        .positive {
-            color: var(--accent-green);
-        }
-        
-        .negative {
-            color: var(--accent-red);
-        }
-        
-        .transactions ul {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .transactions li {
-            padding: 15px;
-            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 20px;
             display: flex;
+            flex-wrap: wrap;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            transition: background 0.3s ease;
-            color: var(--text-primary);
-        }
-        
-        .transactions li:hover {
-            background: var(--surface-hover);
-        }
-        
-        .transaction-info {
-            flex: 1;
-        }
-        
-        .transaction-info strong {
-            display: block;
-            margin-bottom: 5px;
-            color: var(--text-primary);
-        }
-        
-        .transaction-info small {
-            color: var(--text-secondary);
-            display: block;
-            margin-top: 3px;
-        }
-        
-        .transaction-amount {
-            font-weight: bold;
-            margin-right: 15px;
-        }
-        
-        .transaction-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .transaction-actions button {
-            width: auto;
-            padding: 8px 12px;
-            font-size: 14px;
-        }
-        
-        .charts-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 25px 0;
-        }
-        
-        .chart-wrapper {
-            background: var(--surface);
-            padding: 20px;
-            border-radius: 12px;
+            gap: 15px;
             box-shadow: var(--shadow-md);
-            transition: background 0.3s ease;
         }
-        
-        .chart-wrapper.clickable {
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .chart-wrapper.clickable:hover {
-            transform: scale(1.02);
-            box-shadow: var(--shadow-xl);
-        }
-        
-        .category-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-right: 5px;
-            color: white;
-        }
-        
-        /* ABAS MELHORADAS */
-        .tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--accent-blue);
-            background: var(--surface-alt);
-            border-radius: 12px 12px 0 0;
-            overflow: hidden;
-            transition: background 0.3s ease;
-        }
-        
-        .tab {
-            padding: 15px 25px;
-            cursor: pointer;
-            background: var(--surface-alt);
-            border: none;
-            font-weight: 600;
-            flex: 1;
-            text-align: center;
-            transition: all 0.3s ease;
-            color: var(--text-secondary);
-            border-radius: 0;
-        }
-        
-        .tab.active {
-            background: var(--accent-blue);
-            color: white;
-            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
-        }
-        
-        .tab:hover:not(.active) {
-            background: var(--surface-hover);
-            color: var(--accent-blue);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .categories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .category-card {
-            background: var(--surface);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: var(--shadow-sm);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: background 0.3s ease;
-            color: var(--text-primary);
-        }
-        
-        .category-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-        }
-        
-        .category-name {
-            flex: 1;
-            font-weight: 600;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            color: var(--text-muted);
-        }
-        
-        /* CONTROLE DE PERÍODO */
-        .period-control {
-            background: var(--surface-alt);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            transition: background 0.3s ease;
-        }
-        
-        .period-mode {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .period-mode button {
-            width: auto;
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-        
-        .period-mode button.active-mode {
-            background: var(--accent-blue);
-            transform: scale(1.05);
-        }
-        
-        .period-mode button.active-mode:hover {
-            background: var(--accent-blue-hover);
-        }
-        
-        .period-date-inputs {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-            flex: 1;
-        }
-        
-        .period-date-inputs .form-group {
-            min-width: 150px;
-            flex: 0 1 auto;
-        }
-        
-        .period-date-inputs input {
-            width: auto;
-            min-width: 150px;
-        }
-        
-        .period-navigation {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .period-display {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--text-primary);
-            min-width: 180px;
-            text-align: center;
-        }
-        
-        .period-btn {
-            width: auto;
-            padding: 10px 15px;
-            background: var(--accent-blue);
-        }
-        
-        .period-btn:hover {
-            background: var(--accent-blue-hover);
-        }
-        
-        /* Detalhes da categoria no gráfico */
-        .category-detail {
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--surface-alt);
-            border-radius: 12px;
-            border-left: 4px solid var(--accent-blue);
-            display: none;
-            color: var(--text-primary);
-        }
-        
-        .category-detail.show {
-            display: block;
-        }
-        
-        .category-detail h3 {
-            margin-top: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .category-detail .close-detail {
-            margin-left: auto;
-            width: auto;
-            padding: 5px 15px;
-            background: var(--accent-red);
-            font-size: 14px;
-        }
-        
-        .category-detail .close-detail:hover {
-            background: var(--accent-red-hover);
-        }
-        
-        /* Instalar App Banner */
-        .install-banner {
-            background: var(--accent-green);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            animation: slideDown 0.5s ease;
-        }
-        
-        .install-banner.show {
-            display: flex;
-        }
-        
-        .install-banner button {
+        .import-section .import-info { flex: 1; min-width: 200px; }
+        .import-section .import-info h3 { color: white; margin: 0 0 4px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .import-section .import-info p { font-size: 13px; opacity: 0.9; margin: 0; }
+        .import-section button.import-btn {
             width: auto;
             background: white;
-            color: var(--accent-green);
-            padding: 8px 16px;
+            color: var(--accent-blue);
+            font-weight: bold;
+            padding: 12px 22px;
+            flex-shrink: 0;
+            margin: 0;
         }
+        .import-section button.import-btn:hover { background: #f0f0f0; transform: translateY(-2px); color: var(--accent-blue); }
         
-        @keyframes slideDown {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        .btn-group {
-            display: flex;
+        .import-feedback {
+            display: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            align-items: center;
             gap: 10px;
+            border-left: 4px solid;
+        }
+        .import-feedback.show { display: flex; }
+        .import-feedback.success { background: rgba(39, 174, 96, 0.15); border-color: var(--accent-green); color: var(--accent-green); }
+        .import-feedback.error { background: rgba(231, 76, 60, 0.15); border-color: var(--accent-red); color: var(--accent-red); }
+        .import-feedback.warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--accent-orange); }
+        
+        /* Tela de Revisão */
+        .review-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            padding: 15px;
+            overflow-y: auto;
+            backdrop-filter: blur(3px);
+        }
+        .review-modal.show { display: block; }
+        
+        .review-panel {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .review-header {
+            background: var(--surface-alt);
+            padding: 18px 22px;
+            border-bottom: 2px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .review-header h2 { margin: 0; border: none; padding: 0; color: var(--text-primary); font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
+        .review-header .review-summary {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .review-header .review-summary strong { color: var(--text-primary); }
+        
+        .review-body { padding: 20px; max-height: 65vh; overflow-y: auto; }
+        
+        .review-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .review-section-title:first-child { margin-top: 0; }
+        
+        .review-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        .review-table th {
+            text-align: left;
+            padding: 8px 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+        }
+        .review-table td {
+            padding: 6px 6px;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+        .review-table tr:hover td { background: var(--surface-hover); }
+        
+        .review-table input[type="text"],
+        .review-table input[type="number"],
+        .review-table input[type="date"],
+        .review-table select {
+            padding: 7px 9px;
+            font-size: 13px;
+            margin: 0;
+            width: 100%;
+            min-width: 0;
+        }
+        .review-table input.amount-field { text-align: right; }
+        
+        .review-table .col-date { width: 130px; }
+        .review-table .col-desc { min-width: 160px; }
+        .review-table .col-amount { width: 110px; }
+        .review-table .col-cat { width: 160px; }
+        .review-table .col-holder { width: 150px; }
+        .review-table .col-actions { width: 50px; text-align: center; }
+        
+        .review-table .row-low-confidence input,
+        .review-table .row-low-confidence select { border-color: var(--warn-border); }
+        
+        .review-table .type-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+        }
+        .type-badge.despesa { background: var(--accent-red); }
+        .type-badge.receita { background: var(--accent-green); }
+        
+        .review-table .btn-remove-row {
+            width: auto;
+            padding: 6px 9px;
+            background: var(--accent-red);
+            font-size: 12px;
+            margin: 0;
+        }
+        .review-table .btn-remove-row:hover { background: var(--accent-red-hover); }
+        
+        .review-footer {
+            padding: 15px 22px;
+            background: var(--surface-alt);
+            border-top: 2px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
             flex-wrap: wrap;
         }
-        
-        .btn-group button {
-            flex: 1;
-            min-width: 120px;
+        .review-footer .review-total {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-primary);
         }
+        .review-footer .btn-group { flex: 1; justify-content: flex-end; max-width: 500px; }
+        
+        .validation-info {
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: var(--surface-hover);
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .validation-info .ok { color: var(--accent-green); font-weight: 700; }
+        .validation-info .fail { color: var(--accent-red); font-weight: 700; }
+        .validation-info .warn { color: var(--accent-orange); font-weight: 700; }
         
         @media (max-width: 768px) {
-            .theme-toggle {
-                top: 12px;
-                right: 12px;
-                width: 42px;
-                height: 42px;
-                font-size: 1rem;
-            }
+            .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; font-size: 1rem; }
+            .form-row { flex-direction: column; }
+            .summary { grid-template-columns: 1fr; }
+            .charts-container { grid-template-columns: 1fr; }
+            .transactions li { flex-direction: column; align-items: flex-start; }
+            .transaction-actions { margin-top: 10px; align-self: flex-end; }
+            .tabs { flex-direction: column; }
+            .period-control { flex-direction: column; align-items: stretch; }
+            .period-navigation { justify-content: center; }
+            .period-date-inputs { flex-direction: column; align-items: stretch; }
+            .period-date-inputs .form-group { min-width: auto; }
+            .period-date-inputs input { width: 100%; min-width: auto; }
+            .install-banner { flex-direction: column; text-align: center; }
+            .btn-group { flex-direction: column; }
+            .btn-group button { min-width: auto; }
+            body { padding: 10px; }
+            .container { padding: 15px; border-radius: 12px; }
+            h1 { font-size: 1.8rem; margin-top: 30px; }
+            input, select, button { font-size: 16px; }
             
-            .form-row {
-                flex-direction: column;
-            }
+            .import-section { flex-direction: column; text-align: center; }
+            .import-section .import-info h3 { justify-content: center; }
+            .import-section button.import-btn { width: 100%; }
             
-            .summary {
-                grid-template-columns: 1fr;
-            }
+            .review-header { flex-direction: column; align-items: flex-start; }
+            .review-body { padding: 12px; max-height: 70vh; }
+            .review-footer { flex-direction: column; }
+            .review-footer .btn-group { width: 100%; max-width: none; }
             
-            .charts-container {
-                grid-template-columns: 1fr;
+            /* Tabela de revisão vira cards em mobile */
+            .review-table, .review-table thead, .review-table tbody, .review-table tr, .review-table td, .review-table th { display: block; }
+            .review-table thead { display: none; }
+            .review-table tr {
+                background: var(--surface-alt);
+                border-radius: 10px;
+                padding: 12px;
+                margin-bottom: 12px;
+                border: 1px solid var(--border-light);
             }
-            
-            .transactions li {
-                flex-direction: column;
-                align-items: flex-start;
+            .review-table tr:hover td { background: transparent; }
+            .review-table td {
+                border: none;
+                padding: 5px 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
             }
-            
-            .transaction-actions {
-                margin-top: 10px;
-                align-self: flex-end;
+            .review-table td::before {
+                content: attr(data-label);
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                min-width: 70px;
+                flex-shrink: 0;
             }
-            
-            .tabs {
-                flex-direction: column;
-            }
-            
-            .period-control {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .period-navigation {
-                justify-content: center;
-            }
-            
-            .period-date-inputs {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .period-date-inputs .form-group {
-                min-width: auto;
-            }
-            
-            .period-date-inputs input {
-                width: 100%;
-                min-width: auto;
-            }
-            
-            .install-banner {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .btn-group {
-                flex-direction: column;
-            }
-            
-            .btn-group button {
-                min-width: auto;
-            }
-            
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                padding: 15px;
-                border-radius: 12px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-                margin-top: 30px;
-            }
-            
-            input, select, button {
-                font-size: 16px;
-            }
+            .review-table td input, .review-table td select { flex: 1; }
+            .review-table .col-actions { justify-content: flex-end; }
+            .review-table .col-actions::before { display: none; }
         }
         
-        /* Modo Tela Cheia (PWA) */
         @media (display-mode: standalone) {
-            body {
-                padding: 10px 5px;
-            }
-            
-            .container {
-                border-radius: 0;
-                min-height: calc(100vh - 20px);
-                box-shadow: none;
-            }
-            
-            @media (max-width: 768px) {
-                body {
-                    padding: 5px;
-                }
-            }
+            body { padding: 10px 5px; }
+            .container { border-radius: 0; min-height: calc(100vh - 20px); box-shadow: none; }
+            @media (max-width: 768px) { body { padding: 5px; } }
         }
     </style>
 </head>
 <body>
-    <!-- Botão de Alternância de Tema -->
     <button class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro" aria-label="Alternar tema">
         <i class="fas fa-moon" id="themeIcon"></i>
     </button>
     
-    <!-- Banner para instalar o App -->
     <div class="install-banner" id="installBanner">
         <div>
             <strong>📱 Instalar App</strong>
@@ -865,13 +533,11 @@
     <div class="container">
         <h1><i class="fas fa-wallet"></i> Meu Controle Financeiro</h1>
         
-        <!-- CONTROLE DE PERÍODO -->
         <div class="period-control">
             <div class="period-mode">
                 <button class="secondary active-mode" id="period-standard">Padrão (14/14)</button>
                 <button class="secondary" id="period-custom">Personalizado</button>
             </div>
-            
             <div class="period-date-inputs" id="date-inputs">
                 <div class="form-group">
                     <label for="start-date">Data Início</label>
@@ -885,35 +551,44 @@
                     <i class="fas fa-check"></i> Aplicar
                 </button>
             </div>
-            
             <div class="period-navigation" id="period-nav">
-                <button class="period-btn secondary" id="prev-period">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
+                <button class="period-btn secondary" id="prev-period"><i class="fas fa-chevron-left"></i></button>
                 <div class="period-display" id="current-period">Junho 2024</div>
-                <button class="period-btn secondary" id="next-period">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+                <button class="period-btn secondary" id="next-period"><i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
         
         <div class="tabs">
             <div class="tab active" data-tab="transactions">Lançamentos</div>
+            <div class="tab" data-tab="holders">Portadores</div>
             <div class="tab" data-tab="categories">Categorias</div>
             <div class="tab" data-tab="reports">Relatórios</div>
         </div>
         
         <!-- ABA DE LANÇAMENTOS -->
         <div class="tab-content active" id="transactions-tab">
+            
+            <!-- SEÇÃO DE IMPORTAÇÃO DE FATURA -->
+            <div class="import-section">
+                <div class="import-info">
+                    <h3><i class="fas fa-file-import"></i> Importar Fatura</h3>
+                    <p>Envie o arquivo <strong>faturaDDMMAAAA.txt</strong> com os lançamentos da fatura</p>
+                </div>
+                <button class="import-btn" id="importBtn">
+                    <i class="fas fa-upload"></i> Selecionar Arquivo
+                </button>
+                <input type="file" id="importFile" accept=".txt" style="display: none;">
+            </div>
+            
+            <div class="import-feedback" id="importFeedback"></div>
+            
             <div class="form-container">
                 <h2>Adicionar Nova Transação</h2>
                 
                 <div class="voice-status" id="voiceStatus">
                     <span class="status-icon">🎤</span>
                     <span class="status-text" id="voiceStatusText">Ouvindo... Fale agora</span>
-                    <button class="status-close" id="voiceStatusClose">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <button class="status-close" id="voiceStatusClose"><i class="fas fa-times"></i></button>
                 </div>
                 
                 <div class="voice-feedback" id="voiceFeedback">
@@ -932,7 +607,6 @@
                             <input type="number" id="amount" placeholder="Ex: 50.90" step="0.01" min="0" required>
                         </div>
                     </div>
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label for="type">Tipo</label>
@@ -943,13 +617,16 @@
                         </div>
                         <div class="form-group">
                             <label for="category">Categoria</label>
-                            <select id="category" required>
-                                <!-- Categorias serão carregadas via JavaScript -->
-                            </select>
+                            <select id="category" required></select>
                         </div>
                     </div>
-                    
                     <div class="form-row">
+                        <div class="form-group">
+                            <label for="holder">Portador</label>
+                            <select id="holder">
+                                <!-- Preenchido via JS -->
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label for="transaction-date">Data</label>
                             <input type="date" id="transaction-date" required>
@@ -959,7 +636,6 @@
                             <input type="number" id="parcelas" placeholder="Nº de parcelas" min="1" max="60">
                         </div>
                     </div>
-                    
                     <div class="btn-group">
                         <button type="submit"><i class="fas fa-plus"></i> Adicionar</button>
                         <button type="button" class="voice-btn" id="voiceBtn">
@@ -986,13 +662,27 @@
 
             <div class="transactions">
                 <h2>Lançamentos do Período</h2>
-                <ul id="transactions-list">
-                    <div class="empty-state">
-                        <i class="fas fa-receipt"></i>
-                        <p>Nenhuma transação cadastrada</p>
-                    </div>
-                </ul>
+                <ul id="transactions-list"></ul>
             </div>
+        </div>
+        
+        <!-- ABA DE PORTADORES -->
+        <div class="tab-content" id="holders-tab">
+            <div class="form-container">
+                <h2>Gerenciar Portadores</h2>
+                <form id="holder-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="new-holder-name">Nome do Portador</label>
+                            <input type="text" id="new-holder-name" placeholder="Ex: Rodrigo A Prado" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="secondary"><i class="fas fa-plus"></i> Adicionar Portador</button>
+                </form>
+            </div>
+            
+            <h2>Meus Portadores</h2>
+            <div class="categories-grid" id="holders-list"></div>
         </div>
         
         <!-- ABA DE CATEGORIAS -->
@@ -1022,9 +712,7 @@
             </div>
             
             <h2>Minhas Categorias</h2>
-            <div class="categories-grid" id="categories-list">
-                <!-- Categorias serão carregadas via JavaScript -->
-            </div>
+            <div class="categories-grid" id="categories-list"></div>
         </div>
         
         <!-- ABA DE RELATÓRIOS -->
@@ -1044,36 +732,54 @@
             <div class="category-detail" id="category-detail">
                 <h3>
                     <span id="detail-category-name">Categoria</span>
-                    <button class="close-detail" id="close-detail">
-                        <i class="fas fa-times"></i> Fechar
-                    </button>
+                    <button class="close-detail" id="close-detail"><i class="fas fa-times"></i> Fechar</button>
                 </h3>
-                <div id="detail-transactions-list">
-                    <!-- Lista de transações será inserida aqui -->
-                </div>
+                <div id="detail-transactions-list"></div>
                 <p style="margin-top: 10px; font-weight: bold;">
                     Total: <span id="detail-total">R$ 0,00</span>
                 </p>
             </div>
         </div>
     </div>
+    
+    <!-- MODAL DE REVISÃO DA FATURA -->
+    <div class="review-modal" id="reviewModal">
+        <div class="review-panel">
+            <div class="review-header">
+                <h2><i class="fas fa-clipboard-check"></i> Revisar Lançamentos da Fatura</h2>
+                <div class="review-summary" id="reviewSummary"></div>
+            </div>
+            <div class="review-body">
+                <div class="validation-info" id="validationInfo"></div>
+                <div id="reviewTableContainer"></div>
+            </div>
+            <div class="review-footer">
+                <div class="review-total" id="reviewTotal">Total: R$ 0,00</div>
+                <div class="btn-group">
+                    <button class="danger" id="cancelImportBtn"><i class="fas fa-times"></i> Cancelar</button>
+                    <button id="confirmImportBtn"><i class="fas fa-check"></i> Salvar Todos</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // 🔷 CÓDIGO JAVASCRIPT COMPLETO COM DARK MODE
         document.addEventListener('DOMContentLoaded', function() {
-            // Elementos do DOM
+            // ========== ELEMENTOS DO DOM ==========
             const form = document.getElementById('transaction-form');
             const categoryForm = document.getElementById('category-form');
+            const holderForm = document.getElementById('holder-form');
             const transactionsList = document.getElementById('transactions-list');
             const categoriesList = document.getElementById('categories-list');
+            const holdersList = document.getElementById('holders-list');
             const categorySelect = document.getElementById('category');
+            const holderSelect = document.getElementById('holder');
             const totalIncomeElement = document.getElementById('total-income');
             const totalExpenseElement = document.getElementById('total-expense');
             const balanceElement = document.getElementById('balance');
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
             
-            // Elementos do controle de período
             const prevPeriodBtn = document.getElementById('prev-period');
             const nextPeriodBtn = document.getElementById('next-period');
             const currentPeriodElement = document.getElementById('current-period');
@@ -1084,15 +790,12 @@
             const periodCustomBtn = document.getElementById('period-custom');
             const periodNav = document.getElementById('period-nav');
             
-            // Elementos do gráfico interativo
-            const expensesChartWrapper = document.getElementById('expenses-chart-wrapper');
             const categoryDetail = document.getElementById('category-detail');
             const detailCategoryName = document.getElementById('detail-category-name');
             const detailTransactionsList = document.getElementById('detail-transactions-list');
             const detailTotal = document.getElementById('detail-total');
             const closeDetailBtn = document.getElementById('close-detail');
             
-            // Elementos de voz
             const voiceBtn = document.getElementById('voiceBtn');
             const voiceStatus = document.getElementById('voiceStatus');
             const voiceStatusText = document.getElementById('voiceStatusText');
@@ -1102,17 +805,27 @@
             
             const transactionDateInput = document.getElementById('transaction-date');
             
-            // Elementos PWA
             const installBanner = document.getElementById('installBanner');
             const installButton = document.getElementById('installButton');
             let deferredPrompt;
             
-            // Elementos do tema
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = document.getElementById('themeIcon');
             const themeColorMeta = document.getElementById('themeColorMeta');
             
-            // Dados iniciais
+            // Importação
+            const importBtn = document.getElementById('importBtn');
+            const importFile = document.getElementById('importFile');
+            const importFeedback = document.getElementById('importFeedback');
+            const reviewModal = document.getElementById('reviewModal');
+            const reviewSummary = document.getElementById('reviewSummary');
+            const validationInfo = document.getElementById('validationInfo');
+            const reviewTableContainer = document.getElementById('reviewTableContainer');
+            const reviewTotal = document.getElementById('reviewTotal');
+            const cancelImportBtn = document.getElementById('cancelImportBtn');
+            const confirmImportBtn = document.getElementById('confirmImportBtn');
+            
+            // ========== DADOS ==========
             let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
             let categories = JSON.parse(localStorage.getItem('categories')) || [
                 { id: 'alimentacao', name: 'Alimentação', type: 'despesa', color: '#e74c3c' },
@@ -1130,20 +843,49 @@
                 { id: 'outros', name: 'Outros', type: 'despesa', color: '#95a5a6' }
             ];
             
-            // Controle de período
-            let currentDate = new Date();
-            let currentMonth = currentDate.getMonth();
-            let currentYear = currentDate.getFullYear();
+            // Portadores (padrão inicial)
+            let holders = JSON.parse(localStorage.getItem('holders')) || [
+                { id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true }
+            ];
+            
+            // Garantir que o padrão exista e esteja marcado
+            if (!holders.find(h => h.isDefault)) {
+                holders.forEach(h => h.isDefault = false);
+                holders.push({ id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true });
+            }
+            
+            // ========== TAGS DE CATEGORIZAÇÃO ==========
+            const CATEGORY_TAGS = {
+                'transporte': ['posto', 'auto posto', 'autoposto', 'autopostodatorre', 'auto-posto', 'combustivel', 'gasolina', 'etanol', 'uber', '99 ', 'taxi', 'estacionamento', 'pedagio', 'sem parar', 'semparar', 'veloe', 'lr transportes', 'l r transportes'],
+                'alimentacao': ['supermercado', 'supermercad', 'mercado', 'hipermerc', 'atacad', 'atacado', 'padaria', 'panificad', 'restaurante', 'restaur', 'lanchonet', 'pizzaria', 'pizza', 'ifood', 'ifd ', 'food', 'comida', 'cheiro', 'cheirin', 'sabor', 'assaggiare', 'churrasc', 'churrasco', 'peixe', 'sushi', 'nippon', 'mcdonald', 'burger', 'bar ', 'bar', 'cerveja', 'bebida', 'mineirinha', 'velhote', 'mach enio', 'machenio', 'jim com', 'madrugadao', 'bfs alimentacao', 'bfs aliment', 'gri', 'grill', 'fe bar', 'espartanos', 'fuganti'],
+                'saude': ['drogasil', 'drogaria', 'farmacia', 'farmácia', 'farmac', 'manipulacao', 'manipulação', 'manipulac', 'laborat', 'clinica', 'clínica', 'hospital', 'medic', 'médic', 'odonto', 'dentista', 'otica', 'ótica', 'academia', 'wellhub', 'smart fit', 'smartfit'],
+                'moradia': ['casa ', 'construc', 'construção', 'material', 'leroy', 'telha', 'tinta', 'moveis', 'móveis', 'eletro', 'compensados', 'guara compensados', 'casa petropolis', 'casa do tapec', 'tapec'],
+                'educacao': ['curso', 'escola', 'faculdade', 'universidade', 'colegio', 'colégio', 'ensino', 'hotmart', 'udemy', 'alura', 'livraria', 'livro'],
+                'lazer': ['cinema', 'cinemark', 'netflix', 'spotify', 'deezer', 'amazon music', 'amazon prime', 'disney', 'hbo', 'max ', 'prime video', 'paramount', 'globoplay', 'crunchyroll', 'streaming', 'game', 'playstation', 'xbox', 'nintendo', 'ingresso', 'show ', 'teatro', 'hotel', 'pousada', 'viagem', 'elegance', 'ks eventos'],
+                'vestuario': ['riachuelo', 'renner', 'c&a', 'ce a', 'zara', 'hering', 'colcci', 'oakley', 'nike', 'adidas', 'puma', 'calcado', 'calçado', 'sapat', 'tenis', 'tênis', 'roupa', 'moda', 'mercado da moda', 'edegenius', 'jeans', 'loja unanime', 'unanime', 'hortela tricot', 'hortelã tricot', 'basari'],
+                'servicos': ['net ', 'net pgt', 'claro', 'vivo', 'tim ', 'oi ', 'internet', 'telefone', 'celular', 'conta ', 'fatura', 'seguro', 'mapfre', 'porto seguro', 'cpfl', 'energia', 'agua', 'água', 'gas ', 'gás ', 'iptu', 'condominio', 'condomínio', 'anuidade', 'google', 'apple com', 'apple.com', 'microsoft', 'adobe'],
+                'presentes': ['presente', 'etc e tal', 'etc e tal presentes', 'flor', 'floresta'],
+                'investimentos': ['investimento', 'cdb', 'tesouro', 'poupanca', 'poupança', 'acao', 'ação', 'fundo'],
+                'salario': ['salario', 'salário', 'holerite', 'pagamento salario'],
+                'freelance': ['freelance', 'freela', 'servico prestado', 'serviço prestado']
+            };
+            
+            // Constrói mapa reverso: id da categoria -> lista de tags
+            // E também garante que se a categoria 'outros' não existe, ela é usada como fallback
+            
+            // ========== CONTROLE DE PERÍODO ==========
             let periodMode = 'standard';
             let customStartDate = null;
             let customEndDate = null;
             
-            // Variáveis de voz
+            // ========== VOZ ==========
             let recognition = null;
             let isListening = false;
             
-            // ========== FUNÇÕES DE TEMA (DARK MODE) ==========
+            // ========== ESTADO DA IMPORTAÇÃO ==========
+            let importPreview = null; // { transactions: [], validation: {} }
             
+            // ========== TEMA ==========
             function applyTheme(theme) {
                 if (theme === 'dark') {
                     document.body.classList.add('dark-mode');
@@ -1156,14 +898,9 @@
                     themeIcon.classList.add('fa-moon');
                     themeColorMeta.setAttribute('content', '#3498db');
                 }
-                
-                // Re-renderizar gráficos se a aba de relatórios estiver visível
                 const reportsTab = document.getElementById('reports-tab');
                 if (reportsTab && reportsTab.classList.contains('active')) {
-                    // Pequeno delay para o CSS aplicar antes de redesenhar
-                    setTimeout(() => {
-                        renderCharts();
-                    }, 50);
+                    setTimeout(() => renderCharts(), 50);
                 }
             }
             
@@ -1175,92 +912,66 @@
             }
             
             function initTheme() {
-                // 1. Verificar preferência salva
                 const savedTheme = localStorage.getItem('theme');
-                if (savedTheme) {
-                    applyTheme(savedTheme);
-                    return;
-                }
-                
-                // 2. Verificar preferência do sistema
+                if (savedTheme) { applyTheme(savedTheme); return; }
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 applyTheme(prefersDark ? 'dark' : 'light');
-                
-                // 3. Ouvir mudanças na preferência do sistema (só se não houver preferência salva)
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                    if (!localStorage.getItem('theme')) {
-                        applyTheme(e.matches ? 'dark' : 'light');
-                    }
+                    if (!localStorage.getItem('theme')) applyTheme(e.matches ? 'dark' : 'light');
                 });
             }
             
-            // ========== FIM DAS FUNÇÕES DE TEMA ==========
-            
-            // ========== FUNÇÕES DE UTILIDADE PARA DATAS ==========
-            
+            // ========== UTILITÁRIOS DE DATA ==========
             function createDateFromString(dateString) {
                 if (!dateString) return null;
                 const parts = dateString.split('-');
                 if (parts.length !== 3) return null;
-                const year = parseInt(parts[0]);
-                const month = parseInt(parts[1]) - 1;
-                const day = parseInt(parts[2]);
-                return new Date(year, month, day);
+                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
             }
-            
             function formatDateToString(date) {
                 if (!date || isNaN(date.getTime())) return '';
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
             }
-            
-            function isSameDate(date1, date2) {
-                if (!date1 || !date2) return false;
-                return date1.getFullYear() === date2.getFullYear() &&
-                       date1.getMonth() === date2.getMonth() &&
-                       date1.getDate() === date2.getDate();
-            }
-            
             function formatDateToDisplay(date) {
                 if (!date || isNaN(date.getTime())) return '';
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                return `${day}/${month}/${year}`;
+                const d = String(date.getDate()).padStart(2, '0');
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const y = date.getFullYear();
+                return `${d}/${m}/${y}`;
             }
+            function getStartOfDay(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }
+            function getEndOfDay(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999); }
             
-            function getStartOfDay(date) {
-                return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-            }
-            
-            function getEndOfDay(date) {
-                return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
-            }
-            
-            // ========== FIM DAS FUNÇÕES DE UTILIDADE ==========
-            
-            // Inicialização
+            // ========== INICIALIZAÇÃO ==========
             init();
             
             function init() {
-                // Inicializar tema ANTES de tudo (evita flash)
                 initTheme();
                 
-                if (!localStorage.getItem('categories')) {
-                    localStorage.setItem('categories', JSON.stringify(categories));
-                } else {
-                    categories = JSON.parse(localStorage.getItem('categories'));
+                if (!localStorage.getItem('categories')) localStorage.setItem('categories', JSON.stringify(categories));
+                else categories = JSON.parse(localStorage.getItem('categories'));
+                
+                if (!localStorage.getItem('holders')) localStorage.setItem('holders', JSON.stringify(holders));
+                else holders = JSON.parse(localStorage.getItem('holders'));
+                
+                // Garantir que o padrão exista
+                if (!holders.find(h => h.isDefault)) {
+                    holders.forEach(h => h.isDefault = false);
+                    holders.push({ id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true });
+                    localStorage.setItem('holders', JSON.stringify(holders));
                 }
                 
                 const today = new Date();
                 transactionDateInput.value = formatDateToString(today);
                 
                 setupStandardPeriod();
-                
                 updateCategoriesDropdown();
+                updateHoldersDropdown();
                 renderCategories();
+                renderHolders();
                 updateSummary();
                 renderTransactions();
                 setupEventListeners();
@@ -1273,498 +984,957 @@
                 const today = new Date();
                 let startDate = new Date(today.getFullYear(), today.getMonth(), 14);
                 let endDate = new Date(today.getFullYear(), today.getMonth() + 1, 14);
-                
                 if (today.getDate() < 14) {
                     startDate = new Date(today.getFullYear(), today.getMonth() - 1, 14);
                     endDate = new Date(today.getFullYear(), today.getMonth(), 14);
                 }
-                
                 customStartDate = startDate;
                 customEndDate = endDate;
-                
                 startDateInput.value = formatDateToString(startDate);
                 endDateInput.value = formatDateToString(endDate);
-                
                 updatePeriodDisplay();
             }
             
             function updatePeriodDisplay() {
+                const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                 if (periodMode === 'standard') {
                     const start = new Date(customStartDate);
                     const end = new Date(customEndDate);
-                    const monthNames = [
-                        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-                    ];
-                    
-                    const startStr = `${start.getDate()} ${monthNames[start.getMonth()]}`;
-                    const endStr = `${end.getDate()} ${monthNames[end.getMonth()]}`;
-                    currentPeriodElement.textContent = `${startStr} - ${endStr} ${end.getFullYear()}`;
+                    currentPeriodElement.textContent = `${start.getDate()} ${monthNames[start.getMonth()]} - ${end.getDate()} ${monthNames[end.getMonth()]} ${end.getFullYear()}`;
                 } else {
-                    const start = new Date(customStartDate);
-                    const end = new Date(customEndDate);
-                    currentPeriodElement.textContent = `${formatDateToDisplay(start)} - ${formatDateToDisplay(end)}`;
+                    currentPeriodElement.textContent = `${formatDateToDisplay(customStartDate)} - ${formatDateToDisplay(customEndDate)}`;
                 }
-                
                 updateSummary();
                 renderTransactions();
-                
                 const reportsTab = document.getElementById('reports-tab');
-                if (reportsTab.classList.contains('active')) {
-                    renderCharts();
-                }
+                if (reportsTab.classList.contains('active')) renderCharts();
             }
             
             function getPeriodTransactions() {
                 const start = getStartOfDay(new Date(customStartDate));
                 const end = getEndOfDay(new Date(customEndDate));
-                
-                return transactions.filter(transaction => {
-                    const transDate = new Date(transaction.timestamp);
-                    return transDate >= start && transDate <= end;
+                return transactions.filter(t => {
+                    const d = new Date(t.timestamp);
+                    return d >= start && d <= end;
                 });
             }
             
+            // ========== PWA ==========
             function setupPWA() {
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault();
                     deferredPrompt = e;
-                    
-                    setTimeout(() => {
-                        installBanner.classList.add('show');
-                    }, 3000);
+                    setTimeout(() => installBanner.classList.add('show'), 3000);
                 });
-                
                 installButton.addEventListener('click', async () => {
                     if (deferredPrompt) {
                         deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        
-                        if (outcome === 'accepted') {
-                            installBanner.classList.remove('show');
-                        }
-                        
+                        await deferredPrompt.userChoice;
+                        installBanner.classList.remove('show');
                         deferredPrompt = null;
                     }
                 });
-                
                 window.addEventListener('appinstalled', () => {
                     installBanner.classList.remove('show');
                     deferredPrompt = null;
                 });
             }
             
+            // ========== VOZ (inalterado) ==========
             function setupVoiceRecognition() {
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                     voiceBtn.style.display = 'none';
-                    console.warn('Reconhecimento de voz não suportado neste navegador.');
                     return;
                 }
-                
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                recognition = new SpeechRecognition();
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SR();
                 recognition.lang = 'pt-BR';
                 recognition.continuous = false;
                 recognition.interimResults = true;
-                recognition.maxAlternatives = 1;
                 
                 recognition.onresult = function(event) {
-                    let finalTranscript = '';
-                    let interimTranscript = '';
-                    
+                    let final = '', interim = '';
                     for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const transcript = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            finalTranscript += transcript;
-                        } else {
-                            interimTranscript += transcript;
-                        }
+                        const t = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) final += t; else interim += t;
                     }
-                    
-                    const text = finalTranscript || interimTranscript;
+                    const text = final || interim;
                     if (text) {
-                        showVoiceFeedback(text, finalTranscript ? 'final' : 'interim');
-                        
-                        if (finalTranscript) {
-                            processVoiceCommand(finalTranscript);
-                        }
+                        showVoiceFeedback(text, final ? 'final' : 'interim');
+                        if (final) processVoiceCommand(final);
                     }
                 };
-                
                 recognition.onend = function() {
                     stopListening();
-                    
                     if (voiceStatus.classList.contains('show')) {
                         voiceStatusText.textContent = '⏱️ Nada foi ouvido. Tente novamente.';
-                        setTimeout(() => {
-                            hideVoiceStatus();
-                        }, 3000);
+                        setTimeout(hideVoiceStatus, 3000);
                     }
                 };
-                
                 recognition.onerror = function(event) {
-                    console.error('Erro no reconhecimento de voz:', event.error);
-                    
-                    let errorMessage = 'Erro ao capturar áudio. ';
+                    let msg = 'Erro ao capturar áudio. ';
                     switch(event.error) {
-                        case 'not-allowed':
-                            errorMessage += 'Permissão do microfone negada.';
-                            break;
-                        case 'no-speech':
-                            errorMessage += 'Nenhuma fala detectada.';
-                            break;
-                        case 'audio-capture':
-                            errorMessage += 'Microfone não encontrado.';
-                            break;
-                        case 'network':
-                            errorMessage += 'Erro de rede.';
-                            break;
-                        default:
-                            errorMessage += 'Tente novamente.';
+                        case 'not-allowed': msg += 'Permissão negada.'; break;
+                        case 'no-speech': msg += 'Nenhuma fala detectada.'; break;
+                        case 'audio-capture': msg += 'Microfone não encontrado.'; break;
+                        case 'network': msg += 'Erro de rede.'; break;
+                        default: msg += 'Tente novamente.';
                     }
-                    
-                    voiceStatusText.textContent = '❌ ' + errorMessage;
-                    setTimeout(() => {
-                        hideVoiceStatus();
-                    }, 3000);
-                    
+                    voiceStatusText.textContent = '❌ ' + msg;
+                    setTimeout(hideVoiceStatus, 3000);
                     stopListening();
                 };
             }
             
             function startListening() {
-                if (!recognition) {
-                    alert('Reconhecimento de voz não disponível.');
-                    return;
-                }
-                
+                if (!recognition) { alert('Reconhecimento de voz não disponível.'); return; }
                 try {
                     recognition.start();
                     isListening = true;
-                    
                     voiceBtn.classList.add('listening');
                     voiceBtn.innerHTML = '<i class="fas fa-stop"></i> Parar';
-                    
                     voiceStatus.classList.add('show');
                     voiceStatusText.textContent = '🎤 Ouvindo... Fale agora';
-                    
                     voiceFeedback.classList.remove('show');
-                    
-                } catch (error) {
-                    console.error('Erro ao iniciar reconhecimento:', error);
-                    alert('Erro ao iniciar o microfone. Verifique as permissões.');
-                }
+                } catch (e) { alert('Erro ao iniciar microfone.'); }
             }
-            
             function stopListening() {
-                if (recognition && isListening) {
-                    try {
-                        recognition.stop();
-                    } catch (error) {
-                        console.error('Erro ao parar reconhecimento:', error);
-                    }
-                }
-                
+                if (recognition && isListening) { try { recognition.stop(); } catch(e){} }
                 isListening = false;
                 voiceBtn.classList.remove('listening');
                 voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Falar';
             }
-            
-            function toggleListening() {
-                if (isListening) {
-                    stopListening();
-                } else {
-                    startListening();
-                }
-            }
-            
+            function toggleListening() { isListening ? stopListening() : startListening(); }
             function hideVoiceStatus() {
                 voiceStatus.classList.remove('show');
                 voiceBtn.classList.remove('listening');
                 voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Falar';
                 isListening = false;
             }
-            
             function showVoiceFeedback(text, type) {
                 voiceFeedback.classList.add('show');
-                
-                if (type === 'final') {
-                    voiceFeedbackText.innerHTML = `<span class="highlight">${text}</span>`;
-                    voiceFeedback.style.borderColor = '#27ae60';
-                    voiceFeedback.style.background = '';
-                } else {
-                    voiceFeedbackText.textContent = text + ' (processando...)';
-                    voiceFeedback.style.borderColor = '#f1c40f';
-                    voiceFeedback.style.background = '';
-                }
+                if (type === 'final') voiceFeedbackText.innerHTML = `<span class="highlight">${text}</span>`;
+                else voiceFeedbackText.textContent = text + ' (processando...)';
             }
-            
             function processVoiceCommand(text) {
-                const lowerText = text.toLowerCase().trim();
+                const lower = text.toLowerCase().trim();
+                let tipo = null, valor = null, categoria = null, data = null, parcelas = 1;
                 
-                let tipo = null;
-                let valor = null;
-                let descricao = '';
-                let categoria = null;
-                let data = null;
-                let parcelas = 1;
+                if (lower.includes('receita') || lower.includes('ganhei') || lower.includes('salário') || lower.includes('salario')) tipo = 'receita';
+                else if (lower.includes('despesa') || lower.includes('gastei') || lower.includes('paguei')) tipo = 'despesa';
                 
-                if (lowerText.includes('receita') || lowerText.includes('ganhei') || lowerText.includes('salário') || lowerText.includes('salario')) {
-                    tipo = 'receita';
-                } else if (lowerText.includes('despesa') || lowerText.includes('gastei') || lowerText.includes('paguei')) {
-                    tipo = 'despesa';
-                }
+                const vMatch = lower.match(/(\d+[\.,]\d+|\d+)\s*(reais|r\$|real)/i) || lower.match(/(\d+[\.,]\d+|\d+)/);
+                if (vMatch) valor = parseFloat(vMatch[1].replace(',', '.'));
                 
-                const valorMatch = lowerText.match(/(\d+[\.,]\d+|\d+)\s*(reais|r\$|real)/i) || lowerText.match(/(\d+[\.,]\d+|\d+)/);
-                if (valorMatch) {
-                    let valorStr = valorMatch[1].replace(',', '.');
-                    valor = parseFloat(valorStr);
-                }
-                
-                const categoriasDisponiveis = categories.map(c => c.name.toLowerCase());
-                for (const cat of categoriasDisponiveis) {
-                    if (lowerText.includes(cat)) {
-                        const catObj = categories.find(c => c.name.toLowerCase() === cat);
-                        if (catObj) categoria = catObj.id;
-                        break;
+                const catsDisp = categories.map(c => c.name.toLowerCase());
+                for (const cat of catsDisp) {
+                    if (lower.includes(cat)) {
+                        const obj = categories.find(c => c.name.toLowerCase() === cat);
+                        if (obj) { categoria = obj.id; break; }
                     }
                 }
                 
+                const kw = { 'alimentação':'alimentacao','mercado':'alimentacao','comida':'alimentacao','transporte':'transporte','uber':'transporte','gasolina':'transporte','moradia':'moradia','aluguel':'moradia','saúde':'saude','médico':'saude','lazer':'lazer','cinema':'lazer','educação':'educacao','curso':'educacao','vestuário':'vestuario','roupa':'vestuario','serviços':'servicos','salário':'salario' };
                 if (!categoria) {
-                    const keywords = {
-                        'alimentação': 'alimentacao', 'mercado': 'alimentacao', 'comida': 'alimentacao',
-                        'transporte': 'transporte', 'uber': 'transporte', 'gasolina': 'transporte',
-                        'moradia': 'moradia', 'aluguel': 'moradia',
-                        'saúde': 'saude', 'médico': 'saude',
-                        'lazer': 'lazer', 'cinema': 'lazer',
-                        'educação': 'educacao', 'curso': 'educacao',
-                        'vestuário': 'vestuario', 'roupa': 'vestuario',
-                        'serviços': 'servicos', 'salário': 'salario',
-                        'freelance': 'freelance', 'investimentos': 'investimentos', 'presentes': 'presentes'
-                    };
-                    
-                    for (const [key, value] of Object.entries(keywords)) {
-                        if (lowerText.includes(key)) {
-                            const catObj = categories.find(c => c.id === value);
-                            if (catObj) {
-                                categoria = catObj.id;
-                                break;
-                            }
+                    for (const [k, v] of Object.entries(kw)) {
+                        if (lower.includes(k)) {
+                            const obj = categories.find(c => c.id === v);
+                            if (obj) { categoria = obj.id; break; }
                         }
                     }
                 }
                 
-                let descricaoParts = [];
-                const palavrasRemover = ['receita', 'despesa', 'gastei', 'paguei', 'ganhei', 'reais', 'real', 'r$'];
+                let desc = text;
+                ['receita','despesa','gastei','paguei','ganhei','reais','real','r$'].forEach(p => desc = desc.replace(new RegExp(p, 'gi'), ''));
+                desc = desc.replace(/\d+[\.,]\d+|\d+/g, '');
+                catsDisp.forEach(c => desc = desc.replace(new RegExp(c, 'gi'), ''));
+                desc = desc.trim() || (tipo === 'receita' ? 'Receita' : 'Despesa');
                 
-                let descricaoRaw = text;
-                palavrasRemover.forEach(palavra => {
-                    descricaoRaw = descricaoRaw.replace(new RegExp(palavra, 'gi'), '');
-                });
-                
-                descricaoRaw = descricaoRaw.replace(/\d+[\.,]\d+|\d+/g, '');
-                
-                categoriasDisponiveis.forEach(cat => {
-                    descricaoRaw = descricaoRaw.replace(new RegExp(cat, 'gi'), '');
-                });
-                
-                descricao = descricaoRaw.trim();
-                
-                if (!descricao) {
-                    descricao = tipo === 'receita' ? 'Receita' : 'Despesa';
-                }
-                
-                const diaMatch = lowerText.match(/dia\s*(\d+)/i);
-                if (diaMatch) {
-                    const dia = parseInt(diaMatch[1]);
+                const dMatch = lower.match(/dia\s*(\d+)/i);
+                if (dMatch) {
+                    const dia = parseInt(dMatch[1]);
                     const hoje = new Date();
-                    const mesAtual = hoje.getMonth();
-                    const anoAtual = hoje.getFullYear();
-                    
-                    let dataObj = new Date(anoAtual, mesAtual, dia);
-                    if (dataObj > hoje) {
-                        dataObj = new Date(anoAtual, mesAtual - 1, dia);
-                    }
-                    data = dataObj;
+                    let d = new Date(hoje.getFullYear(), hoje.getMonth(), dia);
+                    if (d > hoje) d = new Date(hoje.getFullYear(), hoje.getMonth() - 1, dia);
+                    data = d;
                 }
                 
-                const parcelasMatch = lowerText.match(/(\d+)\s*(x|vezes|parcela|parcelas)/i);
-                if (parcelasMatch) {
-                    parcelas = parseInt(parcelasMatch[1]);
-                }
+                const pMatch = lower.match(/(\d+)\s*(x|vezes|parcela|parcelas)/i);
+                if (pMatch) parcelas = parseInt(pMatch[1]);
                 
-                const descInput = document.getElementById('description');
-                const amountInput = document.getElementById('amount');
-                const typeSelect = document.getElementById('type');
-                const categorySelectEl = document.getElementById('category');
-                const dateInput = document.getElementById('transaction-date');
-                const parcelasInput = document.getElementById('parcelas');
+                const dEl = document.getElementById('description');
+                const aEl = document.getElementById('amount');
+                const tEl = document.getElementById('type');
+                const cEl = document.getElementById('category');
+                const dtEl = document.getElementById('transaction-date');
+                const pEl = document.getElementById('parcelas');
                 
-                if (descricao) descInput.value = descricao;
-                if (valor) amountInput.value = valor;
-                if (tipo) typeSelect.value = tipo;
-                if (categoria) categorySelectEl.value = categoria;
-                if (data) dateInput.value = formatDateToString(data);
-                if (parcelas > 1) parcelasInput.value = parcelas;
+                if (desc) dEl.value = desc;
+                if (valor) aEl.value = valor;
+                if (tipo) tEl.value = tipo;
+                if (categoria) cEl.value = categoria;
+                if (data) dtEl.value = formatDateToString(data);
+                if (parcelas > 1) pEl.value = parcelas;
                 
-                highlightField(descInput, descricao);
-                highlightField(amountInput, valor);
-                highlightField(typeSelect, tipo);
-                highlightField(categorySelectEl, categoria);
-                highlightField(dateInput, data);
-                
-                voiceStatusText.textContent = '✅ Transação preenchida! Verifique os campos e clique em Adicionar.';
+                voiceStatusText.textContent = '✅ Transação preenchida!';
                 voiceStatusText.style.color = '#27ae60';
-                
-                setTimeout(() => {
-                    hideVoiceStatus();
-                    voiceStatusText.style.color = '';
-                }, 4000);
+                setTimeout(() => { hideVoiceStatus(); voiceStatusText.style.color = ''; }, 4000);
             }
             
-            function highlightField(element, value) {
-                if (value) {
-                    element.style.borderColor = '#27ae60';
-                    element.style.backgroundColor = 'rgba(39, 174, 96, 0.15)';
+            // ========== IMPORTAÇÃO DE FATURA ==========
+            
+            /**
+             * Extrai a data de vencimento do nome do arquivo.
+             * Formato esperado: faturaDDMMAAAA.txt
+             */
+            function extractDueDateFromFilename(filename) {
+                const match = filename.match(/fatura(\d{2})(\d{2})(\d{4})\.txt/i);
+                if (!match) return null;
+                return {
+                    day: parseInt(match[1]),
+                    month: parseInt(match[2]) - 1, // 0-indexado
+                    year: parseInt(match[3])
+                };
+            }
+            
+            /**
+             * Normaliza uma linha da fatura: remove espaços extras.
+             */
+            function normalizeLine(line) {
+                return line.trim().replace(/\s+/g, ' ');
+            }
+            
+            /**
+             * Verifica se uma linha é um cabeçalho/título a ser ignorado.
+             */
+            function isIgnoredLine(line) {
+                const l = line.toLowerCase().trim();
+                if (!l) return true;
+                if (l === 'demonstrativo') return true;
+                if (l.startsWith('data descrição cidade')) return true;
+                if (l.startsWith('data descricao cidade')) return true;
+                if (l.startsWith('valor original cotação')) return true;
+                if (l.startsWith('crédito/débito r$')) return true;
+                if (l.startsWith('credito/debito r$')) return true;
+                return false;
+            }
+            
+            /**
+             * Verifica se uma linha de lançamento deve ser ignorada (ruído).
+             */
+            function isNoiseTransaction(description) {
+                const d = description.toLowerCase();
+                const noiseKeywords = [
+                    'total da fatura anterior',
+                    'obrigado pelo pagamento',
+                    'ajuste cred',
+                    'ajuste crédito',
+                    'ajuste credito',
+                    'ajuste de',
+                    'pagamento efetuado',
+                    'saldo anterior',
+                    'juros',
+                    'iof',
+                    'anuidade',
+                    'isent',
+                    'total compras',
+                    'total final',
+                    'valor total desta fatura',
+                    'total '
+                ];
+                return noiseKeywords.some(k => d.includes(k));
+            }
+            
+            /**
+             * Verifica se uma linha parece ser um lançamento.
+             * Formato: DD/MM DESCRIÇÃO VALOR[C|D]
+             */
+            function parseTransactionLine(line) {
+                // Regex: DD/MM <descrição> <valor><C|D>
+                const regex = /^(\d{2})\/(\d{2})\s+(.+?)\s+([\d.]+,\d{2})\s*([CD])\s*$/i;
+                const m = line.match(regex);
+                if (!m) return null;
+                
+                const day = parseInt(m[1]);
+                const month = parseInt(m[2]) - 1; // 0-indexado
+                const description = m[3].trim();
+                const amountStr = m[4].replace(/\./g, '').replace(',', '.');
+                const amount = parseFloat(amountStr);
+                const type = m[5].toUpperCase() === 'D' ? 'despesa' : 'receita';
+                
+                if (isNaN(amount)) return null;
+                
+                return { day, month, description, amount, type };
+            }
+            
+            /**
+             * Verifica se uma linha é um cabeçalho de portador: "NOME (Cartão XXXX)"
+             */
+            function parseHolderLine(line) {
+                const m = line.match(/^(.+?)\s*\(Cartão\s+(\d+)\)\s*$/i);
+                if (!m) return null;
+                return { name: m[1].trim(), cardNumber: m[2] };
+            }
+            
+            /**
+             * Verifica se uma linha é um totalizador de seção.
+             */
+            function parseTotalLine(line) {
+                const l = line.trim();
+                let m;
+                
+                m = l.match(/^Total\s+COMPRAS\s+([\d.]+,\d{2})\s*D?$/i);
+                if (m) return { type: 'compras', value: parseFloat(m[1].replace(/\./g, '').replace(',', '.')) };
+                
+                m = l.match(/^Total\s+COMPRAS\s+PARCELADAS\s+([\d.]+,\d{2})\s*D?$/i);
+                if (m) return { type: 'parceladas', value: parseFloat(m[1].replace(/\./g, '').replace(',', '.')) };
+                
+                m = l.match(/^Total\s+final\s+\(cartão\s+(\d+)\)\s+([\d.]+,\d{2})\s*D?$/i);
+                if (m) return { type: 'final-cartao', cardNumber: m[1], value: parseFloat(m[2].replace(/\./g, '').replace(',', '.')) };
+                
+                m = l.match(/^Valor\s+total\s+desta\s+fatura\s+R\$\s+([\d.]+,\d{2})\s*D?$/i);
+                if (m) return { type: 'total-fatura', value: parseFloat(m[1].replace(/\./g, '').replace(',', '.')) };
+                
+                return null;
+            }
+            
+            /**
+             * Verifica se uma linha é uma anotação de parcela dentro da descrição.
+             * Ex: "MP HLPNEUSAUTOSE 02 DE 07 OSASCO"
+             * Retorna { description: "MP HLPNEUSAUTOSE OSASCO", installment: "02/07" }
+             */
+            function extractInstallment(description) {
+                const m = description.match(/^(.+?)\s+(\d{2})\s+DE\s+(\d{2})\s+(.+)$/i);
+                if (m) {
+                    return {
+                        description: `${m[1].trim()} ${m[4].trim()}`,
+                        installment: `${m[2]}/${m[3]}`
+                    };
+                }
+                return { description, installment: null };
+            }
+            
+            /**
+             * Categoriza uma descrição com base nas tags.
+             */
+            function categorizeDescription(description, type) {
+                const d = description.toLowerCase();
+                const fallback = type === 'despesa' ? 'outros' : 'outros';
+                
+                // Itera pelas categorias (na ordem de prioridade das tags)
+                for (const [categoryId, tags] of Object.entries(CATEGORY_TAGS)) {
+                    // Verifica se a categoria existe
+                    const cat = categories.find(c => c.id === categoryId);
+                    if (!cat) continue;
                     
+                    // Tags mais longas primeiro para evitar falsos positivos
+                    const sortedTags = [...tags].sort((a, b) => b.length - a.length);
+                    for (const tag of sortedTags) {
+                        if (d.includes(tag.toLowerCase())) {
+                            return categoryId;
+                        }
+                    }
+                }
+                return fallback;
+            }
+            
+            /**
+             * Calcula o ano do lançamento com base no vencimento.
+             * Regra: se mês do lançamento > mês do vencimento → ano anterior; senão → ano do vencimento
+             */
+            function resolveYear(month, dueMonth, dueYear) {
+                return month > dueMonth ? dueYear - 1 : dueYear;
+            }
+            
+            /**
+             * Processa o conteúdo do arquivo TXT.
+             */
+            function processInvoiceFile(content) {
+                const lines = content.split(/\r?\n/);
+                const transactions = [];
+                const validation = {
+                    perCard: {}, // { cardNumber: { compras, parceladas, final, calculated } }
+                    declaredTotal: null,
+                    calculatedTotal: 0
+                };
+                
+                let currentHolder = null;
+                let currentCard = null;
+                let currentSection = null; // 'compras' | 'parceladas'
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const raw = lines[i];
+                    const line = normalizeLine(raw);
+                    
+                    // Ignora linhas vazias e cabeçalhos
+                    if (isIgnoredLine(line)) continue;
+                    
+                    // Verifica cabeçalho de portador: "NOME (Cartão XXXX)"
+                    const holderInfo = parseHolderLine(line);
+                    if (holderInfo) {
+                        currentHolder = holderInfo.name;
+                        currentCard = holderInfo.cardNumber;
+                        if (!validation.perCard[currentCard]) {
+                            validation.perCard[currentCard] = { holder: currentHolder, compras: 0, parceladas: 0, final: 0, calculated: 0 };
+                        }
+                        continue;
+                    }
+                    
+                    // Verifica mudança de seção
+                    const upperLine = line.toUpperCase();
+                    if (upperLine === 'COMPRAS' || /^COMPRAS\s*\(Cartão/i.test(line)) {
+                        currentSection = 'compras';
+                        continue;
+                    }
+                    if (upperLine === 'COMPRAS PARCELADAS' || /^COMPRAS PARCELADAS\s*\(Cartão/i.test(line)) {
+                        currentSection = 'parceladas';
+                        continue;
+                    }
+                    if (upperLine === 'ANUIDADE') {
+                        currentSection = 'anuidade';
+                        continue;
+                    }
+                    
+                    // Verifica linhas de totalizador
+                    const totalInfo = parseTotalLine(line);
+                    if (totalInfo) {
+                        if (totalInfo.type === 'compras' && currentCard) {
+                            validation.perCard[currentCard].compras = totalInfo.value;
+                        } else if (totalInfo.type === 'parceladas' && currentCard) {
+                            validation.perCard[currentCard].parceladas = totalInfo.value;
+                        } else if (totalInfo.type === 'final-cartao') {
+                            if (!validation.perCard[totalInfo.cardNumber]) {
+                                validation.perCard[totalInfo.cardNumber] = { holder: null, compras: 0, parceladas: 0, final: 0, calculated: 0 };
+                            }
+                            validation.perCard[totalInfo.cardNumber].final = totalInfo.value;
+                        } else if (totalInfo.type === 'total-fatura') {
+                            validation.declaredTotal = totalInfo.value;
+                        }
+                        continue;
+                    }
+                    
+                    // Tenta parsear como lançamento
+                    const tx = parseTransactionLine(line);
+                    if (!tx) continue;
+                    
+                    // Ignora ruído (TOTAL DA FATURA ANTERIOR, AJUSTE, etc)
+                    if (isNoiseTransaction(tx.description)) continue;
+                    
+                    // Extrai informação de parcela (se houver)
+                    const { description: cleanDesc, installment } = extractInstallment(tx.description);
+                    
+                    // Categoriza
+                    const categoryId = categorizeDescription(cleanDesc, tx.type);
+                    
+                    // Resolve o ano
+                    const year = resolveYear(tx.month, currentDueDate.month, currentDueDate.year);
+                    
+                    // Cria a data
+                    const date = new Date(year, tx.month, tx.day);
+                    
+                    // Constrói o lançamento
+                    const transaction = {
+                        id: Date.now() + Math.random() + Math.random(),
+                        description: cleanDesc + (installment ? ` (${installment})` : ''),
+                        amount: tx.amount,
+                        type: tx.type,
+                        category: categoryId,
+                        date: formatDateToDisplay(date),
+                        timestamp: date.getTime(),
+                        month: date.getMonth(),
+                        year: date.getFullYear(),
+                        holder: currentHolder,
+                        cardNumber: currentCard,
+                        installment: installment
+                    };
+                    
+                    transactions.push(transaction);
+                    
+                    // Soma no cartão atual para validação
+                    if (currentCard && validation.perCard[currentCard]) {
+                        validation.perCard[currentCard].calculated += tx.amount;
+                    }
+                    validation.calculatedTotal += tx.amount;
+                }
+                
+                return { transactions, validation };
+            }
+            
+            // Variável global que recebe o vencimento parseado
+            let currentDueDate = null;
+            
+            /**
+             * Handler do upload da fatura
+             */
+            function handleImportFile(file) {
+                if (!file) return;
+                
+                // Extrai o vencimento do nome do arquivo
+                const dueInfo = extractDueDateFromFilename(file.name);
+                if (!dueInfo) {
+                    showImportFeedback('error', 'Nome do arquivo inválido. Esperado: faturaDDMMAAAA.txt (ex: fatura23092026.txt)');
+                    return;
+                }
+                currentDueDate = dueInfo;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        const { transactions: parsed, validation } = processInvoiceFile(content);
+                        
+                        if (parsed.length === 0) {
+                            showImportFeedback('error', 'Nenhum lançamento foi encontrado no arquivo. Verifique o formato.');
+                            return;
+                        }
+                        
+                        // Guarda o preview
+                        importPreview = { transactions: parsed, validation };
+                        
+                        // Mostra o modal de revisão
+                        openReviewModal();
+                        
+                    } catch (err) {
+                        console.error(err);
+                        showImportFeedback('error', 'Erro ao processar o arquivo: ' + err.message);
+                    }
+                };
+                reader.onerror = function() {
+                    showImportFeedback('error', 'Erro ao ler o arquivo.');
+                };
+                reader.readAsText(file, 'UTF-8');
+            }
+            
+            /**
+             * Mostra feedback de importação
+             */
+            function showImportFeedback(type, message) {
+                importFeedback.className = 'import-feedback show ' + type;
+                importFeedback.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i> ${message}`;
+                
+                if (type === 'success') {
                     setTimeout(() => {
-                        element.style.borderColor = '';
-                        element.style.backgroundColor = '';
-                    }, 3000);
+                        importFeedback.classList.remove('show');
+                    }, 6000);
                 }
             }
             
+            /**
+             * Abre o modal de revisão com os dados do preview
+             */
+            function openReviewModal() {
+                const { transactions, validation } = importPreview;
+                
+                // Atualiza summary no header
+                reviewSummary.innerHTML = `
+                    <span><strong>${transactions.length}</strong> lançamentos</span>
+                    <span>Vencimento: <strong>${String(currentDueDate.day).padStart(2,'0')}/${String(currentDueDate.month+1).padStart(2,'0')}/${currentDueDate.year}</strong></span>
+                `;
+                
+                // Validação
+                renderValidationInfo(validation);
+                
+                // Constrói a tabela
+                renderReviewTable(transactions);
+                
+                // Atualiza total
+                updateReviewTotal();
+                
+                // Mostra o modal
+                reviewModal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            /**
+             * Renderiza as informações de validação
+             */
+            function renderValidationInfo(validation) {
+                let html = '';
+                
+                // Validação por cartão
+                const cardEntries = Object.entries(validation.perCard);
+                if (cardEntries.length > 0) {
+                    html += '<div style="width:100%"><strong>Validação por cartão:</strong></div>';
+                    cardEntries.forEach(([card, data]) => {
+                        const declared = (data.compras || 0) + (data.parceladas || 0);
+                        const final = data.final || 0;
+                        const match = Math.abs(declared - final) < 0.01;
+                        const ok = match ? 'ok' : 'fail';
+                        html += `<div>Cartão ${card}: ${declared.toFixed(2)} vs ${final.toFixed(2)} <span class="${ok}">${match ? '✓' : '✗'}</span></div>`;
+                    });
+                }
+                
+                // Validação total
+                if (validation.declaredTotal !== null) {
+                    const sumFinals = Object.values(validation.perCard).reduce((s, d) => s + (d.final || 0), 0);
+                    const match = Math.abs(sumFinals - validation.declaredTotal) < 0.01;
+                    const ok = match ? 'ok' : 'fail';
+                    html += `<div style="width:100%"><strong>Total fatura:</strong> soma dos finais ${sumFinals.toFixed(2)} vs declarado ${validation.declaredTotal.toFixed(2)} <span class="${ok}">${match ? '✓' : '✗'}</span></div>`;
+                }
+                
+                validationInfo.innerHTML = html;
+            }
+            
+            /**
+             * Renderiza a tabela de revisão
+             */
+            function renderReviewTable(transactions) {
+                // Constrói opções de categoria
+                const categoryOptions = categories.map(c => 
+                    `<option value="${c.id}">${c.name}</option>`
+                ).join('');
+                
+                // Constrói opções de portador (todos, mesmo os inativos, para edição)
+                const holderOptions = holders.map(h => 
+                    `<option value="${h.id}" ${!h.active ? 'disabled' : ''}>${h.name}${!h.active ? ' (excluído)' : ''}</option>`
+                ).join('');
+                
+                // Opções de tipo
+                const typeOptions = `
+                    <option value="despesa">Despesa</option>
+                    <option value="receita">Receita</option>
+                `;
+                
+                let html = '<table class="review-table"><thead><tr>';
+                html += '<th class="col-date">Data</th>';
+                html += '<th class="col-desc">Descrição</th>';
+                html += '<th class="col-amount">Valor</th>';
+                html += '<th class="col-cat">Categoria</th>';
+                html += '<th class="col-holder">Portador</th>';
+                html += '<th class="col-type">Tipo</th>';
+                html += '<th class="col-actions"></th>';
+                html += '</tr></thead><tbody>';
+                
+                transactions.forEach((tx, idx) => {
+                    const isLowConfidence = tx.category === 'outros';
+                    const rowClass = isLowConfidence ? 'row-low-confidence' : '';
+                    
+                    html += `<tr class="${rowClass}" data-idx="${idx}">`;
+                    
+                    html += `<td class="col-date" data-label="Data">`;
+                    html += `<input type="date" class="review-date" data-idx="${idx}" value="${formatDateToString(new Date(tx.timestamp))}">`;
+                    html += `</td>`;
+                    
+                    html += `<td class="col-desc" data-label="Descrição">`;
+                    html += `<input type="text" class="review-desc" data-idx="${idx}" value="${escapeHtml(tx.description)}">`;
+                    html += `</td>`;
+                    
+                    html += `<td class="col-amount" data-label="Valor">`;
+                    html += `<input type="number" step="0.01" min="0" class="review-amount amount-field" data-idx="${idx}" value="${tx.amount.toFixed(2)}">`;
+                    html += `</td>`;
+                    
+                    html += `<td class="col-cat" data-label="Categoria">`;
+                    html += `<select class="review-cat" data-idx="${idx}">`;
+                    html += `<option value="${tx.category}" selected>${getCategoryName(tx.category)}</option>`;
+                    html += categoryOptions;
+                    html += `</select>`;
+                    html += `</td>`;
+                    
+                    html += `<td class="col-holder" data-label="Portador">`;
+                    html += `<select class="review-holder" data-idx="${idx}">`;
+                    html += holderOptions;
+                    html += `</select>`;
+                    html += `</td>`;
+                    
+                    html += `<td class="col-type" data-label="Tipo">`;
+                    html += `<select class="review-type" data-idx="${idx}">`;
+                    html += `<option value="despesa" ${tx.type === 'despesa' ? 'selected' : ''}>Despesa</option>`;
+                    html += `<option value="receita" ${tx.type === 'receita' ? 'selected' : ''}>Receita</option>`;
+                    html += `</select>`;
+                    html += `</td>`;
+                    
+                    html += `<td class="col-actions" data-label="">`;
+                    html += `<button class="btn-remove-row" data-idx="${idx}" title="Remover"><i class="fas fa-trash"></i></button>`;
+                    html += `</td>`;
+                    
+                    html += `</tr>`;
+                });
+                
+                html += '</tbody></table>';
+                reviewTableContainer.innerHTML = html;
+                
+                // Ajusta o portador selecionado em cada linha (por nome)
+                transactions.forEach((tx, idx) => {
+                    const sel = reviewTableContainer.querySelector(`.review-holder[data-idx="${idx}"]`);
+                    if (sel && tx.holder) {
+                        // Tenta achar o portador pelo nome exato
+                        const found = holders.find(h => h.name === tx.holder);
+                        if (found) sel.value = found.id;
+                        else {
+                            // Se não existir, cria automaticamente
+                            const newHolder = {
+                                id: tx.holder.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                                name: tx.holder,
+                                active: true,
+                                isDefault: false
+                            };
+                            // Evita duplicatas
+                            if (!holders.find(h => h.id === newHolder.id)) {
+                                holders.push(newHolder);
+                                saveHolders();
+                                // Adiciona a opção ao select
+                                const opt = document.createElement('option');
+                                opt.value = newHolder.id;
+                                opt.textContent = newHolder.name;
+                                sel.appendChild(opt);
+                                // Também atualiza os outros selects já renderizados
+                                reviewTableContainer.querySelectorAll('.review-holder').forEach(s => {
+                                    const dup = s.querySelector(`option[value="${newHolder.id}"]`);
+                                    if (!dup) {
+                                        const o = document.createElement('option');
+                                        o.value = newHolder.id;
+                                        o.textContent = newHolder.name;
+                                        s.appendChild(o);
+                                    }
+                                });
+                            }
+                            sel.value = newHolder.id;
+                        }
+                    }
+                });
+                
+                // Event listeners
+                reviewTableContainer.querySelectorAll('.review-date, .review-desc, .review-amount, .review-cat, .review-holder, .review-type').forEach(el => {
+                    el.addEventListener('change', () => updateReviewTotal());
+                    el.addEventListener('input', () => updateReviewTotal());
+                });
+                
+                reviewTableContainer.querySelectorAll('.btn-remove-row').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
+                        removeReviewRow(idx);
+                    });
+                });
+            }
+            
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>"']/g, m => ({
+                    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+                })[m]);
+            }
+            
+            function getCategoryName(id) {
+                const cat = categories.find(c => c.id === id);
+                return cat ? cat.name : 'Outros';
+            }
+            
+            /**
+             * Remove uma linha da tabela de revisão
+             */
+            function removeReviewRow(idx) {
+                importPreview.transactions.splice(idx, 1);
+                renderReviewTable(importPreview.transactions);
+                updateReviewTotal();
+            }
+            
+            /**
+             * Atualiza o total exibido no rodapé
+             */
+            function updateReviewTotal() {
+                let total = 0;
+                reviewTableContainer.querySelectorAll('.review-amount').forEach(inp => {
+                    const v = parseFloat(inp.value);
+                    if (!isNaN(v)) total += v;
+                });
+                reviewTotal.textContent = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
+            }
+            
+            /**
+             * Coleta os dados editados e fecha o modal
+             */
+            function collectReviewData() {
+                const rows = reviewTableContainer.querySelectorAll('tr[data-idx]');
+                const collected = [];
+                rows.forEach(row => {
+                    const idx = parseInt(row.getAttribute('data-idx'));
+                    const dateStr = row.querySelector('.review-date').value;
+                    const desc = row.querySelector('.review-desc').value;
+                    const amount = parseFloat(row.querySelector('.review-amount').value);
+                    const cat = row.querySelector('.review-cat').value;
+                    const holderId = row.querySelector('.review-holder').value;
+                    const type = row.querySelector('.review-type').value;
+                    
+                    const date = createDateFromString(dateStr);
+                    if (!date || !desc || isNaN(amount)) return;
+                    
+                    const holder = holders.find(h => h.id === holderId);
+                    
+                    collected.push({
+                        id: Date.now() + Math.random() + idx,
+                        description: desc,
+                        amount: amount,
+                        type: type,
+                        category: cat,
+                        date: formatDateToDisplay(date),
+                        timestamp: date.getTime(),
+                        month: date.getMonth(),
+                        year: date.getFullYear(),
+                        holder: holder ? holder.name : 'Rodrigo A Prado',
+                        holderId: holder ? holder.id : null,
+                        cardNumber: importPreview.transactions[idx]?.cardNumber || null,
+                        installment: importPreview.transactions[idx]?.installment || null
+                    });
+                });
+                return collected;
+            }
+            
+            /**
+             * Confirma a importação: salva todas as transações
+             */
+            function confirmImport() {
+                const collected = collectReviewData();
+                if (collected.length === 0) {
+                    alert('Nenhum lançamento válido para salvar.');
+                    return;
+                }
+                
+                collected.forEach(tx => transactions.push(tx));
+                saveTransactions();
+                renderTransactions();
+                updateSummary();
+                
+                closeReviewModal();
+                showImportFeedback('success', `${collected.length} lançamentos importados com sucesso!`);
+            }
+            
+            function closeReviewModal() {
+                reviewModal.classList.remove('show');
+                document.body.style.overflow = '';
+                importPreview = null;
+                importFile.value = '';
+            }
+            
+            // ========== EVENT LISTENERS ==========
             function setupEventListeners() {
-                // Toggle de tema
                 themeToggle.addEventListener('click', toggleTheme);
                 
-                // Formulário de transação
+                // Importação
+                importBtn.addEventListener('click', () => importFile.click());
+                importFile.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) handleImportFile(file);
+                });
+                
+                cancelImportBtn.addEventListener('click', closeReviewModal);
+                confirmImportBtn.addEventListener('click', confirmImport);
+                
+                // Form
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
                     const description = document.getElementById('description').value;
                     const amount = parseFloat(document.getElementById('amount').value);
                     const type = document.getElementById('type').value;
                     const category = document.getElementById('category').value;
-                    
+                    const holderId = document.getElementById('holder').value;
                     const dateString = document.getElementById('transaction-date').value;
                     const date = createDateFromString(dateString);
-                    
-                    if (!date) {
-                        alert('Data inválida!');
-                        return;
-                    }
-                    
+                    if (!date) { alert('Data inválida!'); return; }
                     const parcelas = parseInt(document.getElementById('parcelas').value) || 1;
+                    
+                    // Resolve holder (se vazio, usa o padrão)
+                    let holderName = 'Rodrigo A Prado';
+                    let finalHolderId = null;
+                    if (holderId) {
+                        const h = holders.find(x => x.id === holderId);
+                        if (h) { holderName = h.name; finalHolderId = h.id; }
+                    } else {
+                        const def = holders.find(x => x.isDefault);
+                        if (def) { holderName = def.name; finalHolderId = def.id; }
+                    }
                     
                     if (parcelas > 1) {
                         for (let i = 0; i < parcelas; i++) {
-                            const parcelaDate = new Date(date);
-                            parcelaDate.setMonth(parcelaDate.getMonth() + i);
-                            
-                            addTransaction(
-                                `${description} (${i+1}/${parcelas})`, 
-                                amount / parcelas, 
-                                type, 
-                                category,
-                                parcelaDate
-                            );
+                            const pd = new Date(date);
+                            pd.setMonth(pd.getMonth() + i);
+                            addTransaction(`${description} (${i+1}/${parcelas})`, amount / parcelas, type, category, pd, holderName, finalHolderId);
                         }
                     } else {
-                        addTransaction(description, amount, type, category, date);
+                        addTransaction(description, amount, type, category, date, holderName, finalHolderId);
                     }
                     
                     form.reset();
-                    const today = new Date();
-                    transactionDateInput.value = formatDateToString(today);
+                    transactionDateInput.value = formatDateToString(new Date());
                 });
                 
+                // Categoria form
                 categoryForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
                     const name = document.getElementById('new-category-name').value;
                     const type = document.getElementById('new-category-type').value;
                     const color = document.getElementById('new-category-color').value;
-                    
                     addCategory(name, type, color);
-                    
                     categoryForm.reset();
                     document.getElementById('new-category-color').value = '#3498db';
                 });
                 
+                // Holder form
+                holderForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const name = document.getElementById('new-holder-name').value;
+                    addHolder(name);
+                    holderForm.reset();
+                });
+                
+                // Período
                 prevPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'standard') {
-                        const start = new Date(customStartDate);
-                        const end = new Date(customEndDate);
-                        start.setMonth(start.getMonth() - 1);
-                        end.setMonth(end.getMonth() - 1);
-                        customStartDate = start;
-                        customEndDate = end;
-                        startDateInput.value = formatDateToString(start);
-                        endDateInput.value = formatDateToString(end);
+                        const s = new Date(customStartDate); const e2 = new Date(customEndDate);
+                        s.setMonth(s.getMonth() - 1); e2.setMonth(e2.getMonth() - 1);
+                        customStartDate = s; customEndDate = e2;
+                        startDateInput.value = formatDateToString(s);
+                        endDateInput.value = formatDateToString(e2);
                         updatePeriodDisplay();
                     }
                 });
-                
                 nextPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'standard') {
-                        const start = new Date(customStartDate);
-                        const end = new Date(customEndDate);
-                        start.setMonth(start.getMonth() + 1);
-                        end.setMonth(end.getMonth() + 1);
-                        customStartDate = start;
-                        customEndDate = end;
-                        startDateInput.value = formatDateToString(start);
-                        endDateInput.value = formatDateToString(end);
+                        const s = new Date(customStartDate); const e2 = new Date(customEndDate);
+                        s.setMonth(s.getMonth() + 1); e2.setMonth(e2.getMonth() + 1);
+                        customStartDate = s; customEndDate = e2;
+                        startDateInput.value = formatDateToString(s);
+                        endDateInput.value = formatDateToString(e2);
                         updatePeriodDisplay();
                     }
                 });
-                
                 periodStandardBtn.addEventListener('click', function() {
                     periodMode = 'standard';
                     periodStandardBtn.classList.add('active-mode');
                     periodCustomBtn.classList.remove('active-mode');
-                    
                     setupStandardPeriod();
                     periodNav.style.display = 'flex';
                 });
-                
                 periodCustomBtn.addEventListener('click', function() {
                     periodMode = 'custom';
                     periodCustomBtn.classList.add('active-mode');
                     periodStandardBtn.classList.remove('active-mode');
-                    
                     customStartDate = createDateFromString(startDateInput.value);
                     customEndDate = createDateFromString(endDateInput.value);
                     updatePeriodDisplay();
-                    
                     periodNav.style.display = 'none';
                 });
-                
                 applyPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'custom') {
-                        const start = createDateFromString(startDateInput.value);
-                        const end = createDateFromString(endDateInput.value);
-                        
-                        if (start && end && start <= end) {
-                            customStartDate = start;
-                            customEndDate = end;
+                        const s = createDateFromString(startDateInput.value);
+                        const e2 = createDateFromString(endDateInput.value);
+                        if (s && e2 && s <= e2) {
+                            customStartDate = s; customEndDate = e2;
                             updatePeriodDisplay();
                         } else {
-                            alert('Por favor, selecione um período válido (data início menor ou igual à data fim).');
+                            alert('Período inválido.');
                         }
                     }
                 });
                 
-                closeDetailBtn.addEventListener('click', function() {
-                    categoryDetail.classList.remove('show');
-                });
-                
+                closeDetailBtn.addEventListener('click', () => categoryDetail.classList.remove('show'));
                 voiceBtn.addEventListener('click', toggleListening);
+                voiceStatusClose.addEventListener('click', () => { stopListening(); hideVoiceStatus(); });
                 
-                voiceStatusClose.addEventListener('click', function() {
-                    stopListening();
-                    hideVoiceStatus();
+                // Fechar modal com ESC
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && reviewModal.classList.contains('show')) {
+                        closeReviewModal();
+                    }
                 });
             }
             
@@ -1772,21 +1942,17 @@
                 tabs.forEach(tab => {
                     tab.addEventListener('click', () => {
                         const tabId = tab.getAttribute('data-tab');
-                        
                         tabs.forEach(t => t.classList.remove('active'));
                         tabContents.forEach(tc => tc.classList.remove('active'));
-                        
                         tab.classList.add('active');
                         document.getElementById(`${tabId}-tab`).classList.add('active');
-                        
-                        if (tabId === 'reports') {
-                            renderCharts();
-                        }
+                        if (tabId === 'reports') renderCharts();
                     });
                 });
             }
             
-            function addTransaction(description, amount, type, category, date) {
+            // ========== TRANSAÇÕES ==========
+            function addTransaction(description, amount, type, category, date, holderName, holderId) {
                 const transaction = {
                     id: Date.now() + Math.random(),
                     description,
@@ -1796,9 +1962,11 @@
                     date: formatDateToDisplay(date),
                     timestamp: date.getTime(),
                     month: date.getMonth(),
-                    year: date.getFullYear()
+                    year: date.getFullYear(),
+                    holder: holderName || null,
+                    holderId: holderId || null,
+                    installment: null
                 };
-                
                 transactions.push(transaction);
                 saveTransactions();
                 renderTransactions();
@@ -1806,50 +1974,186 @@
             }
             
             function deleteTransaction(id) {
-                transactions = transactions.filter(transaction => transaction.id !== id);
+                transactions = transactions.filter(t => t.id !== id);
                 saveTransactions();
                 renderTransactions();
                 updateSummary();
             }
             
-            function addCategory(name, type, color) {
-                const id = name.toLowerCase().replace(/\s+/g, '-');
-                
-                const category = {
-                    id,
-                    name,
-                    type,
-                    color
-                };
-                
-                const existingCategory = categories.find(cat => cat.id === id);
-                if (existingCategory) {
-                    alert('Já existe uma categoria com este nome!');
+            function saveTransactions() {
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+            }
+            
+            function renderTransactions() {
+                transactionsList.innerHTML = '';
+                const period = getPeriodTransactions();
+                if (period.length === 0) {
+                    transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma transação cadastrada para este período</p></div>`;
                     return;
                 }
+                const sorted = [...period].sort((a, b) => b.timestamp - a.timestamp);
+                sorted.forEach(tx => {
+                    const li = document.createElement('li');
+                    const cat = categories.find(c => c.id === tx.category);
+                    const catColor = cat ? cat.color : '#95a5a6';
+                    const catName = cat ? cat.name : tx.category;
+                    const holderHtml = tx.holder ? `<span class="holder-badge"><i class="fas fa-user"></i> ${escapeHtml(tx.holder)}</span>` : '';
+                    
+                    li.innerHTML = `
+                        <div class="transaction-info">
+                            <strong>${escapeHtml(tx.description)}</strong>
+                            <small>
+                                <span class="category-badge" style="background-color: ${catColor}">${catName}</span>
+                                ${holderHtml}
+                                • ${tx.date}
+                            </small>
+                        </div>
+                        <div class="transaction-amount" style="color: ${tx.type === 'receita' ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                            ${tx.type === 'receita' ? '+' : '-'} R$ ${tx.amount.toFixed(2)}
+                        </div>
+                        <div class="transaction-actions">
+                            <button class="danger" onclick="window.deleteTransaction(${tx.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    transactionsList.appendChild(li);
+                });
+            }
+            
+            function updateSummary() {
+                const period = getPeriodTransactions();
+                const totalIncome = period.filter(t => t.type === 'receita').reduce((s, t) => s + parseFloat(t.amount), 0);
+                const totalExpense = period.filter(t => t.type === 'despesa').reduce((s, t) => s + parseFloat(t.amount), 0);
+                const balance = totalIncome - totalExpense;
+                totalIncomeElement.textContent = `R$ ${totalIncome.toFixed(2)}`;
+                totalExpenseElement.textContent = `R$ ${totalExpense.toFixed(2)}`;
+                balanceElement.textContent = `R$ ${balance.toFixed(2)}`;
+                balanceElement.className = balance >= 0 ? 'positive' : 'negative';
+            }
+            
+            // ========== PORTADORES ==========
+            function addHolder(name) {
+                const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                if (holders.find(h => h.id === id)) {
+                    alert('Já existe um portador com este nome!');
+                    return;
+                }
+                holders.push({ id, name, active: true, isDefault: false });
+                saveHolders();
+                updateHoldersDropdown();
+                renderHolders();
+            }
+            
+            function editHolder(id, newName) {
+                const h = holders.find(x => x.id === id);
+                if (!h) return;
+                const oldName = h.name;
+                h.name = newName;
+                saveHolders();
+                // Atualiza transações antigas que usavam o nome antigo
+                let changed = 0;
+                transactions.forEach(tx => {
+                    if (tx.holder === oldName) { tx.holder = newName; changed++; }
+                });
+                if (changed > 0) saveTransactions();
+                updateHoldersDropdown();
+                renderHolders();
+                renderTransactions();
+            }
+            
+            function deleteHolder(id) {
+                const h = holders.find(x => x.id === id);
+                if (!h) return;
+                if (h.isDefault) {
+                    alert('Não é possível excluir o portador padrão.');
+                    return;
+                }
+                const txCount = transactions.filter(t => t.holder === h.name).length;
+                if (!confirm(`Marcar o portador "${h.name}" como excluído?\n\n${txCount} transações vinculadas continuarão no histórico, mas ele não aparecerá mais nas opções.`)) return;
+                h.active = false;
+                saveHolders();
+                updateHoldersDropdown();
+                renderHolders();
+            }
+            
+            function saveHolders() {
+                localStorage.setItem('holders', JSON.stringify(holders));
+            }
+            
+            function updateHoldersDropdown() {
+                holderSelect.innerHTML = '<option value="">(usar padrão)</option>';
+                holders.filter(h => h.active).forEach(h => {
+                    const opt = document.createElement('option');
+                    opt.value = h.id;
+                    opt.textContent = h.name + (h.isDefault ? ' (padrão)' : '');
+                    holderSelect.appendChild(opt);
+                });
+            }
+            
+            function renderHolders() {
+                holdersList.innerHTML = '';
+                if (holders.length === 0) {
+                    holdersList.innerHTML = `<div class="empty-state"><i class="fas fa-users"></i><p>Nenhum portador</p></div>`;
+                    return;
+                }
+                const active = holders.filter(h => h.active);
+                const inactive = holders.filter(h => !h.active);
                 
-                categories.push(category);
+                if (active.length > 0) {
+                    const h = document.createElement('h3');
+                    h.textContent = 'Ativos';
+                    h.style.gridColumn = '1 / -1';
+                    h.style.marginTop = '20px';
+                    holdersList.appendChild(h);
+                    active.forEach(holder => holdersList.appendChild(createHolderElement(holder)));
+                }
+                if (inactive.length > 0) {
+                    const h = document.createElement('h3');
+                    h.textContent = 'Excluídos (ocultos)';
+                    h.style.gridColumn = '1 / -1';
+                    h.style.marginTop = '20px';
+                    h.style.color = 'var(--text-secondary)';
+                    holdersList.appendChild(h);
+                    inactive.forEach(holder => holdersList.appendChild(createHolderElement(holder)));
+                }
+            }
+            
+            function createHolderElement(holder) {
+                const el = document.createElement('div');
+                el.className = 'category-card';
+                if (!holder.active) el.style.opacity = '0.5';
+                
+                const badges = [];
+                if (holder.isDefault) badges.push('<span class="holder-badge" style="background:var(--accent-blue);color:white;border:none">padrão</span>');
+                if (!holder.active) badges.push('<span class="holder-badge">excluído</span>');
+                
+                el.innerHTML = `
+                    <i class="fas fa-user-circle" style="font-size:1.5rem;color:var(--accent-blue)"></i>
+                    <div class="category-name">${escapeHtml(holder.name)} ${badges.join(' ')}</div>
+                    <button class="secondary" onclick="window.editHolder('${holder.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                    ${!holder.isDefault ? `<button class="danger" onclick="window.deleteHolder('${holder.id}')" title="Excluir"><i class="fas fa-trash"></i></button>` : ''}
+                `;
+                return el;
+            }
+            
+            // ========== CATEGORIAS ==========
+            function addCategory(name, type, color) {
+                const id = name.toLowerCase().replace(/\s+/g, '-');
+                if (categories.find(c => c.id === id)) { alert('Já existe uma categoria com este nome!'); return; }
+                categories.push({ id, name, type, color });
                 saveCategories();
                 updateCategoriesDropdown();
                 renderCategories();
             }
             
             function deleteCategory(id) {
-                const transactionsWithCategory = transactions.filter(transaction => transaction.category === id);
-                
-                if (transactionsWithCategory.length > 0) {
-                    alert('Não é possível excluir esta categoria pois existem transações vinculadas a ela!');
+                if (transactions.filter(t => t.category === id).length > 0) {
+                    alert('Não é possível excluir: existem transações vinculadas a esta categoria!');
                     return;
                 }
-                
-                categories = categories.filter(category => category.id !== id);
+                categories = categories.filter(c => c.id !== id);
                 saveCategories();
                 updateCategoriesDropdown();
                 renderCategories();
-            }
-            
-            function saveTransactions() {
-                localStorage.setItem('transactions', JSON.stringify(transactions));
             }
             
             function saveCategories() {
@@ -1858,301 +2162,113 @@
             
             function updateCategoriesDropdown() {
                 categorySelect.innerHTML = '';
-                
-                const expenseCategories = categories.filter(cat => cat.type === 'despesa');
-                const incomeCategories = categories.filter(cat => cat.type === 'receita');
-                
-                if (expenseCategories.length > 0) {
-                    const group = document.createElement('optgroup');
-                    group.label = 'Despesas';
-                    
-                    expenseCategories.forEach(category => {
-                        const option = document.createElement('option');
-                        option.value = category.id;
-                        option.textContent = category.name;
-                        group.appendChild(option);
-                    });
-                    
-                    categorySelect.appendChild(group);
+                const exp = categories.filter(c => c.type === 'despesa');
+                const inc = categories.filter(c => c.type === 'receita');
+                if (exp.length) {
+                    const g = document.createElement('optgroup'); g.label = 'Despesas';
+                    exp.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; g.appendChild(o); });
+                    categorySelect.appendChild(g);
                 }
-                
-                if (incomeCategories.length > 0) {
-                    const group = document.createElement('optgroup');
-                    group.label = 'Receitas';
-                    
-                    incomeCategories.forEach(category => {
-                        const option = document.createElement('option');
-                        option.value = category.id;
-                        option.textContent = category.name;
-                        group.appendChild(option);
-                    });
-                    
-                    categorySelect.appendChild(group);
+                if (inc.length) {
+                    const g = document.createElement('optgroup'); g.label = 'Receitas';
+                    inc.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; g.appendChild(o); });
+                    categorySelect.appendChild(g);
                 }
             }
             
             function renderCategories() {
                 categoriesList.innerHTML = '';
-                
-                if (categories.length === 0) {
-                    categoriesList.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-tags"></i>
-                            <p>Nenhuma categoria cadastrada</p>
-                        </div>
-                    `;
-                    return;
+                const exp = categories.filter(c => c.type === 'despesa');
+                const inc = categories.filter(c => c.type === 'receita');
+                if (exp.length) {
+                    const h = document.createElement('h3'); h.textContent = 'Despesas'; h.style.gridColumn = '1 / -1'; h.style.marginTop = '20px';
+                    categoriesList.appendChild(h);
+                    exp.forEach(c => categoriesList.appendChild(createCategoryElement(c)));
                 }
-                
-                const expenseCategories = categories.filter(cat => cat.type === 'despesa');
-                const incomeCategories = categories.filter(cat => cat.type === 'receita');
-                
-                if (expenseCategories.length > 0) {
-                    const heading = document.createElement('h3');
-                    heading.textContent = 'Despesas';
-                    heading.style.gridColumn = '1 / -1';
-                    heading.style.marginTop = '20px';
-                    categoriesList.appendChild(heading);
-                    
-                    expenseCategories.forEach(category => {
-                        const categoryElement = createCategoryElement(category);
-                        categoriesList.appendChild(categoryElement);
-                    });
-                }
-                
-                if (incomeCategories.length > 0) {
-                    const heading = document.createElement('h3');
-                    heading.textContent = 'Receitas';
-                    heading.style.gridColumn = '1 / -1';
-                    heading.style.marginTop = '20px';
-                    categoriesList.appendChild(heading);
-                    
-                    incomeCategories.forEach(category => {
-                        const categoryElement = createCategoryElement(category);
-                        categoriesList.appendChild(categoryElement);
-                    });
+                if (inc.length) {
+                    const h = document.createElement('h3'); h.textContent = 'Receitas'; h.style.gridColumn = '1 / -1'; h.style.marginTop = '20px';
+                    categoriesList.appendChild(h);
+                    inc.forEach(c => categoriesList.appendChild(createCategoryElement(c)));
                 }
             }
             
             function createCategoryElement(category) {
-                const element = document.createElement('div');
-                element.className = 'category-card';
-                
-                element.innerHTML = `
+                const el = document.createElement('div');
+                el.className = 'category-card';
+                el.innerHTML = `
                     <div class="category-color" style="background-color: ${category.color}"></div>
-                    <div class="category-name">${category.name}</div>
-                    <button class="danger" onclick="window.deleteCategory('${category.id}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div class="category-name">${escapeHtml(category.name)}</div>
+                    <button class="danger" onclick="window.deleteCategory('${category.id}')"><i class="fas fa-trash"></i></button>
                 `;
-                
-                return element;
+                return el;
             }
             
-            function renderTransactions() {
-                transactionsList.innerHTML = '';
-                
-                const periodTransactions = getPeriodTransactions();
-                
-                if (periodTransactions.length === 0) {
-                    transactionsList.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-receipt"></i>
-                            <p>Nenhuma transação cadastrada para este período</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const sortedTransactions = [...periodTransactions].sort((a, b) => b.timestamp - a.timestamp);
-                
-                sortedTransactions.forEach(transaction => {
-                    const li = document.createElement('li');
-                    
-                    const category = categories.find(cat => cat.id === transaction.category);
-                    const categoryColor = category ? category.color : '#95a5a6';
-                    const categoryName = category ? category.name : transaction.category;
-                    
-                    li.innerHTML = `
-                        <div class="transaction-info">
-                            <strong>${transaction.description}</strong>
-                            <small>
-                                <span class="category-badge" style="background-color: ${categoryColor}">
-                                    ${categoryName}
-                                </span>
-                                • ${transaction.date}
-                            </small>
-                        </div>
-                        <div class="transaction-amount" style="color: ${transaction.type === 'receita' ? 'var(--accent-green)' : 'var(--accent-red)'}">
-                            ${transaction.type === 'receita' ? '+' : '-'} R$ ${transaction.amount.toFixed(2)}
-                        </div>
-                        <div class="transaction-actions">
-                            <button class="danger" onclick="window.deleteTransaction(${transaction.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    
-                    transactionsList.appendChild(li);
-                });
-            }
+            // ========== GRÁFICOS ==========
+            function isDarkMode() { return document.body.classList.contains('dark-mode'); }
             
-            function updateSummary() {
-                const periodTransactions = getPeriodTransactions();
-                
-                const totalIncome = periodTransactions
-                    .filter(t => t.type === 'receita')
-                    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-                
-                const totalExpense = periodTransactions
-                    .filter(t => t.type === 'despesa')
-                    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-                
-                const balance = totalIncome - totalExpense;
-                
-                totalIncomeElement.textContent = `R$ ${totalIncome.toFixed(2)}`;
-                totalExpenseElement.textContent = `R$ ${totalExpense.toFixed(2)}`;
-                balanceElement.textContent = `R$ ${balance.toFixed(2)}`;
-                
-                balanceElement.className = balance >= 0 ? 'positive' : 'negative';
-            }
-            
-            function renderCharts() {
-                renderExpensesChart();
-                renderIncomeVsExpensesChart();
-            }
-            
-            // Detecta se está em dark mode para ajustar cores dos gráficos
-            function isDarkMode() {
-                return document.body.classList.contains('dark-mode');
-            }
+            function renderCharts() { renderExpensesChart(); renderIncomeVsExpensesChart(); }
             
             function renderExpensesChart() {
                 const ctx = document.getElementById('expenses-chart').getContext('2d');
                 const dark = isDarkMode();
                 const textColor = dark ? '#e8eaed' : '#2c3e50';
-                
-                const periodTransactions = getPeriodTransactions();
-                const expensesByCategory = {};
-                
-                periodTransactions
-                    .filter(t => t.type === 'despesa')
-                    .forEach(transaction => {
-                        if (!expensesByCategory[transaction.category]) {
-                            expensesByCategory[transaction.category] = 0;
-                        }
-                        expensesByCategory[transaction.category] += parseFloat(transaction.amount);
-                    });
-                
-                const labels = [];
-                const data = [];
-                const backgroundColors = [];
-                const categoryIds = [];
-                
-                Object.keys(expensesByCategory).forEach(categoryId => {
-                    const category = categories.find(cat => cat.id === categoryId);
-                    if (category) {
-                        labels.push(category.name);
-                        data.push(expensesByCategory[categoryId]);
-                        backgroundColors.push(category.color);
-                        categoryIds.push(categoryId);
-                    }
+                const period = getPeriodTransactions();
+                const byCat = {};
+                period.filter(t => t.type === 'despesa').forEach(t => {
+                    byCat[t.category] = (byCat[t.category] || 0) + parseFloat(t.amount);
                 });
-                
-                if (window.expensesChart) {
-                    window.expensesChart.destroy();
-                }
-                
+                const labels = [], data = [], bgColors = [], catIds = [];
+                Object.keys(byCat).forEach(cid => {
+                    const c = categories.find(x => x.id === cid);
+                    if (c) { labels.push(c.name); data.push(byCat[cid]); bgColors.push(c.color); catIds.push(cid); }
+                });
+                if (window.expensesChart) window.expensesChart.destroy();
                 if (data.length > 0) {
                     window.expensesChart = new Chart(ctx, {
                         type: 'pie',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                data: data,
-                                backgroundColor: backgroundColors,
-                                borderWidth: 1,
-                                borderColor: dark ? '#242830' : '#ffffff'
-                            }]
-                        },
+                        data: { labels, datasets: [{ data, backgroundColor: bgColors, borderWidth: 1, borderColor: dark ? '#242830' : '#ffffff' }] },
                         options: {
                             responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        color: textColor
-                                    }
-                                }
-                            },
-                            onClick: function(event, elements) {
-                                if (elements.length > 0) {
-                                    const index = elements[0].index;
-                                    const categoryId = categoryIds[index];
-                                    showCategoryDetails(categoryId);
-                                }
-                            }
+                            plugins: { legend: { position: 'bottom', labels: { color: textColor } } },
+                            onClick: (e, els) => { if (els.length > 0) showCategoryDetails(catIds[els[0].index]); }
                         }
                     });
                 } else {
                     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                    ctx.font = '16px Arial';
-                    ctx.fillStyle = dark ? '#a0a4ab' : '#7f8c8d';
-                    ctx.textAlign = 'center';
+                    ctx.font = '16px Arial'; ctx.fillStyle = dark ? '#a0a4ab' : '#7f8c8d'; ctx.textAlign = 'center';
                     ctx.fillText('Nenhuma despesa para exibir', ctx.canvas.width / 2, ctx.canvas.height / 2);
                 }
             }
             
             function showCategoryDetails(categoryId) {
-                const periodTransactions = getPeriodTransactions();
-                const category = categories.find(cat => cat.id === categoryId);
-                
-                if (!category) {
-                    alert('Categoria não encontrada!');
-                    return;
-                }
-                
-                const categoryTransactions = periodTransactions
-                    .filter(t => t.category === categoryId && t.type === 'despesa')
-                    .sort((a, b) => b.timestamp - a.timestamp);
-                
-                if (categoryTransactions.length === 0) {
-                    alert('Nenhuma transação encontrada para esta categoria.');
-                    return;
-                }
-                
-                const total = categoryTransactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
-                
-                detailCategoryName.textContent = `${category.name} (Despesas)`;
+                const period = getPeriodTransactions();
+                const cat = categories.find(c => c.id === categoryId);
+                if (!cat) return;
+                const txs = period.filter(t => t.category === categoryId && t.type === 'despesa').sort((a, b) => b.timestamp - a.timestamp);
+                if (txs.length === 0) { alert('Nenhuma transação.'); return; }
+                const total = txs.reduce((s, t) => s + parseFloat(t.amount), 0);
+                detailCategoryName.textContent = `${cat.name} (Despesas)`;
                 detailTotal.textContent = `R$ ${total.toFixed(2)}`;
-                
                 detailTransactionsList.innerHTML = '';
                 const ul = document.createElement('ul');
-                ul.style.listStyle = 'none';
-                ul.style.padding = '0';
-                
-                categoryTransactions.forEach(transaction => {
+                ul.style.listStyle = 'none'; ul.style.padding = '0';
+                txs.forEach(tx => {
                     const li = document.createElement('li');
                     li.style.padding = '10px';
                     li.style.borderBottom = '1px solid var(--border-light)';
                     li.style.display = 'flex';
                     li.style.justifyContent = 'space-between';
                     li.style.alignItems = 'center';
-                    
+                    const holderHtml = tx.holder ? ` • <span class="holder-badge">${escapeHtml(tx.holder)}</span>` : '';
                     li.innerHTML = `
                         <div>
-                            <strong>${transaction.description}</strong>
-                            <br>
-                            <small style="color: var(--text-secondary);">${transaction.date}</small>
+                            <strong>${escapeHtml(tx.description)}</strong><br>
+                            <small style="color:var(--text-secondary)">${tx.date}${holderHtml}</small>
                         </div>
-                        <div style="font-weight: bold; color: var(--accent-red);">
-                            - R$ ${transaction.amount.toFixed(2)}
-                        </div>
+                        <div style="font-weight: bold; color: var(--accent-red);">- R$ ${tx.amount.toFixed(2)}</div>
                     `;
-                    
                     ul.appendChild(li);
                 });
-                
                 detailTransactionsList.appendChild(ul);
                 categoryDetail.classList.add('show');
                 categoryDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2163,100 +2279,62 @@
                 const dark = isDarkMode();
                 const textColor = dark ? '#e8eaed' : '#2c3e50';
                 const gridColor = dark ? '#3a3f47' : '#eeeeee';
-                
-                const monthlyData = {};
-                const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                
+                const monthly = {};
+                const monthNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
                 const today = new Date();
                 for (let i = 5; i >= 0; i--) {
-                    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                    const month = date.getMonth();
-                    const year = date.getFullYear();
-                    const label = `${monthNames[month]}/${year}`;
-                    
-                    monthlyData[label] = { income: 0, expense: 0 };
-                    
-                    transactions.forEach(transaction => {
-                        if (transaction.month === month && transaction.year === year) {
-                            if (transaction.type === 'receita') {
-                                monthlyData[label].income += parseFloat(transaction.amount);
-                            } else {
-                                monthlyData[label].expense += parseFloat(transaction.amount);
-                            }
+                    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                    const label = `${monthNames[d.getMonth()]}/${d.getFullYear()}`;
+                    monthly[label] = { income: 0, expense: 0 };
+                    transactions.forEach(tx => {
+                        if (tx.month === d.getMonth() && tx.year === d.getFullYear()) {
+                            if (tx.type === 'receita') monthly[label].income += parseFloat(tx.amount);
+                            else monthly[label].expense += parseFloat(tx.amount);
                         }
                     });
                 }
-                
-                const labels = Object.keys(monthlyData);
-                const incomeData = labels.map(label => monthlyData[label].income);
-                const expenseData = labels.map(label => monthlyData[label].expense);
-                
-                if (window.incomeVsExpensesChart) {
-                    window.incomeVsExpensesChart.destroy();
-                }
-                
+                const labels = Object.keys(monthly);
+                const incomeData = labels.map(l => monthly[l].income);
+                const expenseData = labels.map(l => monthly[l].expense);
+                if (window.incomeVsExpensesChart) window.incomeVsExpensesChart.destroy();
                 if (labels.length > 0) {
                     window.incomeVsExpensesChart = new Chart(ctx, {
                         type: 'bar',
                         data: {
-                            labels: labels,
+                            labels,
                             datasets: [
-                                {
-                                    label: 'Receitas',
-                                    data: incomeData,
-                                    backgroundColor: '#27ae60',
-                                    borderWidth: 1
-                                },
-                                {
-                                    label: 'Despesas',
-                                    data: expenseData,
-                                    backgroundColor: '#e74c3c',
-                                    borderWidth: 1
-                                }
+                                { label: 'Receitas', data: incomeData, backgroundColor: '#27ae60', borderWidth: 1 },
+                                { label: 'Despesas', data: expenseData, backgroundColor: '#e74c3c', borderWidth: 1 }
                             ]
                         },
                         options: {
                             responsive: true,
                             scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        color: textColor
-                                    },
-                                    grid: {
-                                        color: gridColor
-                                    }
-                                },
-                                x: {
-                                    ticks: {
-                                        color: textColor
-                                    },
-                                    grid: {
-                                        color: gridColor
-                                    }
-                                }
+                                y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } },
+                                x: { ticks: { color: textColor }, grid: { color: gridColor } }
                             },
-                            plugins: {
-                                legend: {
-                                    labels: {
-                                        color: textColor
-                                    }
-                                }
-                            }
+                            plugins: { legend: { labels: { color: textColor } } }
                         }
                     });
                 } else {
                     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                    ctx.font = '16px Arial';
-                    ctx.fillStyle = dark ? '#a0a4ab' : '#7f8c8d';
-                    ctx.textAlign = 'center';
+                    ctx.font = '16px Arial'; ctx.fillStyle = dark ? '#a0a4ab' : '#7f8c8d'; ctx.textAlign = 'center';
                     ctx.fillText('Nenhum dado para exibir', ctx.canvas.width / 2, ctx.canvas.height / 2);
                 }
             }
             
-            // Funções globais para os event listeners nos botões
+            // ========== GLOBAIS ==========
             window.deleteTransaction = deleteTransaction;
             window.deleteCategory = deleteCategory;
+            window.deleteHolder = deleteHolder;
+            window.editHolder = function(id) {
+                const h = holders.find(x => x.id === id);
+                if (!h) return;
+                const newName = prompt('Novo nome do portador:', h.name);
+                if (newName && newName.trim() && newName.trim() !== h.name) {
+                    editHolder(id, newName.trim());
+                }
+            };
         });
     </script>
 </body>
