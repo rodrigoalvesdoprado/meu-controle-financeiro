@@ -164,6 +164,37 @@
         .transactions-header h2 { margin-bottom: 0; }
         .transactions-header .count-badge { background: var(--accent-blue); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; }
         
+        /* Filtro de portador (reutilizável nas abas Lançamentos e Relatórios) */
+        .holder-filter-bar {
+            background: var(--surface-alt);
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            border-left: 4px solid var(--accent-purple);
+        }
+        .holder-filter-bar label {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .holder-filter-bar select {
+            margin: 0;
+            padding: 8px 12px;
+            font-size: 14px;
+            width: auto;
+            min-width: 200px;
+            flex: 1;
+            max-width: 320px;
+        }
+        
         .transactions ul { list-style: none; padding: 0; }
         .transactions li { padding: 15px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; transition: background 0.3s ease; color: var(--text-primary); }
         .transactions li:hover { background: var(--surface-hover); }
@@ -215,6 +246,64 @@
         .category-detail h3 { margin-top: 0; display: flex; align-items: center; gap: 10px; }
         .category-detail .close-detail { margin-left: auto; width: auto; padding: 5px 15px; background: var(--accent-red); font-size: 14px; }
         .category-detail .close-detail:hover { background: var(--accent-red-hover); }
+        
+        /* Resumo por portador */
+        .holder-summary-section {
+            margin: 25px 0;
+            padding: 20px;
+            background: var(--surface-alt);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-purple);
+        }
+        .holder-summary-section h3 {
+            margin-top: 0;
+            color: var(--accent-purple);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .holder-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 10px;
+            color: var(--text-primary);
+        }
+        .holder-summary-table th {
+            text-align: left;
+            padding: 10px 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 2px solid var(--border);
+            font-weight: 700;
+        }
+        .holder-summary-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .holder-summary-table tr:last-child td { border-bottom: none; }
+        .holder-summary-table tr:hover td { background: var(--surface-hover); }
+        .holder-summary-table .hs-holder { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .holder-summary-table .hs-holder .avatar {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .holder-summary-table .hs-amount { text-align: right; font-variant-numeric: tabular-nums; }
+        .holder-summary-table .hs-total-row td {
+            border-top: 2px solid var(--border);
+            font-weight: 700;
+            background: var(--surface);
+        }
         
         .install-banner { background: var(--accent-green); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; animation: slideDown 0.5s ease; }
         .install-banner.show { display: flex; }
@@ -354,6 +443,15 @@
             .review-table td input, .review-table td select { flex: 1; }
             .review-table .col-actions { justify-content: flex-end; }
             .review-table .col-actions::before { display: none; }
+            
+            .holder-filter-bar { flex-direction: column; align-items: stretch; }
+            .holder-filter-bar select { max-width: none; }
+            
+            .holder-summary-table, .holder-summary-table thead, .holder-summary-table tbody, .holder-summary-table tr, .holder-summary-table td, .holder-summary-table th { display: block; }
+            .holder-summary-table thead { display: none; }
+            .holder-summary-table tr { background: var(--surface); border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-light); }
+            .holder-summary-table td { border: none; padding: 5px 0; display: flex; justify-content: space-between; align-items: center; }
+            .holder-summary-table td::before { content: attr(data-label); font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
         }
         
         @media (display-mode: standalone) {
@@ -475,6 +573,13 @@
                 </form>
             </div>
 
+            <div class="holder-filter-bar">
+                <label for="holder-filter-transactions"><i class="fas fa-filter"></i> Filtrar por portador:</label>
+                <select id="holder-filter-transactions">
+                    <option value="all">Todos os portadores</option>
+                </select>
+            </div>
+
             <div class="summary">
                 <div class="summary-item">
                     <h3>✅ Receitas</h3>
@@ -549,6 +654,14 @@
         
         <div class="tab-content" id="reports-tab">
             <h2>Relatórios Financeiros</h2>
+            
+            <div class="holder-filter-bar">
+                <label for="holder-filter-reports"><i class="fas fa-filter"></i> Filtrar por portador:</label>
+                <select id="holder-filter-reports">
+                    <option value="all">Todos os portadores</option>
+                </select>
+            </div>
+            
             <div class="charts-container">
                 <div class="chart-wrapper clickable" id="expenses-chart-wrapper">
                     <h3>Despesas por Categoria</h3>
@@ -558,6 +671,15 @@
                     <h3>Receitas vs Despesas</h3>
                     <canvas id="income-vs-expenses-chart"></canvas>
                 </div>
+                <div class="chart-wrapper clickable" id="holders-chart-wrapper">
+                    <h3>Despesas por Portador</h3>
+                    <canvas id="holders-chart"></canvas>
+                </div>
+            </div>
+            
+            <div class="holder-summary-section">
+                <h3><i class="fas fa-users"></i> Resumo por Portador</h3>
+                <div id="holder-summary-container"></div>
             </div>
             
             <div class="category-detail" id="category-detail">
@@ -655,6 +777,11 @@
             const cancelImportBtn = document.getElementById('cancelImportBtn');
             const confirmImportBtn = document.getElementById('confirmImportBtn');
             
+            // Filtros de portador
+            const holderFilterTx = document.getElementById('holder-filter-transactions');
+            const holderFilterReports = document.getElementById('holder-filter-reports');
+            const holderSummaryContainer = document.getElementById('holder-summary-container');
+            
             // ========== DADOS ==========
             let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
             let categories = JSON.parse(localStorage.getItem('categories')) || [
@@ -682,7 +809,6 @@
                 holders.push({ id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true });
             }
             
-            // ========== TAGS DE CATEGORIZAÇÃO ==========
             const CATEGORY_TAGS = {
                 'transporte': ['posto', 'auto posto', 'autoposto', 'autopostodatorre', 'auto-posto', 'combustivel', 'gasolina', 'etanol', 'uber', '99 ', 'taxi', 'estacionamento', 'pedagio', 'sem parar', 'semparar', 'veloe', 'lr transportes', 'l r transportes'],
                 'alimentacao': ['supermercado', 'supermercad', 'mercado', 'hipermerc', 'atacad', 'atacado', 'padaria', 'panificad', 'restaurante', 'restaur', 'lanchonet', 'pizzaria', 'pizza', 'ifood', 'ifd ', 'food', 'comida', 'cheiro', 'cheirin', 'sabor', 'assaggiare', 'churrasc', 'churrasco', 'peixe', 'sushi', 'nippon', 'mcdonald', 'burger', 'bar ', 'bar', 'cerveja', 'bebida', 'mineirinha', 'velhote', 'mach enio', 'machenio', 'jim com', 'madrugadao', 'bfs alimentacao', 'bfs aliment', 'gri', 'grill', 'fe bar', 'espartanos', 'fuganti'],
@@ -698,6 +824,9 @@
                 'freelance': ['freelance', 'freela', 'servico prestado', 'serviço prestado']
             };
             
+            // Cores fixas para portadores no gráfico
+            const HOLDER_COLORS = ['#3498db', '#e74c3c', '#2ecc71', '#9b59b6', '#f1c40f', '#e67e22', '#1abc9c', '#d35400', '#7f8c8d', '#27ae60'];
+            
             // ========== ESTADO ==========
             let periodMode = 'standard';
             let customStartDate = null;
@@ -706,6 +835,8 @@
             let isListening = false;
             let importPreview = null;
             let currentDueDate = null;
+            let currentHolderFilterTx = 'all';       // filtro da aba Lançamentos
+            let currentHolderFilterReports = 'all';  // filtro da aba Relatórios
             
             // ========== TEMA ==========
             function applyTheme(theme) {
@@ -765,6 +896,12 @@
             function fmtBRL(v) {
                 return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             }
+            function getInitials(name) {
+                if (!name) return '?';
+                const parts = name.trim().split(/\s+/);
+                if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
             
             // ========== INICIALIZAÇÃO ==========
             init();
@@ -787,6 +924,7 @@
                 setupStandardPeriod();
                 updateCategoriesDropdown();
                 updateHoldersDropdown();
+                updateHolderFilters();
                 renderCategories();
                 renderHolders();
                 updateSummary();
@@ -826,6 +964,7 @@
                 if (rt.classList.contains('active')) renderCharts();
             }
             
+            // Retorna transações no período (SEM filtro de portador)
             function getPeriodTransactions() {
                 const s = getStartOfDay(new Date(customStartDate));
                 const e = getEndOfDay(new Date(customEndDate));
@@ -833,6 +972,13 @@
                     const d = new Date(t.timestamp);
                     return d >= s && d <= e;
                 });
+            }
+            
+            // Aplica filtro de portador a um array de transações
+            function filterByHolder(txs, holderFilter) {
+                if (!holderFilter || holderFilter === 'all') return txs;
+                if (holderFilter === '__none__') return txs.filter(t => !t.holder);
+                return txs.filter(t => t.holder === holderFilter);
             }
             
             // ========== PWA ==========
@@ -1093,20 +1239,12 @@
                 return 'outros';
             }
             
-            function resolveYear(month, dueMonth, dueYear) {
-                return month > dueMonth ? dueYear - 1 : dueYear;
-            }
-            
             function processInvoiceFile(content) {
                 const lines = content.split(/\r?\n/);
                 const transactions = [];
                 const validation = {
-                    perCard: {},
-                    creditsTotal: 0,
-                    cardExpensesTotal: 0,
-                    netCalculated: 0,
-                    declaredTotal: null,
-                    demonstrativoTotalDeclared: null
+                    perCard: {}, creditsTotal: 0, cardExpensesTotal: 0,
+                    netCalculated: 0, declaredTotal: null, demonstrativoTotalDeclared: null
                 };
                 
                 let currentHolder = null;
@@ -1114,11 +1252,8 @@
                 let currentSection = null;
                 let currentScope = 'demonstrativo';
                 
-                // Ano e mês do vencimento da fatura
                 const anoVenc = currentDueDate.year;
-                const mesVenc = currentDueDate.month; // 0-indexado
-                
-                // Mês anterior ao vencimento (com ajuste de ano se necessário)
+                const mesVenc = currentDueDate.month;
                 const mesAnteriorVenc = mesVenc === 0 ? 11 : mesVenc - 1;
                 const anoMesAnteriorVenc = mesVenc === 0 ? anoVenc - 1 : anoVenc;
                 
@@ -1177,29 +1312,23 @@
                     
                     let date;
                     let finalDescription;
-                    
-                    // Data original da compra no formato DD/MM
                     const diaStr = String(tx.day).padStart(2, '0');
                     const mesStr = String(tx.month + 1).padStart(2, '0');
                     const dataCompraStr = `${diaStr}/${mesStr}`;
                     
                     if (installment) {
-                        // PARCELA: data = 13 do mês do vencimento
                         date = new Date(anoVenc, mesVenc, 13);
                         finalDescription = `${cleanDesc} (${dataCompraStr} - ${installment})`;
                     } else {
-                        // COMPRA À VISTA
                         if (tx.month === mesVenc) {
-                            // Compra no MESMO mês do vencimento → dia 02
                             date = new Date(anoVenc, mesVenc, 2);
                         } else {
-                            // Compra em mês anterior → dia 28 do mês anterior
                             date = new Date(anoMesAnteriorVenc, mesAnteriorVenc, 28);
                         }
                         finalDescription = `${cleanDesc} (${dataCompraStr})`;
                     }
                     
-                    const transaction = {
+                    transactions.push({
                         id: Date.now() + Math.random() + Math.random(),
                         description: finalDescription,
                         amount: tx.amount,
@@ -1212,9 +1341,7 @@
                         holder: currentHolder,
                         cardNumber: currentCard,
                         installment: installment
-                    };
-                    
-                    transactions.push(transaction);
+                    });
                     validation.cardExpensesTotal += tx.amount;
                 }
                 
@@ -1303,7 +1430,6 @@
                         <span class="${match ? 'ok' : 'fail'}">${match ? '✓ VALORES BATEM' : '✗ DIVERGÊNCIA DE ' + fmtBRL(diff)}</span>
                     </div>`;
                 }
-                
                 validationInfo.innerHTML = html;
             }
             
@@ -1431,24 +1557,18 @@
             
             function confirmImport() {
                 try {
-                    console.log('[DEBUG] confirmImport iniciado');
                     const collected = collectReviewData();
-                    console.log('[DEBUG] Lançamentos coletados:', collected.length);
-                    
                     if (collected.length === 0) {
                         alert('Nenhum lançamento válido para salvar.');
                         return;
                     }
-                    
                     collected.forEach(tx => transactions.push(tx));
                     saveTransactions();
-                    console.log('[DEBUG] Total de transações agora:', transactions.length);
-                    
                     renderTransactions();
                     updateSummary();
+                    updateHolderFilters();
                     closeReviewModal();
                     showImportFeedback('success', `${collected.length} lançamentos importados com sucesso!`);
-                    console.log('[DEBUG] confirmImport finalizado com sucesso');
                 } catch(err) {
                     console.error('[ERRO em confirmImport]:', err);
                     alert('Erro ao salvar: ' + err.message);
@@ -1472,6 +1592,18 @@
                 });
                 cancelImportBtn.addEventListener('click', closeReviewModal);
                 confirmImportBtn.addEventListener('click', confirmImport);
+                
+                // Filtros de portador
+                holderFilterTx.addEventListener('change', (e) => {
+                    currentHolderFilterTx = e.target.value;
+                    renderTransactions();
+                    updateSummary();
+                });
+                holderFilterReports.addEventListener('change', (e) => {
+                    currentHolderFilterReports = e.target.value;
+                    renderCharts();
+                    renderHolderSummary();
+                });
                 
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -1587,7 +1719,10 @@
                         tabContents.forEach(tc => tc.classList.remove('active'));
                         tab.classList.add('active');
                         document.getElementById(`${tabId}-tab`).classList.add('active');
-                        if (tabId === 'reports') renderCharts();
+                        if (tabId === 'reports') {
+                            renderCharts();
+                            renderHolderSummary();
+                        }
                     });
                 });
             }
@@ -1608,6 +1743,7 @@
                 saveTransactions();
                 renderTransactions();
                 updateSummary();
+                updateHolderFilters();
             }
             
             function deleteTransaction(id) {
@@ -1615,21 +1751,25 @@
                 saveTransactions();
                 renderTransactions();
                 updateSummary();
+                updateHolderFilters();
             }
             
             function saveTransactions() { localStorage.setItem('transactions', JSON.stringify(transactions)); }
             
             function renderTransactions() {
                 transactionsList.innerHTML = '';
-                const period = getPeriodTransactions();
+                let period = getPeriodTransactions();
+                period = filterByHolder(period, currentHolderFilterTx);
                 
-                // Atualiza o contador no header
                 transactionsCountEl.textContent = period.length === 1 
                     ? '1 lançamento' 
                     : `${period.length} lançamentos`;
                 
                 if (period.length === 0) {
-                    transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma transação cadastrada para este período</p></div>`;
+                    const filterMsg = currentHolderFilterTx !== 'all' 
+                        ? 'Nenhuma transação deste portador neste período' 
+                        : 'Nenhuma transação cadastrada para este período';
+                    transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>${filterMsg}</p></div>`;
                     return;
                 }
                 [...period].sort((a, b) => b.timestamp - a.timestamp).forEach(tx => {
@@ -1659,7 +1799,9 @@
             }
             
             function updateSummary() {
-                const period = getPeriodTransactions();
+                let period = getPeriodTransactions();
+                period = filterByHolder(period, currentHolderFilterTx);
+                
                 const incTx = period.filter(t => t.type === 'receita');
                 const expTx = period.filter(t => t.type === 'despesa');
                 const inc = incTx.reduce((s, t) => s + parseFloat(t.amount), 0);
@@ -1671,7 +1813,6 @@
                 balanceElement.textContent = `R$ ${(inc - exp).toFixed(2)}`;
                 balanceElement.className = (inc - exp) >= 0 ? 'positive' : 'negative';
                 
-                // Contadores
                 countIncomeEl.textContent = incTx.length === 1 ? '(1 lançamento)' : `(${incTx.length} lançamentos)`;
                 countExpenseEl.textContent = expTx.length === 1 ? '(1 lançamento)' : `(${expTx.length} lançamentos)`;
                 countTotalEl.textContent = totalCount === 1 ? '(1 lançamento no total)' : `(${totalCount} lançamentos no total)`;
@@ -1684,6 +1825,7 @@
                 holders.push({ id, name, active: true, isDefault: false });
                 saveHolders();
                 updateHoldersDropdown();
+                updateHolderFilters();
                 renderHolders();
             }
             function editHolder(id, newName) {
@@ -1696,6 +1838,7 @@
                 transactions.forEach(tx => { if (tx.holder === oldName) { tx.holder = newName; changed++; } });
                 if (changed > 0) saveTransactions();
                 updateHoldersDropdown();
+                updateHolderFilters();
                 renderHolders();
                 renderTransactions();
             }
@@ -1708,6 +1851,7 @@
                 h.active = false;
                 saveHolders();
                 updateHoldersDropdown();
+                updateHolderFilters();
                 renderHolders();
             }
             function saveHolders() { localStorage.setItem('holders', JSON.stringify(holders)); }
@@ -1720,6 +1864,49 @@
                     holderSelect.appendChild(o);
                 });
             }
+            
+            // Atualiza os dropdowns de filtro (Lançamentos e Relatórios)
+            function updateHolderFilters() {
+                const period = getPeriodTransactions();
+                
+                // Coleta portadores únicos (por nome) que aparecem no período
+                const holdersInPeriod = new Set();
+                let hasNoHolder = false;
+                period.forEach(t => {
+                    if (t.holder) holdersInPeriod.add(t.holder);
+                    else hasNoHolder = true;
+                });
+                
+                // Reconstrói as opções
+                const buildOptions = () => {
+                    let html = '<option value="all">Todos os portadores</option>';
+                    // Ordena alfabeticamente
+                    [...holdersInPeriod].sort().forEach(name => {
+                        html += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+                    });
+                    if (hasNoHolder) {
+                        html += '<option value="__none__">(sem portador)</option>';
+                    }
+                    return html;
+                };
+                
+                const newOptionsHtml = buildOptions();
+                
+                // Preserva seleção se ainda existir
+                const txValue = currentHolderFilterTx;
+                const rpValue = currentHolderFilterReports;
+                
+                holderFilterTx.innerHTML = newOptionsHtml;
+                holderFilterReports.innerHTML = newOptionsHtml;
+                
+                // Restaura seleção se possível
+                if ([...holderFilterTx.options].some(o => o.value === txValue)) holderFilterTx.value = txValue;
+                else { holderFilterTx.value = 'all'; currentHolderFilterTx = 'all'; }
+                
+                if ([...holderFilterReports.options].some(o => o.value === rpValue)) holderFilterReports.value = rpValue;
+                else { holderFilterReports.value = 'all'; currentHolderFilterReports = 'all'; }
+            }
+            
             function renderHolders() {
                 holdersList.innerHTML = '';
                 const active = holders.filter(h => h.active);
@@ -1814,13 +2001,24 @@
             
             // ========== GRÁFICOS ==========
             function isDarkMode() { return document.body.classList.contains('dark-mode'); }
-            function renderCharts() { renderExpensesChart(); renderIncomeVsExpensesChart(); }
+            
+            // Transações do período já filtradas pelo filtro de relatórios
+            function getReportTransactions() {
+                let period = getPeriodTransactions();
+                return filterByHolder(period, currentHolderFilterReports);
+            }
+            
+            function renderCharts() {
+                renderExpensesChart();
+                renderIncomeVsExpensesChart();
+                renderHoldersChart();
+            }
             
             function renderExpensesChart() {
                 const ctx = document.getElementById('expenses-chart').getContext('2d');
                 const dark = isDarkMode();
                 const textColor = dark ? '#e8eaed' : '#2c3e50';
-                const period = getPeriodTransactions();
+                const period = getReportTransactions();
                 const byCat = {};
                 period.filter(t => t.type === 'despesa').forEach(t => {
                     byCat[t.category] = (byCat[t.category] || 0) + parseFloat(t.amount);
@@ -1839,6 +2037,41 @@
                             responsive: true,
                             plugins: { legend: { position: 'bottom', labels: { color: textColor } } },
                             onClick: (e, els) => { if (els.length > 0) showCategoryDetails(catIds[els[0].index]); }
+                        }
+                    });
+                } else {
+                    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                    ctx.font = '16px Arial'; ctx.fillStyle = dark ? '#a0a4ab' : '#7f8c8d'; ctx.textAlign = 'center';
+                    ctx.fillText('Nenhuma despesa para exibir', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                }
+            }
+            
+            function renderHoldersChart() {
+                const ctx = document.getElementById('holders-chart').getContext('2d');
+                const dark = isDarkMode();
+                const textColor = dark ? '#e8eaed' : '#2c3e50';
+                const period = getReportTransactions();
+                const byHolder = {};
+                period.filter(t => t.type === 'despesa').forEach(t => {
+                    const key = t.holder || '(sem portador)';
+                    byHolder[key] = (byHolder[key] || 0) + parseFloat(t.amount);
+                });
+                const labels = [], data = [], bg = [], holderNames = [];
+                Object.keys(byHolder).sort((a, b) => byHolder[b] - byHolder[a]).forEach((name, i) => {
+                    labels.push(name);
+                    data.push(byHolder[name]);
+                    bg.push(HOLDER_COLORS[i % HOLDER_COLORS.length]);
+                    holderNames.push(name);
+                });
+                if (window.holdersChart) window.holdersChart.destroy();
+                if (data.length > 0) {
+                    window.holdersChart = new Chart(ctx, {
+                        type: 'pie',
+                        data: { labels, datasets: [{ data, backgroundColor: bg, borderWidth: 1, borderColor: dark ? '#242830' : '#ffffff' }] },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'bottom', labels: { color: textColor } } },
+                            onClick: (e, els) => { if (els.length > 0) showHolderDetails(holderNames[els[0].index]); }
                         }
                     });
                 } else {
@@ -1882,6 +2115,105 @@
                 categoryDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
+            function showHolderDetails(holderName) {
+                const period = getPeriodTransactions();
+                const txs = period
+                    .filter(t => {
+                        if (holderName === '(sem portador)') return !t.holder && t.type === 'despesa';
+                        return t.holder === holderName && t.type === 'despesa';
+                    })
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                if (txs.length === 0) { alert('Nenhuma transação.'); return; }
+                const total = txs.reduce((s, t) => s + parseFloat(t.amount), 0);
+                detailCategoryName.textContent = `${holderName} (Despesas)`;
+                detailTotal.textContent = `R$ ${total.toFixed(2)}`;
+                detailTransactionsList.innerHTML = '';
+                const ul = document.createElement('ul');
+                ul.style.listStyle = 'none'; ul.style.padding = '0';
+                txs.forEach(tx => {
+                    const li = document.createElement('li');
+                    li.style.padding = '10px';
+                    li.style.borderBottom = '1px solid var(--border-light)';
+                    li.style.display = 'flex';
+                    li.style.justifyContent = 'space-between';
+                    li.style.alignItems = 'center';
+                    const cat = categories.find(c => c.id === tx.category);
+                    const catName = cat ? cat.name : tx.category;
+                    const catColor = cat ? cat.color : '#95a5a6';
+                    li.innerHTML = `
+                        <div>
+                            <strong>${escapeHtml(tx.description)}</strong><br>
+                            <small style="color:var(--text-secondary)">
+                                <span class="category-badge" style="background:${catColor}">${catName}</span>
+                                • ${tx.date}
+                            </small>
+                        </div>
+                        <div style="font-weight: bold; color: var(--accent-red);">- R$ ${tx.amount.toFixed(2)}</div>
+                    `;
+                    ul.appendChild(li);
+                });
+                detailTransactionsList.appendChild(ul);
+                categoryDetail.classList.add('show');
+                categoryDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            
+            // Tabela de resumo por portador
+            function renderHolderSummary() {
+                const period = getReportTransactions();
+                
+                // Se há filtro ativo, mostra só o portador filtrado
+                const byHolder = {};
+                period.forEach(t => {
+                    const key = t.holder || '(sem portador)';
+                    if (!byHolder[key]) byHolder[key] = { income: 0, expense: 0, count: 0 };
+                    if (t.type === 'receita') byHolder[key].income += parseFloat(t.amount);
+                    else byHolder[key].expense += parseFloat(t.amount);
+                    byHolder[key].count++;
+                });
+                
+                const keys = Object.keys(byHolder).sort();
+                
+                if (keys.length === 0) {
+                    holderSummaryContainer.innerHTML = `<div class="empty-state" style="padding:20px;"><i class="fas fa-users"></i><p>Nenhuma transação no período</p></div>`;
+                    return;
+                }
+                
+                let html = '<table class="holder-summary-table"><thead><tr>';
+                html += '<th>Portador</th><th style="text-align:right;">Receitas</th><th style="text-align:right;">Despesas</th><th style="text-align:right;">Saldo</th><th style="text-align:right;">Lançamentos</th>';
+                html += '</tr></thead><tbody>';
+                
+                let totalIncome = 0, totalExpense = 0, totalCount = 0;
+                
+                keys.forEach(name => {
+                    const d = byHolder[name];
+                    const saldo = d.income - d.expense;
+                    totalIncome += d.income;
+                    totalExpense += d.expense;
+                    totalCount += d.count;
+                    
+                    html += '<tr>';
+                    html += `<td data-label="Portador"><div class="hs-holder"><span class="avatar">${getInitials(name)}</span>${escapeHtml(name)}</div></td>`;
+                    html += `<td class="hs-amount" data-label="Receitas" style="color:var(--accent-green)">${d.income > 0 ? fmtBRL(d.income) : '—'}</td>`;
+                    html += `<td class="hs-amount" data-label="Despesas" style="color:var(--accent-red)">${d.expense > 0 ? fmtBRL(d.expense) : '—'}</td>`;
+                    html += `<td class="hs-amount" data-label="Saldo" style="color:${saldo >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${fmtBRL(saldo)}</td>`;
+                    html += `<td class="hs-amount" data-label="Lançamentos">${d.count}</td>`;
+                    html += '</tr>';
+                });
+                
+                // Linha de total
+                const saldoTotal = totalIncome - totalExpense;
+                html += '<tr class="hs-total-row">';
+                html += `<td data-label="Portador">TOTAL</td>`;
+                html += `<td class="hs-amount" data-label="Receitas" style="color:var(--accent-green)">${fmtBRL(totalIncome)}</td>`;
+                html += `<td class="hs-amount" data-label="Despesas" style="color:var(--accent-red)">${fmtBRL(totalExpense)}</td>`;
+                html += `<td class="hs-amount" data-label="Saldo" style="color:${saldoTotal >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${fmtBRL(saldoTotal)}</td>`;
+                html += `<td class="hs-amount" data-label="Lançamentos">${totalCount}</td>`;
+                html += '</tr>';
+                
+                html += '</tbody></table>';
+                holderSummaryContainer.innerHTML = html;
+            }
+            
             function renderIncomeVsExpensesChart() {
                 const ctx = document.getElementById('income-vs-expenses-chart').getContext('2d');
                 const dark = isDarkMode();
@@ -1890,11 +2222,15 @@
                 const monthly = {};
                 const mn = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
                 const today = new Date();
+                
+                // Filtra todas as transações pelo portador selecionado
+                const filtered = filterByHolder(transactions, currentHolderFilterReports);
+                
                 for (let i = 5; i >= 0; i--) {
                     const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
                     const label = `${mn[d.getMonth()]}/${d.getFullYear()}`;
                     monthly[label] = { income: 0, expense: 0 };
-                    transactions.forEach(tx => {
+                    filtered.forEach(tx => {
                         if (tx.month === d.getMonth() && tx.year === d.getFullYear()) {
                             if (tx.type === 'receita') monthly[label].income += parseFloat(tx.amount);
                             else monthly[label].expense += parseFloat(tx.amount);
@@ -1940,14 +2276,6 @@
                 if (!h) return;
                 const newName = prompt('Novo nome:', h.name);
                 if (newName && newName.trim() && newName.trim() !== h.name) editHolder(id, newName.trim());
-            };
-            
-            // Debug exposto para o console
-            window.debugImport = {
-                getPreview: () => importPreview,
-                getTransactions: () => transactions,
-                collectReviewData,
-                confirmImport
             };
         });
     </script>
