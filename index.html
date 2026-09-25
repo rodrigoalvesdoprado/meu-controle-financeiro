@@ -2069,7 +2069,133 @@
                 updateSummary();
                 updateHolderFilters();
             }
+                        // ========== EDIÇÃO DE TRANSAÇÃO ==========
+            function openEditModal(id) {
+                const tx = transactions.find(t => t.id === id);
+                if (!tx) { alert('Transação não encontrada.'); return; }
+                
+                editingTransactionId = id;
+                
+                editDescription.value = tx.description || '';
+                editAmount.value = tx.amount || 0;
+                editType.value = tx.type || 'despesa';
+                editDate.value = formatDateToString(new Date(tx.timestamp));
+                
+                editCategory.innerHTML = '';
+                const exp = categories.filter(c => c.type === 'despesa');
+                const inc = categories.filter(c => c.type === 'receita');
+                if (exp.length) {
+                    const g = document.createElement('optgroup'); g.label = 'Despesas';
+                    exp.forEach(c => {
+                        const o = document.createElement('option');
+                        o.value = c.id; o.textContent = c.name;
+                        g.appendChild(o);
+                    });
+                    editCategory.appendChild(g);
+                }
+                if (inc.length) {
+                    const g = document.createElement('optgroup'); g.label = 'Receitas';
+                    inc.forEach(c => {
+                        const o = document.createElement('option');
+                        o.value = c.id; o.textContent = c.name;
+                        g.appendChild(o);
+                    });
+                    editCategory.appendChild(g);
+                }
+                editCategory.value = tx.category || 'outros';
+                
+                editHolder.innerHTML = '<option value="">(sem portador)</option>';
+                const activeHolders = holders.filter(h => h.active);
+                activeHolders.forEach(h => {
+                    const o = document.createElement('option');
+                    o.value = h.id;
+                    o.textContent = h.name + (h.isDefault ? ' (padrão)' : '');
+                    editHolder.appendChild(o);
+                });
+                
+                if (tx.holder) {
+                    const found = activeHolders.find(h => h.name === tx.holder);
+                    if (found) {
+                        editHolder.value = found.id;
+                    } else {
+                        const o = document.createElement('option');
+                        o.value = '__legacy__';
+                        o.textContent = tx.holder + ' (atual)';
+                        editHolder.appendChild(o);
+                        editHolder.value = '__legacy__';
+                    }
+                } else {
+                    editHolder.value = '';
+                }
+                
+                editModal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => editDescription.focus(), 100);
+            }
             
+            function closeEditModal() {
+                editModal.classList.remove('show');
+                document.body.style.overflow = '';
+                editingTransactionId = null;
+                editForm.reset();
+            }
+            
+            function saveEditedTransaction() {
+                if (!editingTransactionId) { alert('Nenhuma transação em edição.'); return; }
+                
+                const txIndex = transactions.findIndex(t => t.id === editingTransactionId);
+                if (txIndex === -1) { alert('Transação não encontrada.'); return; }
+                
+                const newDesc = editDescription.value.trim();
+                const newAmount = parseFloat(editAmount.value);
+                const newType = editType.value;
+                const newCategory = editCategory.value;
+                const newHolderId = editHolder.value;
+                const newDateStr = editDate.value;
+                
+                if (!newDesc) { alert('A descrição não pode ficar vazia.'); return; }
+                if (isNaN(newAmount) || newAmount <= 0) { alert('Valor inválido.'); return; }
+                
+                const newDate = createDateFromString(newDateStr);
+                if (!newDate) { alert('Data inválida.'); return; }
+                
+                let newHolderName = null;
+                let newHolderIdValue = null;
+                if (newHolderId === '__legacy__') {
+                    newHolderName = transactions[txIndex].holder;
+                    newHolderIdValue = transactions[txIndex].holderId;
+                } else if (newHolderId) {
+                    const h = holders.find(x => x.id === newHolderId);
+                    if (h) { newHolderName = h.name; newHolderIdValue = h.id; }
+                }
+                
+                transactions[txIndex] = {
+                    ...transactions[txIndex],
+                    description: newDesc,
+                    amount: newAmount,
+                    type: newType,
+                    category: newCategory,
+                    holder: newHolderName,
+                    holderId: newHolderIdValue,
+                    date: formatDateToDisplay(newDate),
+                    timestamp: newDate.getTime(),
+                    month: newDate.getMonth(),
+                    year: newDate.getFullYear()
+                };
+                
+                saveTransactions();
+                renderTransactions();
+                updateSummary();
+                updateHolderFilters();
+                
+                const rt = document.getElementById('reports-tab');
+                if (rt && rt.classList.contains('active')) {
+                    renderCharts();
+                    renderHolderSummary();
+                }
+                
+                closeEditModal();
+            }
             function deleteTransaction(id) {
                 transactions = transactions.filter(t => t.id !== id);
                 saveTransactions();
