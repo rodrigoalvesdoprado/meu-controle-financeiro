@@ -1183,9 +1183,23 @@
             }
             
             function parseHolderLine(line) {
+                const upper = line.toUpperCase().trim();
+                
+                // Palavras reservadas que NÃO são portadores
+                if (upper.startsWith('COMPRAS ') || upper === 'COMPRAS') return null;
+                if (upper.startsWith('COMPRAS PARCELADAS')) return null;
+                if (upper.startsWith('ANUIDADE')) return null;
+                if (upper.startsWith('DEMONSTRATIVO')) return null;
+                if (upper.startsWith('VALOR ') || upper.startsWith('TOTAL ')) return null;
+                
                 const m = line.match(/^(.+?)\s*\(Cartão\s+(\d+)\)\s*$/i);
                 if (!m) return null;
-                return { name: m[1].trim(), cardNumber: m[2] };
+                
+                const name = m[1].trim();
+                const reservedWords = ['COMPRAS', 'COMPRAS PARCELADAS', 'ANUIDADE', 'DEMONSTRATIVO', 'VALOR ORIGINAL', 'TOTAL'];
+                if (reservedWords.some(w => name.toUpperCase().startsWith(w))) return null;
+                
+                return { name, cardNumber: m[2] };
             }
             
             function parseTotalLine(line) {
@@ -1261,6 +1275,13 @@
                     const line = normalizeLine(lines[i]);
                     if (isIgnoredLine(line)) continue;
                     
+                    const upper = line.toUpperCase();
+                    
+                    // ⚠️ ORDEM: primeiro seção, depois portador
+                    if (upper === 'COMPRAS' || /^COMPRAS\s*\(Cartão/i.test(line)) { currentSection = 'compras'; continue; }
+                    if (upper === 'COMPRAS PARCELADAS' || /^COMPRAS PARCELADAS\s*\(Cartão/i.test(line)) { currentSection = 'parceladas'; continue; }
+                    if (upper === 'ANUIDADE') { currentSection = 'anuidade'; continue; }
+                    
                     const holderInfo = parseHolderLine(line);
                     if (holderInfo) {
                         currentHolder = holderInfo.name;
@@ -1271,11 +1292,6 @@
                         }
                         continue;
                     }
-                    
-                    const upper = line.toUpperCase();
-                    if (upper === 'COMPRAS' || /^COMPRAS\s*\(Cartão/i.test(line)) { currentSection = 'compras'; continue; }
-                    if (upper === 'COMPRAS PARCELADAS' || /^COMPRAS PARCELADAS\s*\(Cartão/i.test(line)) { currentSection = 'parceladas'; continue; }
-                    if (upper === 'ANUIDADE') { currentSection = 'anuidade'; continue; }
                     
                     const totalInfo = parseTotalLine(line);
                     if (totalInfo) {
