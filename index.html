@@ -156,8 +156,13 @@
         .summary-item { text-align: center; padding: 15px; border-radius: 8px; background: var(--surface); box-shadow: var(--shadow-sm); transition: background 0.3s ease; }
         .summary-item h3 { font-size: 1rem; margin-bottom: 10px; color: var(--text-secondary); }
         .summary-item p { font-size: 1.5rem; font-weight: bold; }
+        .summary-item .count-label { display: block; font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; margin-top: 4px; }
         .positive { color: var(--accent-green); }
         .negative { color: var(--accent-red); }
+        
+        .transactions-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        .transactions-header h2 { margin-bottom: 0; }
+        .transactions-header .count-badge { background: var(--accent-blue); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; }
         
         .transactions ul { list-style: none; padding: 0; }
         .transactions li { padding: 15px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; transition: background 0.3s ease; color: var(--text-primary); }
@@ -471,13 +476,28 @@
             </div>
 
             <div class="summary">
-                <div class="summary-item"><h3>✅ Receitas</h3><p id="total-income" class="positive">R$ 0,00</p></div>
-                <div class="summary-item"><h3>❌ Despesas</h3><p id="total-expense" class="negative">R$ 0,00</p></div>
-                <div class="summary-item"><h3>💰 Saldo</h3><p id="balance">R$ 0,00</p></div>
+                <div class="summary-item">
+                    <h3>✅ Receitas</h3>
+                    <p id="total-income" class="positive">R$ 0,00</p>
+                    <small class="count-label" id="count-income">(0 lançamentos)</small>
+                </div>
+                <div class="summary-item">
+                    <h3>❌ Despesas</h3>
+                    <p id="total-expense" class="negative">R$ 0,00</p>
+                    <small class="count-label" id="count-expense">(0 lançamentos)</small>
+                </div>
+                <div class="summary-item">
+                    <h3>💰 Saldo</h3>
+                    <p id="balance">R$ 0,00</p>
+                    <small class="count-label" id="count-total">(0 lançamentos no total)</small>
+                </div>
             </div>
 
             <div class="transactions">
-                <h2>Lançamentos do Período</h2>
+                <div class="transactions-header">
+                    <h2>Lançamentos do Período</h2>
+                    <span class="count-badge" id="transactions-count">0 lançamentos</span>
+                </div>
                 <ul id="transactions-list"></ul>
             </div>
         </div>
@@ -584,6 +604,10 @@
             const totalIncomeElement = document.getElementById('total-income');
             const totalExpenseElement = document.getElementById('total-expense');
             const balanceElement = document.getElementById('balance');
+            const countIncomeEl = document.getElementById('count-income');
+            const countExpenseEl = document.getElementById('count-expense');
+            const countTotalEl = document.getElementById('count-total');
+            const transactionsCountEl = document.getElementById('transactions-count');
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
             
@@ -1142,8 +1166,15 @@
                     
                     const { description: cleanDesc, installment } = extractInstallment(tx.description);
                     const categoryId = categorizeDescription(cleanDesc);
-                    const year = resolveYear(tx.month, currentDueDate.month, currentDueDate.year);
-                    const date = new Date(year, tx.month, tx.day);
+                    
+                    // MUDANÇA: parcelas usam a data de vencimento; compras à vista mantêm a data original
+                    let date;
+                    if (installment) {
+                        date = new Date(currentDueDate.year, currentDueDate.month, currentDueDate.day);
+                    } else {
+                        const year = resolveYear(tx.month, currentDueDate.month, currentDueDate.year);
+                        date = new Date(year, tx.month, tx.day);
+                    }
                     
                     const transaction = {
                         id: Date.now() + Math.random() + Math.random(),
@@ -1380,31 +1411,26 @@
                     console.log('[DEBUG] confirmImport iniciado');
                     const collected = collectReviewData();
                     console.log('[DEBUG] Lançamentos coletados:', collected.length);
-                    console.log('[DEBUG] Primeiros 3:', collected.slice(0, 3));
                     
                     if (collected.length === 0) {
-                        alert('Nenhum lançamento válido para salvar. Verifique se a tabela está visível.');
+                        alert('Nenhum lançamento válido para salvar.');
                         return;
                     }
                     
                     collected.forEach(tx => transactions.push(tx));
-                    console.log('[DEBUG] Total de transações no array agora:', transactions.length);
-                    
                     saveTransactions();
-                    console.log('[DEBUG] Salvo no localStorage');
+                    console.log('[DEBUG] Total de transações agora:', transactions.length);
                     
                     renderTransactions();
                     updateSummary();
                     closeReviewModal();
-                    console.log('[DEBUG] Modal fechado');
-                    
                     showImportFeedback('success', `${collected.length} lançamentos importados com sucesso!`);
                     console.log('[DEBUG] confirmImport finalizado com sucesso');
                 } catch(err) {
                     console.error('[ERRO em confirmImport]:', err);
                     alert('Erro ao salvar: ' + err.message);
                 }
-            }    
+            }
             
             function closeReviewModal() {
                 reviewModal.classList.remove('show');
@@ -1573,6 +1599,12 @@
             function renderTransactions() {
                 transactionsList.innerHTML = '';
                 const period = getPeriodTransactions();
+                
+                // Atualiza o contador no header
+                transactionsCountEl.textContent = period.length === 1 
+                    ? '1 lançamento' 
+                    : `${period.length} lançamentos`;
+                
                 if (period.length === 0) {
                     transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma transação cadastrada para este período</p></div>`;
                     return;
@@ -1605,12 +1637,21 @@
             
             function updateSummary() {
                 const period = getPeriodTransactions();
-                const inc = period.filter(t => t.type === 'receita').reduce((s, t) => s + parseFloat(t.amount), 0);
-                const exp = period.filter(t => t.type === 'despesa').reduce((s, t) => s + parseFloat(t.amount), 0);
+                const incTx = period.filter(t => t.type === 'receita');
+                const expTx = period.filter(t => t.type === 'despesa');
+                const inc = incTx.reduce((s, t) => s + parseFloat(t.amount), 0);
+                const exp = expTx.reduce((s, t) => s + parseFloat(t.amount), 0);
+                const totalCount = period.length;
+                
                 totalIncomeElement.textContent = `R$ ${inc.toFixed(2)}`;
                 totalExpenseElement.textContent = `R$ ${exp.toFixed(2)}`;
                 balanceElement.textContent = `R$ ${(inc - exp).toFixed(2)}`;
                 balanceElement.className = (inc - exp) >= 0 ? 'positive' : 'negative';
+                
+                // Contadores
+                countIncomeEl.textContent = incTx.length === 1 ? '(1 lançamento)' : `(${incTx.length} lançamentos)`;
+                countExpenseEl.textContent = expTx.length === 1 ? '(1 lançamento)' : `(${expTx.length} lançamentos)`;
+                countTotalEl.textContent = totalCount === 1 ? '(1 lançamento no total)' : `(${totalCount} lançamentos no total)`;
             }
             
             // ========== PORTADORES ==========
@@ -1866,13 +1907,7 @@
                     ctx.fillText('Nenhum dado para exibir', ctx.canvas.width / 2, ctx.canvas.height / 2);
                 }
             }
-                        // Expor funções para debug pelo console
-            window.debugImport = {
-                getPreview: () => importPreview,
-                getTransactions: () => transactions,
-                collectReviewData,
-                confirmImport
-            };
+            
             // ========== GLOBAIS ==========
             window.deleteTransaction = deleteTransaction;
             window.deleteCategory = deleteCategory;
@@ -1882,6 +1917,14 @@
                 if (!h) return;
                 const newName = prompt('Novo nome:', h.name);
                 if (newName && newName.trim() && newName.trim() !== h.name) editHolder(id, newName.trim());
+            };
+            
+            // Debug exposto para o console
+            window.debugImport = {
+                getPreview: () => importPreview,
+                getTransactions: () => transactions,
+                collectReviewData,
+                confirmImport
             };
         });
     </script>
