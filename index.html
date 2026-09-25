@@ -164,36 +164,6 @@
         .transactions-header h2 { margin-bottom: 0; }
         .transactions-header .count-badge { background: var(--accent-blue); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; }
         
-        .holder-filter-bar {
-            background: var(--surface-alt);
-            padding: 12px 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            border-left: 4px solid var(--accent-purple);
-        }
-        .holder-filter-bar label {
-            margin: 0;
-            font-size: 14px;
-            color: var(--text-secondary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .holder-filter-bar select {
-            margin: 0;
-            padding: 8px 12px;
-            font-size: 14px;
-            width: auto;
-            min-width: 200px;
-            flex: 1;
-            max-width: 320px;
-        }
-        
         .transactions ul { list-style: none; padding: 0; }
         .transactions li { padding: 15px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; transition: background 0.3s ease; color: var(--text-primary); }
         .transactions li:hover { background: var(--surface-hover); }
@@ -245,63 +215,6 @@
         .category-detail h3 { margin-top: 0; display: flex; align-items: center; gap: 10px; }
         .category-detail .close-detail { margin-left: auto; width: auto; padding: 5px 15px; background: var(--accent-red); font-size: 14px; }
         .category-detail .close-detail:hover { background: var(--accent-red-hover); }
-        
-        .holder-summary-section {
-            margin: 25px 0;
-            padding: 20px;
-            background: var(--surface-alt);
-            border-radius: 12px;
-            border-left: 4px solid var(--accent-purple);
-        }
-        .holder-summary-section h3 {
-            margin-top: 0;
-            color: var(--accent-purple);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .holder-summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-            margin-top: 10px;
-            color: var(--text-primary);
-        }
-        .holder-summary-table th {
-            text-align: left;
-            padding: 10px 8px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            border-bottom: 2px solid var(--border);
-            font-weight: 700;
-        }
-        .holder-summary-table td {
-            padding: 12px 8px;
-            border-bottom: 1px solid var(--border-light);
-        }
-        .holder-summary-table tr:last-child td { border-bottom: none; }
-        .holder-summary-table tr:hover td { background: var(--surface-hover); }
-        .holder-summary-table .hs-holder { display: flex; align-items: center; gap: 8px; font-weight: 600; }
-        .holder-summary-table .hs-holder .avatar {
-            width: 30px; height: 30px;
-            border-radius: 50%;
-            background: var(--accent-blue);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 12px;
-            flex-shrink: 0;
-        }
-        .holder-summary-table .hs-amount { text-align: right; font-variant-numeric: tabular-nums; }
-        .holder-summary-table .hs-total-row td {
-            border-top: 2px solid var(--border);
-            font-weight: 700;
-            background: var(--surface);
-        }
         
         .install-banner { background: var(--accent-green); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; animation: slideDown 0.5s ease; }
         .install-banner.show { display: flex; }
@@ -402,108 +315,6 @@
         .validation-info .v-header { font-weight: 700; color: var(--text-primary); padding-bottom: 5px; border-bottom: 1px solid var(--border-light); margin-bottom: 5px; }
         .validation-info .v-divider { border-top: 1px dashed var(--border); margin: 8px 0; }
         
-        /* ============================================
-           MODAL DE EDIÇÃO DE TRANSAÇÃO
-           ============================================ */
-        .edit-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 2100;
-            padding: 15px;
-            overflow-y: auto;
-            backdrop-filter: blur(3px);
-            align-items: center;
-            justify-content: center;
-        }
-        .edit-modal.show { display: flex; }
-        
-        .edit-panel {
-            width: 100%;
-            max-width: 600px;
-            margin: auto;
-            background: var(--surface);
-            border-radius: 16px;
-            box-shadow: var(--shadow-lg);
-            overflow: hidden;
-            animation: slideUp 0.3s ease;
-        }
-        
-        .edit-header {
-            background: var(--surface-alt);
-            padding: 18px 22px;
-            border-bottom: 2px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-        .edit-header h2 {
-            margin: 0;
-            border: none;
-            padding: 0;
-            color: var(--text-primary);
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .edit-header .edit-close {
-            width: 36px;
-            height: 36px;
-            padding: 0;
-            background: transparent;
-            color: var(--text-secondary);
-            border-radius: 50%;
-            font-size: 1rem;
-            margin: 0;
-            flex-shrink: 0;
-        }
-        .edit-header .edit-close:hover {
-            background: var(--accent-red);
-            color: white;
-            transform: none;
-        }
-        
-        .edit-body {
-            padding: 20px 22px;
-        }
-        .edit-body .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .edit-body .form-row:last-child { margin-bottom: 0; }
-        .edit-body .form-group {
-            flex: 1;
-            min-width: 180px;
-        }
-        
-        .edit-footer {
-            padding: 15px 22px;
-            background: var(--surface-alt);
-            border-top: 2px solid var(--border-light);
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .edit-footer button {
-            width: auto;
-            min-width: 140px;
-            flex: 0 1 auto;
-        }
-        
-        /* Botão de editar na lista de transações */
-        .transaction-actions .btn-edit {
-            background: var(--accent-blue);
-        }
-        .transaction-actions .btn-edit:hover {
-            background: var(--accent-blue-hover);
-        }
-        
         @media (max-width: 768px) {
             .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; font-size: 1rem; }
             .form-row { flex-direction: column; }
@@ -543,23 +354,6 @@
             .review-table td input, .review-table td select { flex: 1; }
             .review-table .col-actions { justify-content: flex-end; }
             .review-table .col-actions::before { display: none; }
-            
-            .holder-filter-bar { flex-direction: column; align-items: stretch; }
-            .holder-filter-bar select { max-width: none; }
-            
-            .holder-summary-table, .holder-summary-table thead, .holder-summary-table tbody, .holder-summary-table tr, .holder-summary-table td, .holder-summary-table th { display: block; }
-            .holder-summary-table thead { display: none; }
-            .holder-summary-table tr { background: var(--surface); border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-light); }
-            .holder-summary-table td { border: none; padding: 5px 0; display: flex; justify-content: space-between; align-items: center; }
-            .holder-summary-table td::before { content: attr(data-label); font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
-            
-            .edit-panel { border-radius: 12px; max-width: 100%; }
-            .edit-body { padding: 15px; }
-            .edit-body .form-row { flex-direction: column; gap: 10px; }
-            .edit-body .form-group { min-width: auto; }
-            .edit-footer { flex-direction: column-reverse; }
-            .edit-footer button { width: 100%; min-width: auto; }
-            .edit-header .edit-close { width: 32px; height: 32px; }
         }
         
         @media (display-mode: standalone) {
@@ -681,13 +475,6 @@
                 </form>
             </div>
 
-            <div class="holder-filter-bar">
-                <label for="holder-filter-transactions"><i class="fas fa-filter"></i> Filtrar por portador:</label>
-                <select id="holder-filter-transactions">
-                    <option value="all">Todos os portadores</option>
-                </select>
-            </div>
-
             <div class="summary">
                 <div class="summary-item">
                     <h3>✅ Receitas</h3>
@@ -762,14 +549,6 @@
         
         <div class="tab-content" id="reports-tab">
             <h2>Relatórios Financeiros</h2>
-            
-            <div class="holder-filter-bar">
-                <label for="holder-filter-reports"><i class="fas fa-filter"></i> Filtrar por portador:</label>
-                <select id="holder-filter-reports">
-                    <option value="all">Todos os portadores</option>
-                </select>
-            </div>
-            
             <div class="charts-container">
                 <div class="chart-wrapper clickable" id="expenses-chart-wrapper">
                     <h3>Despesas por Categoria</h3>
@@ -779,15 +558,6 @@
                     <h3>Receitas vs Despesas</h3>
                     <canvas id="income-vs-expenses-chart"></canvas>
                 </div>
-                <div class="chart-wrapper clickable" id="holders-chart-wrapper">
-                    <h3>Despesas por Portador</h3>
-                    <canvas id="holders-chart"></canvas>
-                </div>
-            </div>
-            
-            <div class="holder-summary-section">
-                <h3><i class="fas fa-users"></i> Resumo por Portador</h3>
-                <div id="holder-summary-container"></div>
             </div>
             
             <div class="category-detail" id="category-detail">
@@ -817,58 +587,6 @@
                     <button class="danger" id="cancelImportBtn"><i class="fas fa-times"></i> Cancelar</button>
                     <button id="confirmImportBtn"><i class="fas fa-check"></i> Salvar Todos</button>
                 </div>
-            </div>
-        </div>
-    </div>
-        <!-- MODAL DE EDIÇÃO DE TRANSAÇÃO -->
-    <div class="edit-modal" id="editModal">
-        <div class="edit-panel">
-            <div class="edit-header">
-                <h2><i class="fas fa-edit"></i> Editar Lançamento</h2>
-                <button class="edit-close" id="editCloseBtn" title="Fechar"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="edit-body">
-                <form id="editForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="edit-description">Descrição</label>
-                            <input type="text" id="edit-description" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="edit-amount">Valor (R$)</label>
-                            <input type="number" id="edit-amount" step="0.01" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-type">Tipo</label>
-                            <select id="edit-type">
-                                <option value="despesa">Despesa</option>
-                                <option value="receita">Receita</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="edit-category">Categoria</label>
-                            <select id="edit-category" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-holder">Portador</label>
-                            <select id="edit-holder"></select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="edit-date">Data</label>
-                            <input type="date" id="edit-date" required>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="edit-footer">
-                <button class="danger" id="editCancelBtn"><i class="fas fa-times"></i> Cancelar</button>
-                <button id="editSaveBtn"><i class="fas fa-check"></i> Salvar Alterações</button>
             </div>
         </div>
     </div>
@@ -936,42 +654,22 @@
             const reviewTotal = document.getElementById('reviewTotal');
             const cancelImportBtn = document.getElementById('cancelImportBtn');
             const confirmImportBtn = document.getElementById('confirmImportBtn');
-                        // Elementos do modal de edição
-            const editModal = document.getElementById('editModal');
-            const editForm = document.getElementById('editForm');
-            const editDescription = document.getElementById('edit-description');
-            const editAmount = document.getElementById('edit-amount');
-            const editType = document.getElementById('edit-type');
-            const editCategory = document.getElementById('edit-category');
-            const editHolder = document.getElementById('edit-holder');
-            const editDate = document.getElementById('edit-date');
-            const editSaveBtn = document.getElementById('editSaveBtn');
-            const editCancelBtn = document.getElementById('editCancelBtn');
-            const editCloseBtn = document.getElementById('editCloseBtn');
-            
-            // Filtros de portador
-            const holderFilterTx = document.getElementById('holder-filter-transactions');
-            const holderFilterReports = document.getElementById('holder-filter-reports');
-            const holderSummaryContainer = document.getElementById('holder-summary-container');
             
             // ========== DADOS ==========
             let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
             let categories = JSON.parse(localStorage.getItem('categories')) || [
                 { id: 'alimentacao', name: 'Alimentação', type: 'despesa', color: '#e74c3c' },
-                { id: 'restaurante', name: 'Restaurante', type: 'despesa', color: '#d35400' },
-                { id: 'padaria', name: 'Padaria', type: 'despesa', color: '#e67e22' },
                 { id: 'transporte', name: 'Transporte', type: 'despesa', color: '#3498db' },
                 { id: 'moradia', name: 'Moradia', type: 'despesa', color: '#2ecc71' },
                 { id: 'saude', name: 'Saúde', type: 'despesa', color: '#9b59b6' },
                 { id: 'lazer', name: 'Lazer', type: 'despesa', color: '#f1c40f' },
                 { id: 'educacao', name: 'Educação', type: 'despesa', color: '#1abc9c' },
-                { id: 'vestuario', name: 'Vestuário', type: 'despesa', color: '#c0392b' },
+                { id: 'vestuario', name: 'Vestuário', type: 'despesa', color: '#d35400' },
                 { id: 'servicos', name: 'Serviços', type: 'despesa', color: '#7f8c8d' },
-                { id: 'compra-online', name: 'Compra Online', type: 'despesa', color: '#8e44ad' },
                 { id: 'salario', name: 'Salário', type: 'receita', color: '#27ae60' },
                 { id: 'freelance', name: 'Freelance', type: 'receita', color: '#2980b9' },
-                { id: 'investimentos', name: 'Investimentos', type: 'receita', color: '#16a085' },
-                { id: 'presentes', name: 'Presentes', type: 'receita', color: '#f39c12' },
+                { id: 'investimentos', name: 'Investimentos', type: 'receita', color: '#8e44ad' },
+                { id: 'presentes', name: 'Presentes', type: 'receita', color: '#e67e22' },
                 { id: 'outros', name: 'Outros', type: 'despesa', color: '#95a5a6' }
             ];
             
@@ -984,155 +682,21 @@
                 holders.push({ id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true });
             }
             
+            // ========== TAGS DE CATEGORIZAÇÃO ==========
             const CATEGORY_TAGS = {
-                // ========== TRANSPORTE ==========
-                'transporte': [
-                    'posto', 'auto posto', 'autoposto', 'autopostodatorre', 'auto-posto',
-                    'posto super tigre', 'posto vila paiva', 'auto posto abc', 'auto posto 500',
-                    'autopostotreviso', 'combustivel', 'gasolina', 'etanol', 'alcool',
-                    'uber', '99 ', '99app', 'taxi', 'estacionamento', 'pedagio',
-                    'sem parar', 'semparar', 'veloe', 'lr transportes', 'l r transportes',
-                    'cptm', 'metro', 'onibus', 'passagem', 'bilhete unico'
-                ],
-                
-                // ========== RESTAURANTE ==========
-                'restaurante': [
-                    // Tags específicas (nomes literais citados por você)
-                    'serve pronto', 'machenio', 'jim com', 'jim com top',
-                    'ifd ', 'ifood', 'peixe e cia', 'peixe & cia',
-                    'madrugadao', 'espartanos', 'churrasdopern', 'churrasco do pern',
-                    'mineirinha', 'a mineirinha', 'velhote', 'velhote rock bar',
-                    'assaggiare', 'fe bar', 'da fe bar', 'fuganti', 'fugantistore',
-                    'giancarlo', 'giancarlo grill',
-                    // Tags genéricas
-                    'restaurante', 'restaur', 'lanchonet', 'pizzaria', 'pizza',
-                    'food', 'comida', 'cheiro', 'cheirin', 'sabor',
-                    'churrasc', 'churrasco', 'churrascaria',
-                    'peixe', 'sushi', 'nippon', 'japones', 'temaki',
-                    'burger', 'hamburguer', 'mcdonald', 'burguer',
-                    'bar ', 'bar', 'cerveja', 'bebida', 'chopp', 'drink',
-                    'gri', 'grill', 'grelhado', 'chapa',
-                    'esfiha', 'esfirra', 'acai', 'sorvete', 'gelato',
-                    'cafe ', 'cafeteria', 'starbucks', 'bistro'
-                ],
-                
-                // ========== PADARIA ==========
-                'padaria': [
-                    'padaria', 'panificad', 'panificadora', 'pao de acucar',
-                    'pao ', 'confeitaria', 'doceria', 'bolo', 'pastelaria'
-                ],
-                
-                // ========== ALIMENTAÇÃO (só supermercado) ==========
-                'alimentacao': [
-                    // Nomes específicos citados por você
-                    'maiolini', 'nosso maiolini', 'solmar', 'supermercado solmar',
-                    'bueno', 'supermercado bueno', 'alvorada', 'supermercados alvorada',
-                    'supermercado bh', 'supermercados bh', 'supermercado abc',
-                    'supermercado extra', 'abc atacado', 'atacado e varejo',
-                    'mercadinho', 'hortifruti', 'hortifruti', 'sacolao',
-                    // Tags genéricas (cuidado com falsos positivos)
-                    'supermercado', 'supermercad', 'hipermerc', 'hipermercado',
-                    'atacad', 'atacadao', 'atacado ', 'atacarejo',
-                    'minimercado', 'mercadinho', 'empório', 'emporio'
-                ],
-                
-                // ========== COMPRA ONLINE ==========
-                'compra-online': [
-                    'mercadolivre', 'mercado livre', 'mp mercadolivre',
-                    'amazon', 'amazon prime', 'amazon br',
-                    'magazineluiza', 'magazine luiza', 'magalu',
-                    'americanas', 'submarino', 'shopee', 'aliexpress',
-                    'shein', 'netshoes', 'kabum', 'pichau', 'terabyte',
-                    'dafiti', 'centauro', 'nike.com', 'adidas.com'
-                ],
-                
-                // ========== SAÚDE ==========
-                'saude': [
-                    'drogasil', 'drogaria', 'farmacia', 'farmácia', 'farmac',
-                    'manipulacao', 'manipulação', 'manipulac',
-                    'laborat', 'clinica', 'clínica', 'hospital',
-                    'medic', 'médic', 'odonto', 'dentista',
-                    'otica', 'ótica', 'academia', 'wellhub',
-                    'smart fit', 'smartfit', 'bodytech', 'bluefit'
-                ],
-                
-                // ========== MORADIA ==========
-                'moradia': [
-                    'casa ', 'construc', 'construção', 'material',
-                    'leroy', 'telha', 'tinta', 'moveis', 'móveis',
-                    'eletro', 'compensados', 'guara compensados',
-                    'casa petropolis', 'casa do tapec', 'a casa do tapec',
-                    'madeireira', 'ferramentas', 'lider ferramentas'
-                ],
-                
-                // ========== EDUCAÇÃO ==========
-                'educacao': [
-                    'curso', 'escola', 'faculdade', 'universidade',
-                    'colegio', 'colégio', 'ensino', 'hotmart',
-                    'udemy', 'alura', 'livraria', 'livro'
-                ],
-                
-                // ========== LAZER ==========
-                'lazer': [
-                    'cinema', 'cinemark', 'netflix', 'spotify',
-                    'deezer', 'dl google deezer', 'amazon music',
-                    'disney', 'hbo', 'max ', 'prime video',
-                    'paramount', 'globoplay', 'crunchyroll', 'streaming',
-                    'game', 'playstation', 'xbox', 'nintendo',
-                    'ingresso', 'show ', 'teatro', 'hotel', 'pousada',
-                    'viagem', 'elegance', 'ks eventos', 'eventos'
-                ],
-                
-                // ========== VESTUÁRIO ==========
-                'vestuario': [
-                    'riachuelo', 'renner', 'c&a', 'ce a', 'zara',
-                    'hering', 'colcci', 'oakley', 'nike', 'adidas',
-                    'puma', 'calcado', 'calçado', 'sapat', 'tenis', 'tênis',
-                    'roupa', 'moda', 'mercado da moda', 'edegenius',
-                    'jeans', 'loja unanime', 'unanime', 'hortela tricot',
-                    'hortelã tricot', 'basari', 'morale perfumaria',
-                    'perfumaria', 'havan', 'jocko'
-                ],
-                
-                // ========== SERVIÇOS ==========
-                'servicos': [
-                    'net ', 'net pgt', 'claro', 'vivo', 'tim ', 'oi ',
-                    'internet', 'telefone', 'celular', 'conta ',
-                    'fatura', 'seguro', 'mapfre', 'porto seguro',
-                    'cpfl', 'energia', 'agua', 'água', 'gas ', 'gás ',
-                    'iptu', 'condominio', 'condomínio', 'anuidade',
-                    'apple com', 'apple.com', 'microsoft', 'adobe',
-                    'lavajatomega', 'lavajato', 'lavagem', 'estacionamento',
-                    'guara compensados', 'ipg associacaodepe'
-                ],
-                
-                // ========== PRESENTES ==========
-                'presentes': [
-                    'presente', 'etc e tal', 'etc e tal presentes',
-                    'flor', 'floresta', 'floricultura'
-                ],
-                
-                // ========== INVESTIMENTOS ==========
-                'investimentos': [
-                    'investimento', 'cdb', 'tesouro', 'poupanca', 'poupança',
-                    'acao', 'ação', 'fundo', 'corretora', 'rico', 'xp investimentos'
-                ],
-                
-                // ========== SALÁRIO ==========
-                'salario': [
-                    'salario', 'salário', 'holerite', 'pagamento salario',
-                    'pagamento de salario', 'provento'
-                ],
-                
-                // ========== FREELANCE ==========
-                'freelance': [
-                    'freelance', 'freela', 'servico prestado', 'serviço prestado',
-                    'pagamento de servico', 'pagamento de serviço'
-                ]
+                'transporte': ['posto', 'auto posto', 'autoposto', 'autopostodatorre', 'auto-posto', 'combustivel', 'gasolina', 'etanol', 'uber', '99 ', 'taxi', 'estacionamento', 'pedagio', 'sem parar', 'semparar', 'veloe', 'lr transportes', 'l r transportes'],
+                'alimentacao': ['supermercado', 'supermercad', 'mercado', 'hipermerc', 'atacad', 'atacado', 'padaria', 'panificad', 'restaurante', 'restaur', 'lanchonet', 'pizzaria', 'pizza', 'ifood', 'ifd ', 'food', 'comida', 'cheiro', 'cheirin', 'sabor', 'assaggiare', 'churrasc', 'churrasco', 'peixe', 'sushi', 'nippon', 'mcdonald', 'burger', 'bar ', 'bar', 'cerveja', 'bebida', 'mineirinha', 'velhote', 'mach enio', 'machenio', 'jim com', 'madrugadao', 'bfs alimentacao', 'bfs aliment', 'gri', 'grill', 'fe bar', 'espartanos', 'fuganti'],
+                'saude': ['drogasil', 'drogaria', 'farmacia', 'farmácia', 'farmac', 'manipulacao', 'manipulação', 'manipulac', 'laborat', 'clinica', 'clínica', 'hospital', 'medic', 'médic', 'odonto', 'dentista', 'otica', 'ótica', 'academia', 'wellhub', 'smart fit', 'smartfit'],
+                'moradia': ['casa ', 'construc', 'construção', 'material', 'leroy', 'telha', 'tinta', 'moveis', 'móveis', 'eletro', 'compensados', 'guara compensados', 'casa petropolis', 'casa do tapec', 'tapec'],
+                'educacao': ['curso', 'escola', 'faculdade', 'universidade', 'colegio', 'colégio', 'ensino', 'hotmart', 'udemy', 'alura', 'livraria', 'livro'],
+                'lazer': ['cinema', 'cinemark', 'netflix', 'spotify', 'deezer', 'amazon music', 'amazon prime', 'disney', 'hbo', 'max ', 'prime video', 'paramount', 'globoplay', 'crunchyroll', 'streaming', 'game', 'playstation', 'xbox', 'nintendo', 'ingresso', 'show ', 'teatro', 'hotel', 'pousada', 'viagem', 'elegance', 'ks eventos'],
+                'vestuario': ['riachuelo', 'renner', 'c&a', 'ce a', 'zara', 'hering', 'colcci', 'oakley', 'nike', 'adidas', 'puma', 'calcado', 'calçado', 'sapat', 'tenis', 'tênis', 'roupa', 'moda', 'mercado da moda', 'edegenius', 'jeans', 'loja unanime', 'unanime', 'hortela tricot', 'hortelã tricot', 'basari'],
+                'servicos': ['net ', 'net pgt', 'claro', 'vivo', 'tim ', 'oi ', 'internet', 'telefone', 'celular', 'conta ', 'fatura', 'seguro', 'mapfre', 'porto seguro', 'cpfl', 'energia', 'agua', 'água', 'gas ', 'gás ', 'iptu', 'condominio', 'condomínio', 'anuidade', 'google', 'apple com', 'apple.com', 'microsoft', 'adobe'],
+                'presentes': ['presente', 'etc e tal', 'etc e tal presentes', 'flor', 'floresta'],
+                'investimentos': ['investimento', 'cdb', 'tesouro', 'poupanca', 'poupança', 'acao', 'ação', 'fundo'],
+                'salario': ['salario', 'salário', 'holerite', 'pagamento salario'],
+                'freelance': ['freelance', 'freela', 'servico prestado', 'serviço prestado']
             };
-            
-            // Cores fixas para portadores no gráfico
-            const HOLDER_COLORS = ['#3498db', '#e74c3c', '#2ecc71', '#9b59b6', '#f1c40f', '#e67e22', '#1abc9c', '#d35400', '#7f8c8d', '#27ae60'];
             
             // ========== ESTADO ==========
             let periodMode = 'standard';
@@ -1142,9 +706,6 @@
             let isListening = false;
             let importPreview = null;
             let currentDueDate = null;
-            let currentHolderFilterTx = 'all';       // filtro da aba Lançamentos
-            let currentHolderFilterReports = 'all';  // filtro da aba Relatórios
-            let editingTransactionId = null;
             
             // ========== TEMA ==========
             function applyTheme(theme) {
@@ -1204,12 +765,6 @@
             function fmtBRL(v) {
                 return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             }
-            function getInitials(name) {
-                if (!name) return '?';
-                const parts = name.trim().split(/\s+/);
-                if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-            }
             
             // ========== INICIALIZAÇÃO ==========
             init();
@@ -1232,7 +787,6 @@
                 setupStandardPeriod();
                 updateCategoriesDropdown();
                 updateHoldersDropdown();
-                updateHolderFilters();
                 renderCategories();
                 renderHolders();
                 updateSummary();
@@ -1272,7 +826,6 @@
                 if (rt.classList.contains('active')) renderCharts();
             }
             
-            // Retorna transações no período (SEM filtro de portador)
             function getPeriodTransactions() {
                 const s = getStartOfDay(new Date(customStartDate));
                 const e = getEndOfDay(new Date(customEndDate));
@@ -1280,13 +833,6 @@
                     const d = new Date(t.timestamp);
                     return d >= s && d <= e;
                 });
-            }
-            
-            // Aplica filtro de portador a um array de transações
-            function filterByHolder(txs, holderFilter) {
-                if (!holderFilter || holderFilter === 'all') return txs;
-                if (holderFilter === '__none__') return txs.filter(t => !t.holder);
-                return txs.filter(t => t.holder === holderFilter);
             }
             
             // ========== PWA ==========
@@ -1491,23 +1037,9 @@
             }
             
             function parseHolderLine(line) {
-                const upper = line.toUpperCase().trim();
-                
-                // Palavras reservadas que NÃO são portadores
-                if (upper.startsWith('COMPRAS ') || upper === 'COMPRAS') return null;
-                if (upper.startsWith('COMPRAS PARCELADAS')) return null;
-                if (upper.startsWith('ANUIDADE')) return null;
-                if (upper.startsWith('DEMONSTRATIVO')) return null;
-                if (upper.startsWith('VALOR ') || upper.startsWith('TOTAL ')) return null;
-                
                 const m = line.match(/^(.+?)\s*\(Cartão\s+(\d+)\)\s*$/i);
                 if (!m) return null;
-                
-                const name = m[1].trim();
-                const reservedWords = ['COMPRAS', 'COMPRAS PARCELADAS', 'ANUIDADE', 'DEMONSTRATIVO', 'VALOR ORIGINAL', 'TOTAL'];
-                if (reservedWords.some(w => name.toUpperCase().startsWith(w))) return null;
-                
-                return { name, cardNumber: m[2] };
+                return { name: m[1].trim(), cardNumber: m[2] };
             }
             
             function parseTotalLine(line) {
@@ -1561,12 +1093,20 @@
                 return 'outros';
             }
             
+            function resolveYear(month, dueMonth, dueYear) {
+                return month > dueMonth ? dueYear - 1 : dueYear;
+            }
+            
             function processInvoiceFile(content) {
                 const lines = content.split(/\r?\n/);
                 const transactions = [];
                 const validation = {
-                    perCard: {}, creditsTotal: 0, cardExpensesTotal: 0,
-                    netCalculated: 0, declaredTotal: null, demonstrativoTotalDeclared: null
+                    perCard: {},
+                    creditsTotal: 0,
+                    cardExpensesTotal: 0,
+                    netCalculated: 0,
+                    declaredTotal: null,
+                    demonstrativoTotalDeclared: null
                 };
                 
                 let currentHolder = null;
@@ -1574,21 +1114,17 @@
                 let currentSection = null;
                 let currentScope = 'demonstrativo';
                 
+                // Ano e mês do vencimento da fatura
                 const anoVenc = currentDueDate.year;
-                const mesVenc = currentDueDate.month;
+                const mesVenc = currentDueDate.month; // 0-indexado
+                
+                // Mês anterior ao vencimento (com ajuste de ano se necessário)
                 const mesAnteriorVenc = mesVenc === 0 ? 11 : mesVenc - 1;
                 const anoMesAnteriorVenc = mesVenc === 0 ? anoVenc - 1 : anoVenc;
                 
                 for (let i = 0; i < lines.length; i++) {
                     const line = normalizeLine(lines[i]);
                     if (isIgnoredLine(line)) continue;
-                    
-                    const upper = line.toUpperCase();
-                    
-                    // ⚠️ ORDEM: primeiro seção, depois portador
-                    if (upper === 'COMPRAS' || /^COMPRAS\s*\(Cartão/i.test(line)) { currentSection = 'compras'; continue; }
-                    if (upper === 'COMPRAS PARCELADAS' || /^COMPRAS PARCELADAS\s*\(Cartão/i.test(line)) { currentSection = 'parceladas'; continue; }
-                    if (upper === 'ANUIDADE') { currentSection = 'anuidade'; continue; }
                     
                     const holderInfo = parseHolderLine(line);
                     if (holderInfo) {
@@ -1600,6 +1136,11 @@
                         }
                         continue;
                     }
+                    
+                    const upper = line.toUpperCase();
+                    if (upper === 'COMPRAS' || /^COMPRAS\s*\(Cartão/i.test(line)) { currentSection = 'compras'; continue; }
+                    if (upper === 'COMPRAS PARCELADAS' || /^COMPRAS PARCELADAS\s*\(Cartão/i.test(line)) { currentSection = 'parceladas'; continue; }
+                    if (upper === 'ANUIDADE') { currentSection = 'anuidade'; continue; }
                     
                     const totalInfo = parseTotalLine(line);
                     if (totalInfo) {
@@ -1636,23 +1177,29 @@
                     
                     let date;
                     let finalDescription;
+                    
+                    // Data original da compra no formato DD/MM
                     const diaStr = String(tx.day).padStart(2, '0');
                     const mesStr = String(tx.month + 1).padStart(2, '0');
                     const dataCompraStr = `${diaStr}/${mesStr}`;
                     
                     if (installment) {
+                        // PARCELA: data = 13 do mês do vencimento
                         date = new Date(anoVenc, mesVenc, 13);
                         finalDescription = `${cleanDesc} (${dataCompraStr} - ${installment})`;
                     } else {
+                        // COMPRA À VISTA
                         if (tx.month === mesVenc) {
+                            // Compra no MESMO mês do vencimento → dia 02
                             date = new Date(anoVenc, mesVenc, 2);
                         } else {
+                            // Compra em mês anterior → dia 28 do mês anterior
                             date = new Date(anoMesAnteriorVenc, mesAnteriorVenc, 28);
                         }
                         finalDescription = `${cleanDesc} (${dataCompraStr})`;
                     }
                     
-                    transactions.push({
+                    const transaction = {
                         id: Date.now() + Math.random() + Math.random(),
                         description: finalDescription,
                         amount: tx.amount,
@@ -1665,7 +1212,9 @@
                         holder: currentHolder,
                         cardNumber: currentCard,
                         installment: installment
-                    });
+                    };
+                    
+                    transactions.push(transaction);
                     validation.cardExpensesTotal += tx.amount;
                 }
                 
@@ -1754,6 +1303,7 @@
                         <span class="${match ? 'ok' : 'fail'}">${match ? '✓ VALORES BATEM' : '✗ DIVERGÊNCIA DE ' + fmtBRL(diff)}</span>
                     </div>`;
                 }
+                
                 validationInfo.innerHTML = html;
             }
             
@@ -1881,18 +1431,24 @@
             
             function confirmImport() {
                 try {
+                    console.log('[DEBUG] confirmImport iniciado');
                     const collected = collectReviewData();
+                    console.log('[DEBUG] Lançamentos coletados:', collected.length);
+                    
                     if (collected.length === 0) {
                         alert('Nenhum lançamento válido para salvar.');
                         return;
                     }
+                    
                     collected.forEach(tx => transactions.push(tx));
                     saveTransactions();
+                    console.log('[DEBUG] Total de transações agora:', transactions.length);
+                    
                     renderTransactions();
                     updateSummary();
-                    updateHolderFilters();
                     closeReviewModal();
                     showImportFeedback('success', `${collected.length} lançamentos importados com sucesso!`);
+                    console.log('[DEBUG] confirmImport finalizado com sucesso');
                 } catch(err) {
                     console.error('[ERRO em confirmImport]:', err);
                     alert('Erro ao salvar: ' + err.message);
@@ -1916,31 +1472,6 @@
                 });
                 cancelImportBtn.addEventListener('click', closeReviewModal);
                 confirmImportBtn.addEventListener('click', confirmImport);
-                                // Listeners do modal de edição
-                editSaveBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    saveEditedTransaction();
-                });
-                editCancelBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    closeEditModal();
-                });
-                editCloseBtn.addEventListener('click', closeEditModal);
-                editForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    saveEditedTransaction();
-                });
-                // Filtros de portador
-                holderFilterTx.addEventListener('change', (e) => {
-                    currentHolderFilterTx = e.target.value;
-                    renderTransactions();
-                    updateSummary();
-                });
-                holderFilterReports.addEventListener('change', (e) => {
-                    currentHolderFilterReports = e.target.value;
-                    renderCharts();
-                    renderHolderSummary();
-                });
                 
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -2056,10 +1587,7 @@
                         tabContents.forEach(tc => tc.classList.remove('active'));
                         tab.classList.add('active');
                         document.getElementById(`${tabId}-tab`).classList.add('active');
-                        if (tabId === 'reports') {
-                            renderCharts();
-                            renderHolderSummary();
-                        }
+                        if (tabId === 'reports') renderCharts();
                     });
                 });
             }
@@ -2080,159 +1608,28 @@
                 saveTransactions();
                 renderTransactions();
                 updateSummary();
-                updateHolderFilters();
-            }
-                        // ========== EDIÇÃO DE TRANSAÇÃO ==========
-            function openEditModal(id) {
-                const tx = transactions.find(t => t.id === id);
-                if (!tx) { alert('Transação não encontrada.'); return; }
-                
-                editingTransactionId = id;
-                
-                editDescription.value = tx.description || '';
-                editAmount.value = tx.amount || 0;
-                editType.value = tx.type || 'despesa';
-                editDate.value = formatDateToString(new Date(tx.timestamp));
-                
-                editCategory.innerHTML = '';
-                const exp = categories.filter(c => c.type === 'despesa');
-                const inc = categories.filter(c => c.type === 'receita');
-                if (exp.length) {
-                    const g = document.createElement('optgroup'); g.label = 'Despesas';
-                    exp.forEach(c => {
-                        const o = document.createElement('option');
-                        o.value = c.id; o.textContent = c.name;
-                        g.appendChild(o);
-                    });
-                    editCategory.appendChild(g);
-                }
-                if (inc.length) {
-                    const g = document.createElement('optgroup'); g.label = 'Receitas';
-                    inc.forEach(c => {
-                        const o = document.createElement('option');
-                        o.value = c.id; o.textContent = c.name;
-                        g.appendChild(o);
-                    });
-                    editCategory.appendChild(g);
-                }
-                editCategory.value = tx.category || 'outros';
-                
-                editHolder.innerHTML = '<option value="">(sem portador)</option>';
-                const activeHolders = holders.filter(h => h.active);
-                activeHolders.forEach(h => {
-                    const o = document.createElement('option');
-                    o.value = h.id;
-                    o.textContent = h.name + (h.isDefault ? ' (padrão)' : '');
-                    editHolder.appendChild(o);
-                });
-                
-                if (tx.holder) {
-                    const found = activeHolders.find(h => h.name === tx.holder);
-                    if (found) {
-                        editHolder.value = found.id;
-                    } else {
-                        const o = document.createElement('option');
-                        o.value = '__legacy__';
-                        o.textContent = tx.holder + ' (atual)';
-                        editHolder.appendChild(o);
-                        editHolder.value = '__legacy__';
-                    }
-                } else {
-                    editHolder.value = '';
-                }
-                
-                editModal.classList.add('show');
-                document.body.style.overflow = 'hidden';
-                setTimeout(() => editDescription.focus(), 100);
             }
             
-            function closeEditModal() {
-                editModal.classList.remove('show');
-                document.body.style.overflow = '';
-                editingTransactionId = null;
-                editForm.reset();
-            }
-            
-            function saveEditedTransaction() {
-                if (!editingTransactionId) { alert('Nenhuma transação em edição.'); return; }
-                
-                const txIndex = transactions.findIndex(t => t.id === editingTransactionId);
-                if (txIndex === -1) { alert('Transação não encontrada.'); return; }
-                
-                const newDesc = editDescription.value.trim();
-                const newAmount = parseFloat(editAmount.value);
-                const newType = editType.value;
-                const newCategory = editCategory.value;
-                const newHolderId = editHolder.value;
-                const newDateStr = editDate.value;
-                
-                if (!newDesc) { alert('A descrição não pode ficar vazia.'); return; }
-                if (isNaN(newAmount) || newAmount <= 0) { alert('Valor inválido.'); return; }
-                
-                const newDate = createDateFromString(newDateStr);
-                if (!newDate) { alert('Data inválida.'); return; }
-                
-                let newHolderName = null;
-                let newHolderIdValue = null;
-                if (newHolderId === '__legacy__') {
-                    newHolderName = transactions[txIndex].holder;
-                    newHolderIdValue = transactions[txIndex].holderId;
-                } else if (newHolderId) {
-                    const h = holders.find(x => x.id === newHolderId);
-                    if (h) { newHolderName = h.name; newHolderIdValue = h.id; }
-                }
-                
-                transactions[txIndex] = {
-                    ...transactions[txIndex],
-                    description: newDesc,
-                    amount: newAmount,
-                    type: newType,
-                    category: newCategory,
-                    holder: newHolderName,
-                    holderId: newHolderIdValue,
-                    date: formatDateToDisplay(newDate),
-                    timestamp: newDate.getTime(),
-                    month: newDate.getMonth(),
-                    year: newDate.getFullYear()
-                };
-                
-                saveTransactions();
-                renderTransactions();
-                updateSummary();
-                updateHolderFilters();
-                
-                const rt = document.getElementById('reports-tab');
-                if (rt && rt.classList.contains('active')) {
-                    renderCharts();
-                    renderHolderSummary();
-                }
-                
-                closeEditModal();
-            }
             function deleteTransaction(id) {
                 transactions = transactions.filter(t => t.id !== id);
                 saveTransactions();
                 renderTransactions();
                 updateSummary();
-                updateHolderFilters();
             }
             
             function saveTransactions() { localStorage.setItem('transactions', JSON.stringify(transactions)); }
             
             function renderTransactions() {
                 transactionsList.innerHTML = '';
-                let period = getPeriodTransactions();
-                period = filterByHolder(period, currentHolderFilterTx);
+                const period = getPeriodTransactions();
                 
+                // Atualiza o contador no header
                 transactionsCountEl.textContent = period.length === 1 
                     ? '1 lançamento' 
                     : `${period.length} lançamentos`;
                 
                 if (period.length === 0) {
-                    const filterMsg = currentHolderFilterTx !== 'all' 
-                        ? 'Nenhuma transação deste portador neste período' 
-                        : 'Nenhuma transação cadastrada para este período';
-                    transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>${filterMsg}</p></div>`;
+                    transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma transação cadastrada para este período</p></div>`;
                     return;
                 }
                 [...period].sort((a, b) => b.timestamp - a.timestamp).forEach(tx => {
@@ -2254,8 +1651,7 @@
                             ${tx.type === 'receita' ? '+' : '-'} R$ ${tx.amount.toFixed(2)}
                         </div>
                         <div class="transaction-actions">
-                            <button class="btn-edit" onclick="window.openEditModal(${tx.id})" title="Editar"><i class="fas fa-edit"></i></button>
-                            <button class="danger" onclick="window.deleteTransaction(${tx.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+                            <button class="danger" onclick="window.deleteTransaction(${tx.id})"><i class="fas fa-trash"></i></button>
                         </div>
                     `;
                     transactionsList.appendChild(li);
@@ -2263,9 +1659,7 @@
             }
             
             function updateSummary() {
-                let period = getPeriodTransactions();
-                period = filterByHolder(period, currentHolderFilterTx);
-                
+                const period = getPeriodTransactions();
                 const incTx = period.filter(t => t.type === 'receita');
                 const expTx = period.filter(t => t.type === 'despesa');
                 const inc = incTx.reduce((s, t) => s + parseFloat(t.amount), 0);
@@ -2277,6 +1671,7 @@
                 balanceElement.textContent = `R$ ${(inc - exp).toFixed(2)}`;
                 balanceElement.className = (inc - exp) >= 0 ? 'positive' : 'negative';
                 
+                // Contadores
                 countIncomeEl.textContent = incTx.length === 1 ? '(1 lançamento)' : `(${incTx.length} lançamentos)`;
                 countExpenseEl.textContent = expTx.length === 1 ? '(1 lançamento)' : `(${expTx.length} lançamentos)`;
                 countTotalEl.textContent = totalCount === 1 ? '(1 lançamento no total)' : `(${totalCount} lançamentos no total)`;
@@ -2289,7 +1684,6 @@
                 holders.push({ id, name, active: true, isDefault: false });
                 saveHolders();
                 updateHoldersDropdown();
-                updateHolderFilters();
                 renderHolders();
             }
             function editHolder(id, newName) {
@@ -2302,7 +1696,6 @@
                 transactions.forEach(tx => { if (tx.holder === oldName) { tx.holder = newName; changed++; } });
                 if (changed > 0) saveTransactions();
                 updateHoldersDropdown();
-                updateHolderFilters();
                 renderHolders();
                 renderTransactions();
             }
@@ -2315,7 +1708,6 @@
                 h.active = false;
                 saveHolders();
                 updateHoldersDropdown();
-                updateHolderFilters();
                 renderHolders();
             }
             function saveHolders() { localStorage.setItem('holders', JSON.stringify(holders)); }
@@ -2328,49 +1720,6 @@
                     holderSelect.appendChild(o);
                 });
             }
-            
-            // Atualiza os dropdowns de filtro (Lançamentos e Relatórios)
-            function updateHolderFilters() {
-                const period = getPeriodTransactions();
-                
-                // Coleta portadores únicos (por nome) que aparecem no período
-                const holdersInPeriod = new Set();
-                let hasNoHolder = false;
-                period.forEach(t => {
-                    if (t.holder) holdersInPeriod.add(t.holder);
-                    else hasNoHolder = true;
-                });
-                
-                // Reconstrói as opções
-                const buildOptions = () => {
-                    let html = '<option value="all">Todos os portadores</option>';
-                    // Ordena alfabeticamente
-                    [...holdersInPeriod].sort().forEach(name => {
-                        html += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
-                    });
-                    if (hasNoHolder) {
-                        html += '<option value="__none__">(sem portador)</option>';
-                    }
-                    return html;
-                };
-                
-                const newOptionsHtml = buildOptions();
-                
-                // Preserva seleção se ainda existir
-                const txValue = currentHolderFilterTx;
-                const rpValue = currentHolderFilterReports;
-                
-                holderFilterTx.innerHTML = newOptionsHtml;
-                holderFilterReports.innerHTML = newOptionsHtml;
-                
-                // Restaura seleção se possível
-                if ([...holderFilterTx.options].some(o => o.value === txValue)) holderFilterTx.value = txValue;
-                else { holderFilterTx.value = 'all'; currentHolderFilterTx = 'all'; }
-                
-                if ([...holderFilterReports.options].some(o => o.value === rpValue)) holderFilterReports.value = rpValue;
-                else { holderFilterReports.value = 'all'; currentHolderFilterReports = 'all'; }
-            }
-            
             function renderHolders() {
                 holdersList.innerHTML = '';
                 const active = holders.filter(h => h.active);
@@ -2465,24 +1814,13 @@
             
             // ========== GRÁFICOS ==========
             function isDarkMode() { return document.body.classList.contains('dark-mode'); }
-            
-            // Transações do período já filtradas pelo filtro de relatórios
-            function getReportTransactions() {
-                let period = getPeriodTransactions();
-                return filterByHolder(period, currentHolderFilterReports);
-            }
-            
-            function renderCharts() {
-                renderExpensesChart();
-                renderIncomeVsExpensesChart();
-                renderHoldersChart();
-            }
+            function renderCharts() { renderExpensesChart(); renderIncomeVsExpensesChart(); }
             
             function renderExpensesChart() {
                 const ctx = document.getElementById('expenses-chart').getContext('2d');
                 const dark = isDarkMode();
                 const textColor = dark ? '#e8eaed' : '#2c3e50';
-                const period = getReportTransactions();
+                const period = getPeriodTransactions();
                 const byCat = {};
                 period.filter(t => t.type === 'despesa').forEach(t => {
                     byCat[t.category] = (byCat[t.category] || 0) + parseFloat(t.amount);
@@ -2501,41 +1839,6 @@
                             responsive: true,
                             plugins: { legend: { position: 'bottom', labels: { color: textColor } } },
                             onClick: (e, els) => { if (els.length > 0) showCategoryDetails(catIds[els[0].index]); }
-                        }
-                    });
-                } else {
-                    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                    ctx.font = '16px Arial'; ctx.fillStyle = dark ? '#a0a4ab' : '#7f8c8d'; ctx.textAlign = 'center';
-                    ctx.fillText('Nenhuma despesa para exibir', ctx.canvas.width / 2, ctx.canvas.height / 2);
-                }
-            }
-            
-            function renderHoldersChart() {
-                const ctx = document.getElementById('holders-chart').getContext('2d');
-                const dark = isDarkMode();
-                const textColor = dark ? '#e8eaed' : '#2c3e50';
-                const period = getReportTransactions();
-                const byHolder = {};
-                period.filter(t => t.type === 'despesa').forEach(t => {
-                    const key = t.holder || '(sem portador)';
-                    byHolder[key] = (byHolder[key] || 0) + parseFloat(t.amount);
-                });
-                const labels = [], data = [], bg = [], holderNames = [];
-                Object.keys(byHolder).sort((a, b) => byHolder[b] - byHolder[a]).forEach((name, i) => {
-                    labels.push(name);
-                    data.push(byHolder[name]);
-                    bg.push(HOLDER_COLORS[i % HOLDER_COLORS.length]);
-                    holderNames.push(name);
-                });
-                if (window.holdersChart) window.holdersChart.destroy();
-                if (data.length > 0) {
-                    window.holdersChart = new Chart(ctx, {
-                        type: 'pie',
-                        data: { labels, datasets: [{ data, backgroundColor: bg, borderWidth: 1, borderColor: dark ? '#242830' : '#ffffff' }] },
-                        options: {
-                            responsive: true,
-                            plugins: { legend: { position: 'bottom', labels: { color: textColor } } },
-                            onClick: (e, els) => { if (els.length > 0) showHolderDetails(holderNames[els[0].index]); }
                         }
                     });
                 } else {
@@ -2579,105 +1882,6 @@
                 categoryDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
-            function showHolderDetails(holderName) {
-                const period = getPeriodTransactions();
-                const txs = period
-                    .filter(t => {
-                        if (holderName === '(sem portador)') return !t.holder && t.type === 'despesa';
-                        return t.holder === holderName && t.type === 'despesa';
-                    })
-                    .sort((a, b) => b.timestamp - a.timestamp);
-                if (txs.length === 0) { alert('Nenhuma transação.'); return; }
-                const total = txs.reduce((s, t) => s + parseFloat(t.amount), 0);
-                detailCategoryName.textContent = `${holderName} (Despesas)`;
-                detailTotal.textContent = `R$ ${total.toFixed(2)}`;
-                detailTransactionsList.innerHTML = '';
-                const ul = document.createElement('ul');
-                ul.style.listStyle = 'none'; ul.style.padding = '0';
-                txs.forEach(tx => {
-                    const li = document.createElement('li');
-                    li.style.padding = '10px';
-                    li.style.borderBottom = '1px solid var(--border-light)';
-                    li.style.display = 'flex';
-                    li.style.justifyContent = 'space-between';
-                    li.style.alignItems = 'center';
-                    const cat = categories.find(c => c.id === tx.category);
-                    const catName = cat ? cat.name : tx.category;
-                    const catColor = cat ? cat.color : '#95a5a6';
-                    li.innerHTML = `
-                        <div>
-                            <strong>${escapeHtml(tx.description)}</strong><br>
-                            <small style="color:var(--text-secondary)">
-                                <span class="category-badge" style="background:${catColor}">${catName}</span>
-                                • ${tx.date}
-                            </small>
-                        </div>
-                        <div style="font-weight: bold; color: var(--accent-red);">- R$ ${tx.amount.toFixed(2)}</div>
-                    `;
-                    ul.appendChild(li);
-                });
-                detailTransactionsList.appendChild(ul);
-                categoryDetail.classList.add('show');
-                categoryDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-            
-            // Tabela de resumo por portador
-            function renderHolderSummary() {
-                const period = getReportTransactions();
-                
-                // Se há filtro ativo, mostra só o portador filtrado
-                const byHolder = {};
-                period.forEach(t => {
-                    const key = t.holder || '(sem portador)';
-                    if (!byHolder[key]) byHolder[key] = { income: 0, expense: 0, count: 0 };
-                    if (t.type === 'receita') byHolder[key].income += parseFloat(t.amount);
-                    else byHolder[key].expense += parseFloat(t.amount);
-                    byHolder[key].count++;
-                });
-                
-                const keys = Object.keys(byHolder).sort();
-                
-                if (keys.length === 0) {
-                    holderSummaryContainer.innerHTML = `<div class="empty-state" style="padding:20px;"><i class="fas fa-users"></i><p>Nenhuma transação no período</p></div>`;
-                    return;
-                }
-                
-                let html = '<table class="holder-summary-table"><thead><tr>';
-                html += '<th>Portador</th><th style="text-align:right;">Receitas</th><th style="text-align:right;">Despesas</th><th style="text-align:right;">Saldo</th><th style="text-align:right;">Lançamentos</th>';
-                html += '</tr></thead><tbody>';
-                
-                let totalIncome = 0, totalExpense = 0, totalCount = 0;
-                
-                keys.forEach(name => {
-                    const d = byHolder[name];
-                    const saldo = d.income - d.expense;
-                    totalIncome += d.income;
-                    totalExpense += d.expense;
-                    totalCount += d.count;
-                    
-                    html += '<tr>';
-                    html += `<td data-label="Portador"><div class="hs-holder"><span class="avatar">${getInitials(name)}</span>${escapeHtml(name)}</div></td>`;
-                    html += `<td class="hs-amount" data-label="Receitas" style="color:var(--accent-green)">${d.income > 0 ? fmtBRL(d.income) : '—'}</td>`;
-                    html += `<td class="hs-amount" data-label="Despesas" style="color:var(--accent-red)">${d.expense > 0 ? fmtBRL(d.expense) : '—'}</td>`;
-                    html += `<td class="hs-amount" data-label="Saldo" style="color:${saldo >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${fmtBRL(saldo)}</td>`;
-                    html += `<td class="hs-amount" data-label="Lançamentos">${d.count}</td>`;
-                    html += '</tr>';
-                });
-                
-                // Linha de total
-                const saldoTotal = totalIncome - totalExpense;
-                html += '<tr class="hs-total-row">';
-                html += `<td data-label="Portador">TOTAL</td>`;
-                html += `<td class="hs-amount" data-label="Receitas" style="color:var(--accent-green)">${fmtBRL(totalIncome)}</td>`;
-                html += `<td class="hs-amount" data-label="Despesas" style="color:var(--accent-red)">${fmtBRL(totalExpense)}</td>`;
-                html += `<td class="hs-amount" data-label="Saldo" style="color:${saldoTotal >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${fmtBRL(saldoTotal)}</td>`;
-                html += `<td class="hs-amount" data-label="Lançamentos">${totalCount}</td>`;
-                html += '</tr>';
-                
-                html += '</tbody></table>';
-                holderSummaryContainer.innerHTML = html;
-            }
-            
             function renderIncomeVsExpensesChart() {
                 const ctx = document.getElementById('income-vs-expenses-chart').getContext('2d');
                 const dark = isDarkMode();
@@ -2686,15 +1890,11 @@
                 const monthly = {};
                 const mn = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
                 const today = new Date();
-                
-                // Filtra todas as transações pelo portador selecionado
-                const filtered = filterByHolder(transactions, currentHolderFilterReports);
-                
                 for (let i = 5; i >= 0; i--) {
                     const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
                     const label = `${mn[d.getMonth()]}/${d.getFullYear()}`;
                     monthly[label] = { income: 0, expense: 0 };
-                    filtered.forEach(tx => {
+                    transactions.forEach(tx => {
                         if (tx.month === d.getMonth() && tx.year === d.getFullYear()) {
                             if (tx.type === 'receita') monthly[label].income += parseFloat(tx.amount);
                             else monthly[label].expense += parseFloat(tx.amount);
@@ -2733,7 +1933,6 @@
             
             // ========== GLOBAIS ==========
             window.deleteTransaction = deleteTransaction;
-            window.openEditModal = openEditModal;
             window.deleteCategory = deleteCategory;
             window.deleteHolder = deleteHolder;
             window.editHolder = function(id) {
@@ -2741,6 +1940,14 @@
                 if (!h) return;
                 const newName = prompt('Novo nome:', h.name);
                 if (newName && newName.trim() && newName.trim() !== h.name) editHolder(id, newName.trim());
+            };
+            
+            // Debug exposto para o console
+            window.debugImport = {
+                getPreview: () => importPreview,
+                getTransactions: () => transactions,
+                collectReviewData,
+                confirmImport
             };
         });
     </script>
