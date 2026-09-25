@@ -1167,18 +1167,26 @@
                     const { description: cleanDesc, installment } = extractInstallment(tx.description);
                     const categoryId = categorizeDescription(cleanDesc);
                     
-                    // MUDANÇA: parcelas usam a data de vencimento; compras à vista mantêm a data original
                     let date;
+                    let finalDescription;
+                    
                     if (installment) {
-                        date = new Date(currentDueDate.year, currentDueDate.month, currentDueDate.day);
+                        // PARCELA: data = dia 14 do mês do vencimento da fatura
+                        date = new Date(currentDueDate.year, currentDueDate.month, 14);
+                        // Descrição inclui data da compra original e número da parcela
+                        const diaCompra = String(tx.day).padStart(2, '0');
+                        const mesCompra = String(tx.month + 1).padStart(2, '0');
+                        finalDescription = `${cleanDesc} (${diaCompra}/${mesCompra} - ${installment})`;
                     } else {
+                        // COMPRA À VISTA: mantém a data original
                         const year = resolveYear(tx.month, currentDueDate.month, currentDueDate.year);
                         date = new Date(year, tx.month, tx.day);
+                        finalDescription = cleanDesc;
                     }
                     
                     const transaction = {
                         id: Date.now() + Math.random() + Math.random(),
-                        description: cleanDesc + (installment ? ` (${installment})` : ''),
+                        description: finalDescription,
                         amount: tx.amount,
                         type: tx.type,
                         category: categoryId,
