@@ -88,39 +88,22 @@
         }
         
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: var(--surface);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: var(--shadow-lg);
+            max-width: 1200px; margin: 0 auto;
+            background: var(--surface); padding: 25px;
+            border-radius: 16px; box-shadow: var(--shadow-lg);
             transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         
         .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: none;
-            background: var(--surface);
-            color: var(--text-primary);
-            box-shadow: var(--shadow-md);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            z-index: 1000;
-            transition: all 0.3s ease;
-            padding: 0;
-            margin: 0;
+            position: fixed; top: 20px; right: 20px;
+            width: 48px; height: 48px; border-radius: 50%; border: none;
+            background: var(--surface); color: var(--text-primary);
+            box-shadow: var(--shadow-md); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; z-index: 1000; transition: all 0.3s ease;
+            padding: 0; margin: 0;
         }
-        
         .theme-toggle:hover { transform: scale(1.1) rotate(15deg); box-shadow: var(--shadow-lg); }
-        .theme-toggle i { transition: transform 0.4s ease; }
         
         h1 { text-align: center; color: var(--text-primary); margin-bottom: 25px; font-size: 2.2rem; display: flex; align-items: center; justify-content: center; gap: 12px; }
         h2 { color: var(--accent-blue); margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--border-light); }
@@ -132,15 +115,10 @@
         label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-primary); }
         
         input, select, button {
-            width: 100%;
-            padding: 12px 15px;
-            margin: 5px 0;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: var(--surface);
-            color: var(--text-primary);
+            width: 100%; padding: 12px 15px; margin: 5px 0;
+            border: 1px solid var(--border); border-radius: 8px;
+            font-size: 16px; transition: all 0.3s ease;
+            background: var(--surface); color: var(--text-primary);
             font-family: inherit;
         }
         
@@ -155,8 +133,6 @@
         button.secondary:hover { background: var(--accent-blue-hover); }
         button.danger { background: var(--accent-red); }
         button.danger:hover { background: var(--accent-red-hover); }
-        button.warning { background: var(--accent-orange); }
-        button.warning:hover { background: #d35400; }
         
         button.voice-btn { background: var(--accent-purple); width: auto; padding: 12px 20px; }
         button.voice-btn:hover { background: var(--accent-purple-hover); }
@@ -199,7 +175,6 @@
         .chart-wrapper.clickable:hover { transform: scale(1.02); box-shadow: var(--shadow-xl); }
         
         .category-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-right: 5px; color: white; }
-        
         .holder-badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; background: var(--surface-hover); color: var(--text-secondary); border: 1px solid var(--border); margin-left: 5px; }
         
         .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--accent-blue); background: var(--surface-alt); border-radius: 12px 12px 0 0; overflow: hidden; transition: background 0.3s ease; }
@@ -244,145 +219,57 @@
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-group button { flex: 1; min-width: 120px; }
         
-        /* ============================================
-           IMPORTAÇÃO DE FATURA
-           ============================================ */
         .import-section {
             background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
-            color: white;
-            padding: 18px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            box-shadow: var(--shadow-md);
+            color: white; padding: 18px 20px; border-radius: 12px;
+            margin-bottom: 20px; display: flex; flex-wrap: wrap;
+            align-items: center; justify-content: space-between;
+            gap: 15px; box-shadow: var(--shadow-md);
         }
         .import-section .import-info { flex: 1; min-width: 200px; }
         .import-section .import-info h3 { color: white; margin: 0 0 4px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
         .import-section .import-info p { font-size: 13px; opacity: 0.9; margin: 0; }
-        .import-section button.import-btn {
-            width: auto;
-            background: white;
-            color: var(--accent-blue);
-            font-weight: bold;
-            padding: 12px 22px;
-            flex-shrink: 0;
-            margin: 0;
-        }
+        .import-section button.import-btn { width: auto; background: white; color: var(--accent-blue); font-weight: bold; padding: 12px 22px; flex-shrink: 0; margin: 0; }
         .import-section button.import-btn:hover { background: #f0f0f0; transform: translateY(-2px); color: var(--accent-blue); }
         
-        .import-feedback {
-            display: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 14px;
-            align-items: center;
-            gap: 10px;
-            border-left: 4px solid;
-        }
+        .import-feedback { display: none; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; align-items: center; gap: 10px; border-left: 4px solid; }
         .import-feedback.show { display: flex; }
         .import-feedback.success { background: rgba(39, 174, 96, 0.15); border-color: var(--accent-green); color: var(--accent-green); }
         .import-feedback.error { background: rgba(231, 76, 60, 0.15); border-color: var(--accent-red); color: var(--accent-red); }
-        .import-feedback.warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--accent-orange); }
         
-        /* Tela de Revisão */
         .review-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 2000;
-            padding: 15px;
-            overflow-y: auto;
-            backdrop-filter: blur(3px);
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); z-index: 2000; padding: 15px;
+            overflow-y: auto; backdrop-filter: blur(3px);
         }
         .review-modal.show { display: block; }
         
         .review-panel {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: var(--surface);
-            border-radius: 16px;
-            box-shadow: var(--shadow-lg);
-            overflow: hidden;
+            max-width: 1200px; margin: 0 auto; background: var(--surface);
+            border-radius: 16px; box-shadow: var(--shadow-lg); overflow: hidden;
             animation: slideUp 0.3s ease;
         }
         @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
         .review-header {
-            background: var(--surface-alt);
-            padding: 18px 22px;
+            background: var(--surface-alt); padding: 18px 22px;
             border-bottom: 2px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 10px;
         }
         .review-header h2 { margin: 0; border: none; padding: 0; color: var(--text-primary); font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
-        .review-header .review-summary {
-            font-size: 13px;
-            color: var(--text-secondary);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-        }
+        .review-header .review-summary { font-size: 13px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
         .review-header .review-summary strong { color: var(--text-primary); }
         
         .review-body { padding: 20px; max-height: 65vh; overflow-y: auto; }
         
-        .review-section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 20px 0 10px 0;
-            padding-bottom: 5px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .review-section-title:first-child { margin-top: 0; }
-        
-        .review-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-            color: var(--text-primary);
-        }
-        .review-table th {
-            text-align: left;
-            padding: 8px 6px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            border-bottom: 1px solid var(--border);
-            font-weight: 700;
-        }
-        .review-table td {
-            padding: 6px 6px;
-            border-bottom: 1px solid var(--border-light);
-            vertical-align: middle;
-        }
+        .review-table { width: 100%; border-collapse: collapse; font-size: 14px; color: var(--text-primary); }
+        .review-table th { text-align: left; padding: 8px 6px; font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--border); font-weight: 700; }
+        .review-table td { padding: 6px 6px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
         .review-table tr:hover td { background: var(--surface-hover); }
         
-        .review-table input[type="text"],
-        .review-table input[type="number"],
-        .review-table input[type="date"],
-        .review-table select {
-            padding: 7px 9px;
-            font-size: 13px;
-            margin: 0;
-            width: 100%;
-            min-width: 0;
+        .review-table input[type="text"], .review-table input[type="number"], .review-table input[type="date"], .review-table select {
+            padding: 7px 9px; font-size: 13px; margin: 0; width: 100%; min-width: 0;
         }
         .review-table input.amount-field { text-align: right; }
         
@@ -393,60 +280,35 @@
         .review-table .col-holder { width: 150px; }
         .review-table .col-actions { width: 50px; text-align: center; }
         
-        .review-table .row-low-confidence input,
-        .review-table .row-low-confidence select { border-color: var(--warn-border); }
+        .review-table .row-low-confidence input, .review-table .row-low-confidence select { border-color: var(--warn-border); }
         
-        .review-table .type-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            color: white;
-        }
-        .type-badge.despesa { background: var(--accent-red); }
-        .type-badge.receita { background: var(--accent-green); }
-        
-        .review-table .btn-remove-row {
-            width: auto;
-            padding: 6px 9px;
-            background: var(--accent-red);
-            font-size: 12px;
-            margin: 0;
-        }
+        .review-table .btn-remove-row { width: auto; padding: 6px 9px; background: var(--accent-red); font-size: 12px; margin: 0; }
         .review-table .btn-remove-row:hover { background: var(--accent-red-hover); }
         
         .review-footer {
-            padding: 15px 22px;
-            background: var(--surface-alt);
+            padding: 15px 22px; background: var(--surface-alt);
             border-top: 2px solid var(--border-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 12px; flex-wrap: wrap;
         }
-        .review-footer .review-total {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--text-primary);
-        }
+        .review-footer .review-total { font-size: 1rem; color: var(--text-primary); line-height: 1.5; }
+        .review-footer .review-total .main-total { font-size: 1.1rem; font-weight: bold; display: block; }
+        .review-footer .review-total .sub-total { font-size: 12px; color: var(--text-secondary); font-weight: normal; display: block; margin-top: 2px; }
         .review-footer .btn-group { flex: 1; justify-content: flex-end; max-width: 500px; }
         
         .validation-info {
-            font-size: 12px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            background: var(--surface-hover);
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            font-size: 13px; padding: 12px 15px; border-radius: 8px;
+            background: var(--surface-alt); color: var(--text-primary);
+            margin-bottom: 12px; line-height: 1.8;
+            border-left: 4px solid var(--accent-blue);
         }
+        .validation-info .v-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 3px 0; }
+        .validation-info .v-row .label { color: var(--text-secondary); }
+        .validation-info .v-row .value { font-weight: 700; }
         .validation-info .ok { color: var(--accent-green); font-weight: 700; }
         .validation-info .fail { color: var(--accent-red); font-weight: 700; }
-        .validation-info .warn { color: var(--accent-orange); font-weight: 700; }
+        .validation-info .v-header { font-weight: 700; color: var(--text-primary); padding-bottom: 5px; border-bottom: 1px solid var(--border-light); margin-bottom: 5px; }
+        .validation-info .v-divider { border-top: 1px dashed var(--border); margin: 8px 0; }
         
         @media (max-width: 768px) {
             .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; font-size: 1rem; }
@@ -475,36 +337,15 @@
             
             .review-header { flex-direction: column; align-items: flex-start; }
             .review-body { padding: 12px; max-height: 70vh; }
-            .review-footer { flex-direction: column; }
+            .review-footer { flex-direction: column; align-items: stretch; }
             .review-footer .btn-group { width: 100%; max-width: none; }
             
-            /* Tabela de revisão vira cards em mobile */
             .review-table, .review-table thead, .review-table tbody, .review-table tr, .review-table td, .review-table th { display: block; }
             .review-table thead { display: none; }
-            .review-table tr {
-                background: var(--surface-alt);
-                border-radius: 10px;
-                padding: 12px;
-                margin-bottom: 12px;
-                border: 1px solid var(--border-light);
-            }
+            .review-table tr { background: var(--surface-alt); border-radius: 10px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); }
             .review-table tr:hover td { background: transparent; }
-            .review-table td {
-                border: none;
-                padding: 5px 0;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-            .review-table td::before {
-                content: attr(data-label);
-                font-size: 11px;
-                font-weight: 700;
-                color: var(--text-secondary);
-                text-transform: uppercase;
-                min-width: 70px;
-                flex-shrink: 0;
-            }
+            .review-table td { border: none; padding: 5px 0; display: flex; align-items: center; gap: 8px; }
+            .review-table td::before { content: attr(data-label); font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; min-width: 70px; flex-shrink: 0; }
             .review-table td input, .review-table td select { flex: 1; }
             .review-table .col-actions { justify-content: flex-end; }
             .review-table .col-actions::before { display: none; }
@@ -518,15 +359,10 @@
     </style>
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro" aria-label="Alternar tema">
-        <i class="fas fa-moon" id="themeIcon"></i>
-    </button>
+    <button class="theme-toggle" id="themeToggle" title="Alternar tema"><i class="fas fa-moon" id="themeIcon"></i></button>
     
     <div class="install-banner" id="installBanner">
-        <div>
-            <strong>📱 Instalar App</strong>
-            <p>Use em tela cheia como app nativo!</p>
-        </div>
+        <div><strong>📱 Instalar App</strong><p>Use em tela cheia como app nativo!</p></div>
         <button id="installButton">Instalar</button>
     </div>
     
@@ -547,9 +383,7 @@
                     <label for="end-date">Data Fim</label>
                     <input type="date" id="end-date">
                 </div>
-                <button class="secondary" id="apply-period" style="width: auto; margin-top: 22px;">
-                    <i class="fas fa-check"></i> Aplicar
-                </button>
+                <button class="secondary" id="apply-period" style="width: auto; margin-top: 22px;"><i class="fas fa-check"></i> Aplicar</button>
             </div>
             <div class="period-navigation" id="period-nav">
                 <button class="period-btn secondary" id="prev-period"><i class="fas fa-chevron-left"></i></button>
@@ -565,18 +399,13 @@
             <div class="tab" data-tab="reports">Relatórios</div>
         </div>
         
-        <!-- ABA DE LANÇAMENTOS -->
         <div class="tab-content active" id="transactions-tab">
-            
-            <!-- SEÇÃO DE IMPORTAÇÃO DE FATURA -->
             <div class="import-section">
                 <div class="import-info">
                     <h3><i class="fas fa-file-import"></i> Importar Fatura</h3>
                     <p>Envie o arquivo <strong>faturaDDMMAAAA.txt</strong> com os lançamentos da fatura</p>
                 </div>
-                <button class="import-btn" id="importBtn">
-                    <i class="fas fa-upload"></i> Selecionar Arquivo
-                </button>
+                <button class="import-btn" id="importBtn"><i class="fas fa-upload"></i> Selecionar Arquivo</button>
                 <input type="file" id="importFile" accept=".txt" style="display: none;">
             </div>
             
@@ -623,9 +452,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="holder">Portador</label>
-                            <select id="holder">
-                                <!-- Preenchido via JS -->
-                            </select>
+                            <select id="holder"></select>
                         </div>
                         <div class="form-group">
                             <label for="transaction-date">Data</label>
@@ -638,26 +465,15 @@
                     </div>
                     <div class="btn-group">
                         <button type="submit"><i class="fas fa-plus"></i> Adicionar</button>
-                        <button type="button" class="voice-btn" id="voiceBtn">
-                            <i class="fas fa-microphone"></i> Falar
-                        </button>
+                        <button type="button" class="voice-btn" id="voiceBtn"><i class="fas fa-microphone"></i> Falar</button>
                     </div>
                 </form>
             </div>
 
             <div class="summary">
-                <div class="summary-item">
-                    <h3>✅ Receitas</h3>
-                    <p id="total-income" class="positive">R$ 0,00</p>
-                </div>
-                <div class="summary-item">
-                    <h3>❌ Despesas</h3>
-                    <p id="total-expense" class="negative">R$ 0,00</p>
-                </div>
-                <div class="summary-item">
-                    <h3>💰 Saldo</h3>
-                    <p id="balance">R$ 0,00</p>
-                </div>
+                <div class="summary-item"><h3>✅ Receitas</h3><p id="total-income" class="positive">R$ 0,00</p></div>
+                <div class="summary-item"><h3>❌ Despesas</h3><p id="total-expense" class="negative">R$ 0,00</p></div>
+                <div class="summary-item"><h3>💰 Saldo</h3><p id="balance">R$ 0,00</p></div>
             </div>
 
             <div class="transactions">
@@ -666,7 +482,6 @@
             </div>
         </div>
         
-        <!-- ABA DE PORTADORES -->
         <div class="tab-content" id="holders-tab">
             <div class="form-container">
                 <h2>Gerenciar Portadores</h2>
@@ -680,12 +495,10 @@
                     <button type="submit" class="secondary"><i class="fas fa-plus"></i> Adicionar Portador</button>
                 </form>
             </div>
-            
             <h2>Meus Portadores</h2>
             <div class="categories-grid" id="holders-list"></div>
         </div>
         
-        <!-- ABA DE CATEGORIAS -->
         <div class="tab-content" id="categories-tab">
             <div class="form-container">
                 <h2>Gerenciar Categorias</h2>
@@ -710,12 +523,10 @@
                     <button type="submit" class="secondary"><i class="fas fa-plus"></i> Adicionar Categoria</button>
                 </form>
             </div>
-            
             <h2>Minhas Categorias</h2>
             <div class="categories-grid" id="categories-list"></div>
         </div>
         
-        <!-- ABA DE RELATÓRIOS -->
         <div class="tab-content" id="reports-tab">
             <h2>Relatórios Financeiros</h2>
             <div class="charts-container">
@@ -735,14 +546,11 @@
                     <button class="close-detail" id="close-detail"><i class="fas fa-times"></i> Fechar</button>
                 </h3>
                 <div id="detail-transactions-list"></div>
-                <p style="margin-top: 10px; font-weight: bold;">
-                    Total: <span id="detail-total">R$ 0,00</span>
-                </p>
+                <p style="margin-top: 10px; font-weight: bold;">Total: <span id="detail-total">R$ 0,00</span></p>
             </div>
         </div>
     </div>
     
-    <!-- MODAL DE REVISÃO DA FATURA -->
     <div class="review-modal" id="reviewModal">
         <div class="review-panel">
             <div class="review-header">
@@ -754,7 +562,7 @@
                 <div id="reviewTableContainer"></div>
             </div>
             <div class="review-footer">
-                <div class="review-total" id="reviewTotal">Total: R$ 0,00</div>
+                <div class="review-total" id="reviewTotal"></div>
                 <div class="btn-group">
                     <button class="danger" id="cancelImportBtn"><i class="fas fa-times"></i> Cancelar</button>
                     <button id="confirmImportBtn"><i class="fas fa-check"></i> Salvar Todos</button>
@@ -762,10 +570,9 @@
             </div>
         </div>
     </div>
-
-    <script>
+        <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ========== ELEMENTOS DO DOM ==========
+            // ========== DOM ==========
             const form = document.getElementById('transaction-form');
             const categoryForm = document.getElementById('category-form');
             const holderForm = document.getElementById('holder-form');
@@ -813,7 +620,6 @@
             const themeIcon = document.getElementById('themeIcon');
             const themeColorMeta = document.getElementById('themeColorMeta');
             
-            // Importação
             const importBtn = document.getElementById('importBtn');
             const importFile = document.getElementById('importFile');
             const importFeedback = document.getElementById('importFeedback');
@@ -843,12 +649,10 @@
                 { id: 'outros', name: 'Outros', type: 'despesa', color: '#95a5a6' }
             ];
             
-            // Portadores (padrão inicial)
             let holders = JSON.parse(localStorage.getItem('holders')) || [
                 { id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true }
             ];
             
-            // Garantir que o padrão exista e esteja marcado
             if (!holders.find(h => h.isDefault)) {
                 holders.forEach(h => h.isDefault = false);
                 holders.push({ id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true });
@@ -870,20 +674,14 @@
                 'freelance': ['freelance', 'freela', 'servico prestado', 'serviço prestado']
             };
             
-            // Constrói mapa reverso: id da categoria -> lista de tags
-            // E também garante que se a categoria 'outros' não existe, ela é usada como fallback
-            
-            // ========== CONTROLE DE PERÍODO ==========
+            // ========== ESTADO ==========
             let periodMode = 'standard';
             let customStartDate = null;
             let customEndDate = null;
-            
-            // ========== VOZ ==========
             let recognition = null;
             let isListening = false;
-            
-            // ========== ESTADO DA IMPORTAÇÃO ==========
-            let importPreview = null; // { transactions: [], validation: {} }
+            let importPreview = null;
+            let currentDueDate = null;
             
             // ========== TEMA ==========
             function applyTheme(theme) {
@@ -903,14 +701,12 @@
                     setTimeout(() => renderCharts(), 50);
                 }
             }
-            
             function toggleTheme() {
                 const isDark = document.body.classList.contains('dark-mode');
                 const newTheme = isDark ? 'light' : 'dark';
                 localStorage.setItem('theme', newTheme);
                 applyTheme(newTheme);
             }
-            
             function initTheme() {
                 const savedTheme = localStorage.getItem('theme');
                 if (savedTheme) { applyTheme(savedTheme); return; }
@@ -921,52 +717,49 @@
                 });
             }
             
-            // ========== UTILITÁRIOS DE DATA ==========
-            function createDateFromString(dateString) {
-                if (!dateString) return null;
-                const parts = dateString.split('-');
-                if (parts.length !== 3) return null;
-                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            // ========== UTILITÁRIOS DATA ==========
+            function createDateFromString(ds) {
+                if (!ds) return null;
+                const p = ds.split('-');
+                if (p.length !== 3) return null;
+                return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
             }
-            function formatDateToString(date) {
-                if (!date || isNaN(date.getTime())) return '';
-                const y = date.getFullYear();
-                const m = String(date.getMonth() + 1).padStart(2, '0');
-                const d = String(date.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
+            function formatDateToString(d) {
+                if (!d || isNaN(d.getTime())) return '';
+                return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             }
-            function formatDateToDisplay(date) {
-                if (!date || isNaN(date.getTime())) return '';
-                const d = String(date.getDate()).padStart(2, '0');
-                const m = String(date.getMonth() + 1).padStart(2, '0');
-                const y = date.getFullYear();
-                return `${d}/${m}/${y}`;
+            function formatDateToDisplay(d) {
+                if (!d || isNaN(d.getTime())) return '';
+                return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
             }
-            function getStartOfDay(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }
-            function getEndOfDay(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999); }
+            function getStartOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+            function getEndOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999); }
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]);
+            }
+            function fmtBRL(v) {
+                return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
             
             // ========== INICIALIZAÇÃO ==========
             init();
             
             function init() {
                 initTheme();
-                
                 if (!localStorage.getItem('categories')) localStorage.setItem('categories', JSON.stringify(categories));
                 else categories = JSON.parse(localStorage.getItem('categories'));
                 
                 if (!localStorage.getItem('holders')) localStorage.setItem('holders', JSON.stringify(holders));
                 else holders = JSON.parse(localStorage.getItem('holders'));
                 
-                // Garantir que o padrão exista
                 if (!holders.find(h => h.isDefault)) {
                     holders.forEach(h => h.isDefault = false);
                     holders.push({ id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true });
                     localStorage.setItem('holders', JSON.stringify(holders));
                 }
                 
-                const today = new Date();
-                transactionDateInput.value = formatDateToString(today);
-                
+                transactionDateInput.value = formatDateToString(new Date());
                 setupStandardPeriod();
                 updateCategoriesDropdown();
                 updateHoldersDropdown();
@@ -982,40 +775,39 @@
             
             function setupStandardPeriod() {
                 const today = new Date();
-                let startDate = new Date(today.getFullYear(), today.getMonth(), 14);
-                let endDate = new Date(today.getFullYear(), today.getMonth() + 1, 14);
+                let s = new Date(today.getFullYear(), today.getMonth(), 14);
+                let e = new Date(today.getFullYear(), today.getMonth() + 1, 14);
                 if (today.getDate() < 14) {
-                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 14);
-                    endDate = new Date(today.getFullYear(), today.getMonth(), 14);
+                    s = new Date(today.getFullYear(), today.getMonth() - 1, 14);
+                    e = new Date(today.getFullYear(), today.getMonth(), 14);
                 }
-                customStartDate = startDate;
-                customEndDate = endDate;
-                startDateInput.value = formatDateToString(startDate);
-                endDateInput.value = formatDateToString(endDate);
+                customStartDate = s;
+                customEndDate = e;
+                startDateInput.value = formatDateToString(s);
+                endDateInput.value = formatDateToString(e);
                 updatePeriodDisplay();
             }
             
             function updatePeriodDisplay() {
-                const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                const mn = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                 if (periodMode === 'standard') {
-                    const start = new Date(customStartDate);
-                    const end = new Date(customEndDate);
-                    currentPeriodElement.textContent = `${start.getDate()} ${monthNames[start.getMonth()]} - ${end.getDate()} ${monthNames[end.getMonth()]} ${end.getFullYear()}`;
+                    const s = new Date(customStartDate), e = new Date(customEndDate);
+                    currentPeriodElement.textContent = `${s.getDate()} ${mn[s.getMonth()]} - ${e.getDate()} ${mn[e.getMonth()]} ${e.getFullYear()}`;
                 } else {
                     currentPeriodElement.textContent = `${formatDateToDisplay(customStartDate)} - ${formatDateToDisplay(customEndDate)}`;
                 }
                 updateSummary();
                 renderTransactions();
-                const reportsTab = document.getElementById('reports-tab');
-                if (reportsTab.classList.contains('active')) renderCharts();
+                const rt = document.getElementById('reports-tab');
+                if (rt.classList.contains('active')) renderCharts();
             }
             
             function getPeriodTransactions() {
-                const start = getStartOfDay(new Date(customStartDate));
-                const end = getEndOfDay(new Date(customEndDate));
+                const s = getStartOfDay(new Date(customStartDate));
+                const e = getEndOfDay(new Date(customEndDate));
                 return transactions.filter(t => {
                     const d = new Date(t.timestamp);
-                    return d >= start && d <= end;
+                    return d >= s && d <= e;
                 });
             }
             
@@ -1040,7 +832,7 @@
                 });
             }
             
-            // ========== VOZ (inalterado) ==========
+            // ========== VOZ ==========
             function setupVoiceRecognition() {
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                     voiceBtn.style.display = 'none';
@@ -1085,7 +877,6 @@
                     stopListening();
                 };
             }
-            
             function startListening() {
                 if (!recognition) { alert('Reconhecimento de voz não disponível.'); return; }
                 try {
@@ -1119,13 +910,10 @@
             function processVoiceCommand(text) {
                 const lower = text.toLowerCase().trim();
                 let tipo = null, valor = null, categoria = null, data = null, parcelas = 1;
-                
                 if (lower.includes('receita') || lower.includes('ganhei') || lower.includes('salário') || lower.includes('salario')) tipo = 'receita';
                 else if (lower.includes('despesa') || lower.includes('gastei') || lower.includes('paguei')) tipo = 'despesa';
-                
                 const vMatch = lower.match(/(\d+[\.,]\d+|\d+)\s*(reais|r\$|real)/i) || lower.match(/(\d+[\.,]\d+|\d+)/);
                 if (vMatch) valor = parseFloat(vMatch[1].replace(',', '.'));
-                
                 const catsDisp = categories.map(c => c.name.toLowerCase());
                 for (const cat of catsDisp) {
                     if (lower.includes(cat)) {
@@ -1133,7 +921,6 @@
                         if (obj) { categoria = obj.id; break; }
                     }
                 }
-                
                 const kw = { 'alimentação':'alimentacao','mercado':'alimentacao','comida':'alimentacao','transporte':'transporte','uber':'transporte','gasolina':'transporte','moradia':'moradia','aluguel':'moradia','saúde':'saude','médico':'saude','lazer':'lazer','cinema':'lazer','educação':'educacao','curso':'educacao','vestuário':'vestuario','roupa':'vestuario','serviços':'servicos','salário':'salario' };
                 if (!categoria) {
                     for (const [k, v] of Object.entries(kw)) {
@@ -1143,13 +930,11 @@
                         }
                     }
                 }
-                
                 let desc = text;
                 ['receita','despesa','gastei','paguei','ganhei','reais','real','r$'].forEach(p => desc = desc.replace(new RegExp(p, 'gi'), ''));
                 desc = desc.replace(/\d+[\.,]\d+|\d+/g, '');
                 catsDisp.forEach(c => desc = desc.replace(new RegExp(c, 'gi'), ''));
                 desc = desc.trim() || (tipo === 'receita' ? 'Receita' : 'Despesa');
-                
                 const dMatch = lower.match(/dia\s*(\d+)/i);
                 if (dMatch) {
                     const dia = parseInt(dMatch[1]);
@@ -1158,7 +943,6 @@
                     if (d > hoje) d = new Date(hoje.getFullYear(), hoje.getMonth() - 1, dia);
                     data = d;
                 }
-                
                 const pMatch = lower.match(/(\d+)\s*(x|vezes|parcela|parcelas)/i);
                 if (pMatch) parcelas = parseInt(pMatch[1]);
                 
@@ -1168,7 +952,6 @@
                 const cEl = document.getElementById('category');
                 const dtEl = document.getElementById('transaction-date');
                 const pEl = document.getElementById('parcelas');
-                
                 if (desc) dEl.value = desc;
                 if (valor) aEl.value = valor;
                 if (tipo) tEl.value = tipo;
@@ -1181,32 +964,18 @@
                 setTimeout(() => { hideVoiceStatus(); voiceStatusText.style.color = ''; }, 4000);
             }
             
-            // ========== IMPORTAÇÃO DE FATURA ==========
+            // ==================================================
+            // IMPORTAÇÃO DE FATURA
+            // ==================================================
             
-            /**
-             * Extrai a data de vencimento do nome do arquivo.
-             * Formato esperado: faturaDDMMAAAA.txt
-             */
             function extractDueDateFromFilename(filename) {
-                const match = filename.match(/fatura(\d{2})(\d{2})(\d{4})\.txt/i);
-                if (!match) return null;
-                return {
-                    day: parseInt(match[1]),
-                    month: parseInt(match[2]) - 1, // 0-indexado
-                    year: parseInt(match[3])
-                };
+                const m = filename.match(/fatura(\d{2})(\d{2})(\d{4})\.txt/i);
+                if (!m) return null;
+                return { day: parseInt(m[1]), month: parseInt(m[2]) - 1, year: parseInt(m[3]) };
             }
             
-            /**
-             * Normaliza uma linha da fatura: remove espaços extras.
-             */
-            function normalizeLine(line) {
-                return line.trim().replace(/\s+/g, ' ');
-            }
+            function normalizeLine(l) { return l.trim().replace(/\s+/g, ' '); }
             
-            /**
-             * Verifica se uma linha é um cabeçalho/título a ser ignorado.
-             */
             function isIgnoredLine(line) {
                 const l = line.toLowerCase().trim();
                 if (!l) return true;
@@ -1219,66 +988,36 @@
                 return false;
             }
             
-            /**
-             * Verifica se uma linha de lançamento deve ser ignorada (ruído).
-             */
             function isNoiseTransaction(description) {
                 const d = description.toLowerCase();
                 const noiseKeywords = [
-                    'total da fatura anterior',
-                    'obrigado pelo pagamento',
-                    'ajuste cred',
-                    'ajuste crédito',
-                    'ajuste credito',
-                    'ajuste de',
-                    'pagamento efetuado',
-                    'saldo anterior',
-                    'juros',
-                    'iof',
-                    'anuidade',
-                    'isent',
-                    'total compras',
-                    'total final',
-                    'valor total desta fatura',
+                    'total da fatura anterior', 'obrigado pelo pagamento',
+                    'ajuste cred', 'ajuste crédito', 'ajuste credito', 'ajuste de',
+                    'pagamento efetuado', 'saldo anterior', 'juros', 'iof',
+                    'anuidade', 'isent',
+                    'total compras', 'total final', 'valor total desta fatura',
                     'total '
                 ];
                 return noiseKeywords.some(k => d.includes(k));
             }
             
-            /**
-             * Verifica se uma linha parece ser um lançamento.
-             * Formato: DD/MM DESCRIÇÃO VALOR[C|D]
-             */
-            function parseTransactionLine(line) {
-                // Regex: DD/MM <descrição> <valor><C|D>
-                const regex = /^(\d{2})\/(\d{2})\s+(.+?)\s+([\d.]+,\d{2})\s*([CD])\s*$/i;
-                const m = line.match(regex);
-                if (!m) return null;
-                
-                const day = parseInt(m[1]);
-                const month = parseInt(m[2]) - 1; // 0-indexado
-                const description = m[3].trim();
-                const amountStr = m[4].replace(/\./g, '').replace(',', '.');
-                const amount = parseFloat(amountStr);
-                const type = m[5].toUpperCase() === 'D' ? 'despesa' : 'receita';
-                
-                if (isNaN(amount)) return null;
-                
-                return { day, month, description, amount, type };
+            function extractInstallment(description) {
+                const m = description.match(/^(.+?)\s+(\d{2})\s+DE\s+(\d{2})\s+(.+)$/i);
+                if (m) {
+                    return {
+                        description: `${m[1].trim()} ${m[4].trim()}`,
+                        installment: `${m[2]}/${m[3]}`
+                    };
+                }
+                return { description, installment: null };
             }
             
-            /**
-             * Verifica se uma linha é um cabeçalho de portador: "NOME (Cartão XXXX)"
-             */
             function parseHolderLine(line) {
                 const m = line.match(/^(.+?)\s*\(Cartão\s+(\d+)\)\s*$/i);
                 if (!m) return null;
                 return { name: m[1].trim(), cardNumber: m[2] };
             }
             
-            /**
-             * Verifica se uma linha é um totalizador de seção.
-             */
             function parseTotalLine(line) {
                 const l = line.trim();
                 let m;
@@ -1295,107 +1034,82 @@
                 m = l.match(/^Valor\s+total\s+desta\s+fatura\s+R\$\s+([\d.]+,\d{2})\s*D?$/i);
                 if (m) return { type: 'total-fatura', value: parseFloat(m[1].replace(/\./g, '').replace(',', '.')) };
                 
+                m = l.match(/^Total\s+([\d.]+,\d{2})\s*([CD])?$/i);
+                if (m) return { type: 'total-simples', value: parseFloat(m[1].replace(/\./g, '').replace(',', '.')), letter: (m[2] || '').toUpperCase() };
+                
                 return null;
             }
             
-            /**
-             * Verifica se uma linha é uma anotação de parcela dentro da descrição.
-             * Ex: "MP HLPNEUSAUTOSE 02 DE 07 OSASCO"
-             * Retorna { description: "MP HLPNEUSAUTOSE OSASCO", installment: "02/07" }
-             */
-            function extractInstallment(description) {
-                const m = description.match(/^(.+?)\s+(\d{2})\s+DE\s+(\d{2})\s+(.+)$/i);
-                if (m) {
-                    return {
-                        description: `${m[1].trim()} ${m[4].trim()}`,
-                        installment: `${m[2]}/${m[3]}`
-                    };
-                }
-                return { description, installment: null };
+            function parseTransactionLine(line) {
+                const regex = /^(\d{2})\/(\d{2})\s+(.+?)\s+([\d.]+,\d{2})\s*([CD])\s*$/i;
+                const m = line.match(regex);
+                if (!m) return null;
+                const amountStr = m[4].replace(/\./g, '').replace(',', '.');
+                const amount = parseFloat(amountStr);
+                if (isNaN(amount)) return null;
+                return {
+                    day: parseInt(m[1]),
+                    month: parseInt(m[2]) - 1,
+                    description: m[3].trim(),
+                    amount,
+                    type: m[5].toUpperCase() === 'D' ? 'despesa' : 'receita'
+                };
             }
             
-            /**
-             * Categoriza uma descrição com base nas tags.
-             */
-            function categorizeDescription(description, type) {
+            function categorizeDescription(description) {
                 const d = description.toLowerCase();
-                const fallback = type === 'despesa' ? 'outros' : 'outros';
-                
-                // Itera pelas categorias (na ordem de prioridade das tags)
                 for (const [categoryId, tags] of Object.entries(CATEGORY_TAGS)) {
-                    // Verifica se a categoria existe
                     const cat = categories.find(c => c.id === categoryId);
                     if (!cat) continue;
-                    
-                    // Tags mais longas primeiro para evitar falsos positivos
-                    const sortedTags = [...tags].sort((a, b) => b.length - a.length);
-                    for (const tag of sortedTags) {
-                        if (d.includes(tag.toLowerCase())) {
-                            return categoryId;
-                        }
+                    const sorted = [...tags].sort((a, b) => b.length - a.length);
+                    for (const tag of sorted) {
+                        if (d.includes(tag.toLowerCase())) return categoryId;
                     }
                 }
-                return fallback;
+                return 'outros';
             }
             
-            /**
-             * Calcula o ano do lançamento com base no vencimento.
-             * Regra: se mês do lançamento > mês do vencimento → ano anterior; senão → ano do vencimento
-             */
             function resolveYear(month, dueMonth, dueYear) {
                 return month > dueMonth ? dueYear - 1 : dueYear;
             }
             
-            /**
-             * Processa o conteúdo do arquivo TXT.
-             */
             function processInvoiceFile(content) {
                 const lines = content.split(/\r?\n/);
                 const transactions = [];
                 const validation = {
-                    perCard: {}, // { cardNumber: { compras, parceladas, final, calculated } }
+                    perCard: {},
+                    creditsTotal: 0,
+                    cardExpensesTotal: 0,
+                    netCalculated: 0,
                     declaredTotal: null,
-                    calculatedTotal: 0
+                    demonstrativoTotalDeclared: null
                 };
                 
                 let currentHolder = null;
                 let currentCard = null;
-                let currentSection = null; // 'compras' | 'parceladas'
+                let currentSection = null;
+                let currentScope = 'demonstrativo';
                 
                 for (let i = 0; i < lines.length; i++) {
-                    const raw = lines[i];
-                    const line = normalizeLine(raw);
-                    
-                    // Ignora linhas vazias e cabeçalhos
+                    const line = normalizeLine(lines[i]);
                     if (isIgnoredLine(line)) continue;
                     
-                    // Verifica cabeçalho de portador: "NOME (Cartão XXXX)"
                     const holderInfo = parseHolderLine(line);
                     if (holderInfo) {
                         currentHolder = holderInfo.name;
                         currentCard = holderInfo.cardNumber;
+                        currentScope = 'card';
                         if (!validation.perCard[currentCard]) {
-                            validation.perCard[currentCard] = { holder: currentHolder, compras: 0, parceladas: 0, final: 0, calculated: 0 };
+                            validation.perCard[currentCard] = { holder: currentHolder, compras: 0, parceladas: 0, final: 0 };
                         }
                         continue;
                     }
                     
-                    // Verifica mudança de seção
-                    const upperLine = line.toUpperCase();
-                    if (upperLine === 'COMPRAS' || /^COMPRAS\s*\(Cartão/i.test(line)) {
-                        currentSection = 'compras';
-                        continue;
-                    }
-                    if (upperLine === 'COMPRAS PARCELADAS' || /^COMPRAS PARCELADAS\s*\(Cartão/i.test(line)) {
-                        currentSection = 'parceladas';
-                        continue;
-                    }
-                    if (upperLine === 'ANUIDADE') {
-                        currentSection = 'anuidade';
-                        continue;
-                    }
+                    const upper = line.toUpperCase();
+                    if (upper === 'COMPRAS' || /^COMPRAS\s*\(Cartão/i.test(line)) { currentSection = 'compras'; continue; }
+                    if (upper === 'COMPRAS PARCELADAS' || /^COMPRAS PARCELADAS\s*\(Cartão/i.test(line)) { currentSection = 'parceladas'; continue; }
+                    if (upper === 'ANUIDADE') { currentSection = 'anuidade'; continue; }
                     
-                    // Verifica linhas de totalizador
                     const totalInfo = parseTotalLine(line);
                     if (totalInfo) {
                         if (totalInfo.type === 'compras' && currentCard) {
@@ -1404,35 +1118,33 @@
                             validation.perCard[currentCard].parceladas = totalInfo.value;
                         } else if (totalInfo.type === 'final-cartao') {
                             if (!validation.perCard[totalInfo.cardNumber]) {
-                                validation.perCard[totalInfo.cardNumber] = { holder: null, compras: 0, parceladas: 0, final: 0, calculated: 0 };
+                                validation.perCard[totalInfo.cardNumber] = { holder: null, compras: 0, parceladas: 0, final: 0 };
                             }
                             validation.perCard[totalInfo.cardNumber].final = totalInfo.value;
                         } else if (totalInfo.type === 'total-fatura') {
                             validation.declaredTotal = totalInfo.value;
+                        } else if (totalInfo.type === 'total-simples') {
+                            if (currentScope === 'demonstrativo' && totalInfo.letter === 'C') {
+                                validation.demonstrativoTotalDeclared = totalInfo.value;
+                            }
                         }
                         continue;
                     }
                     
-                    // Tenta parsear como lançamento
                     const tx = parseTransactionLine(line);
                     if (!tx) continue;
-                    
-                    // Ignora ruído (TOTAL DA FATURA ANTERIOR, AJUSTE, etc)
                     if (isNoiseTransaction(tx.description)) continue;
                     
-                    // Extrai informação de parcela (se houver)
+                    if (currentScope === 'demonstrativo') {
+                        if (tx.type === 'receita') validation.creditsTotal += tx.amount;
+                        continue;
+                    }
+                    
                     const { description: cleanDesc, installment } = extractInstallment(tx.description);
-                    
-                    // Categoriza
-                    const categoryId = categorizeDescription(cleanDesc, tx.type);
-                    
-                    // Resolve o ano
+                    const categoryId = categorizeDescription(cleanDesc);
                     const year = resolveYear(tx.month, currentDueDate.month, currentDueDate.year);
-                    
-                    // Cria a data
                     const date = new Date(year, tx.month, tx.day);
                     
-                    // Constrói o lançamento
                     const transaction = {
                         id: Date.now() + Math.random() + Math.random(),
                         description: cleanDesc + (installment ? ` (${installment})` : ''),
@@ -1449,27 +1161,15 @@
                     };
                     
                     transactions.push(transaction);
-                    
-                    // Soma no cartão atual para validação
-                    if (currentCard && validation.perCard[currentCard]) {
-                        validation.perCard[currentCard].calculated += tx.amount;
-                    }
-                    validation.calculatedTotal += tx.amount;
+                    validation.cardExpensesTotal += tx.amount;
                 }
                 
+                validation.netCalculated = validation.cardExpensesTotal - validation.creditsTotal;
                 return { transactions, validation };
             }
             
-            // Variável global que recebe o vencimento parseado
-            let currentDueDate = null;
-            
-            /**
-             * Handler do upload da fatura
-             */
             function handleImportFile(file) {
                 if (!file) return;
-                
-                // Extrai o vencimento do nome do arquivo
                 const dueInfo = extractDueDateFromFilename(file.name);
                 if (!dueInfo) {
                     showImportFeedback('error', 'Nome do arquivo inválido. Esperado: faturaDDMMAAAA.txt (ex: fatura23092026.txt)');
@@ -1480,223 +1180,131 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     try {
-                        const content = e.target.result;
-                        const { transactions: parsed, validation } = processInvoiceFile(content);
-                        
+                        const { transactions: parsed, validation } = processInvoiceFile(e.target.result);
                         if (parsed.length === 0) {
-                            showImportFeedback('error', 'Nenhum lançamento foi encontrado no arquivo. Verifique o formato.');
+                            showImportFeedback('error', 'Nenhum lançamento encontrado. Verifique o formato.');
                             return;
                         }
-                        
-                        // Guarda o preview
                         importPreview = { transactions: parsed, validation };
-                        
-                        // Mostra o modal de revisão
                         openReviewModal();
-                        
                     } catch (err) {
                         console.error(err);
-                        showImportFeedback('error', 'Erro ao processar o arquivo: ' + err.message);
+                        showImportFeedback('error', 'Erro ao processar: ' + err.message);
                     }
                 };
-                reader.onerror = function() {
-                    showImportFeedback('error', 'Erro ao ler o arquivo.');
-                };
+                reader.onerror = function() { showImportFeedback('error', 'Erro ao ler o arquivo.'); };
                 reader.readAsText(file, 'UTF-8');
             }
             
-            /**
-             * Mostra feedback de importação
-             */
             function showImportFeedback(type, message) {
                 importFeedback.className = 'import-feedback show ' + type;
-                importFeedback.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i> ${message}`;
-                
-                if (type === 'success') {
-                    setTimeout(() => {
-                        importFeedback.classList.remove('show');
-                    }, 6000);
-                }
+                importFeedback.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+                if (type === 'success') setTimeout(() => importFeedback.classList.remove('show'), 6000);
             }
             
-            /**
-             * Abre o modal de revisão com os dados do preview
-             */
             function openReviewModal() {
                 const { transactions, validation } = importPreview;
-                
-                // Atualiza summary no header
                 reviewSummary.innerHTML = `
                     <span><strong>${transactions.length}</strong> lançamentos</span>
                     <span>Vencimento: <strong>${String(currentDueDate.day).padStart(2,'0')}/${String(currentDueDate.month+1).padStart(2,'0')}/${currentDueDate.year}</strong></span>
                 `;
-                
-                // Validação
                 renderValidationInfo(validation);
-                
-                // Constrói a tabela
                 renderReviewTable(transactions);
-                
-                // Atualiza total
                 updateReviewTotal();
-                
-                // Mostra o modal
                 reviewModal.classList.add('show');
                 document.body.style.overflow = 'hidden';
             }
             
-            /**
-             * Renderiza as informações de validação
-             */
             function renderValidationInfo(validation) {
                 let html = '';
+                html += '<div class="v-header"><i class="fas fa-calculator"></i> Validação da Fatura</div>';
                 
-                // Validação por cartão
                 const cardEntries = Object.entries(validation.perCard);
                 if (cardEntries.length > 0) {
-                    html += '<div style="width:100%"><strong>Validação por cartão:</strong></div>';
+                    html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Por cartão:</div>';
                     cardEntries.forEach(([card, data]) => {
                         const declared = (data.compras || 0) + (data.parceladas || 0);
                         const final = data.final || 0;
-                        const match = Math.abs(declared - final) < 0.01;
-                        const ok = match ? 'ok' : 'fail';
-                        html += `<div>Cartão ${card}: ${declared.toFixed(2)} vs ${final.toFixed(2)} <span class="${ok}">${match ? '✓' : '✗'}</span></div>`;
+                        const diff = Math.abs(declared - final);
+                        const ok = diff < 0.01;
+                        html += `<div class="v-row" style="font-size:12px;">
+                            <span class="label">Cartão ${card}:</span>
+                            <span class="value">${fmtBRL(declared)} <span class="${ok ? 'ok' : 'fail'}">${ok ? '✓' : '✗ (' + fmtBRL(diff) + ')'}</span></span>
+                        </div>`;
                     });
                 }
                 
-                // Validação total
+                html += '<div class="v-divider"></div>';
+                html += `<div class="v-row"><span class="label">Total das compras (bruto):</span><span class="value">${fmtBRL(validation.cardExpensesTotal)}</span></div>`;
+                html += `<div class="v-row"><span class="label">Créditos/estornos do Demonstrativo:</span><span class="value" style="color:var(--accent-green)">− ${fmtBRL(validation.creditsTotal)}</span></div>`;
+                html += '<div class="v-divider"></div>';
+                html += `<div class="v-row"><span class="label"><strong>Total líquido calculado:</strong></span><span class="value">${fmtBRL(validation.netCalculated)}</span></div>`;
+                
                 if (validation.declaredTotal !== null) {
-                    const sumFinals = Object.values(validation.perCard).reduce((s, d) => s + (d.final || 0), 0);
-                    const match = Math.abs(sumFinals - validation.declaredTotal) < 0.01;
-                    const ok = match ? 'ok' : 'fail';
-                    html += `<div style="width:100%"><strong>Total fatura:</strong> soma dos finais ${sumFinals.toFixed(2)} vs declarado ${validation.declaredTotal.toFixed(2)} <span class="${ok}">${match ? '✓' : '✗'}</span></div>`;
+                    const match = Math.abs(validation.netCalculated - validation.declaredTotal) < 0.01;
+                    const diff = Math.abs(validation.netCalculated - validation.declaredTotal);
+                    html += `<div class="v-row"><span class="label"><strong>Total declarado na fatura:</strong></span><span class="value">${fmtBRL(validation.declaredTotal)}</span></div>`;
+                    html += `<div class="v-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
+                        <span class="label"><strong>Resultado:</strong></span>
+                        <span class="${match ? 'ok' : 'fail'}">${match ? '✓ VALORES BATEM' : '✗ DIVERGÊNCIA DE ' + fmtBRL(diff)}</span>
+                    </div>`;
                 }
                 
                 validationInfo.innerHTML = html;
             }
             
-            /**
-             * Renderiza a tabela de revisão
-             */
             function renderReviewTable(transactions) {
-                // Constrói opções de categoria
-                const categoryOptions = categories.map(c => 
-                    `<option value="${c.id}">${c.name}</option>`
-                ).join('');
-                
-                // Constrói opções de portador (todos, mesmo os inativos, para edição)
-                const holderOptions = holders.map(h => 
-                    `<option value="${h.id}" ${!h.active ? 'disabled' : ''}>${h.name}${!h.active ? ' (excluído)' : ''}</option>`
-                ).join('');
-                
-                // Opções de tipo
-                const typeOptions = `
-                    <option value="despesa">Despesa</option>
-                    <option value="receita">Receita</option>
-                `;
+                const categoryOptions = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                const holderOptions = holders.map(h => `<option value="${h.id}" ${!h.active ? 'disabled' : ''}>${h.name}${!h.active ? ' (excluído)' : ''}</option>`).join('');
                 
                 let html = '<table class="review-table"><thead><tr>';
-                html += '<th class="col-date">Data</th>';
-                html += '<th class="col-desc">Descrição</th>';
-                html += '<th class="col-amount">Valor</th>';
-                html += '<th class="col-cat">Categoria</th>';
-                html += '<th class="col-holder">Portador</th>';
-                html += '<th class="col-type">Tipo</th>';
-                html += '<th class="col-actions"></th>';
+                html += '<th class="col-date">Data</th><th class="col-desc">Descrição</th><th class="col-amount">Valor</th>';
+                html += '<th class="col-cat">Categoria</th><th class="col-holder">Portador</th><th class="col-type">Tipo</th><th class="col-actions"></th>';
                 html += '</tr></thead><tbody>';
                 
                 transactions.forEach((tx, idx) => {
-                    const isLowConfidence = tx.category === 'outros';
-                    const rowClass = isLowConfidence ? 'row-low-confidence' : '';
-                    
-                    html += `<tr class="${rowClass}" data-idx="${idx}">`;
-                    
-                    html += `<td class="col-date" data-label="Data">`;
-                    html += `<input type="date" class="review-date" data-idx="${idx}" value="${formatDateToString(new Date(tx.timestamp))}">`;
-                    html += `</td>`;
-                    
-                    html += `<td class="col-desc" data-label="Descrição">`;
-                    html += `<input type="text" class="review-desc" data-idx="${idx}" value="${escapeHtml(tx.description)}">`;
-                    html += `</td>`;
-                    
-                    html += `<td class="col-amount" data-label="Valor">`;
-                    html += `<input type="number" step="0.01" min="0" class="review-amount amount-field" data-idx="${idx}" value="${tx.amount.toFixed(2)}">`;
-                    html += `</td>`;
-                    
-                    html += `<td class="col-cat" data-label="Categoria">`;
-                    html += `<select class="review-cat" data-idx="${idx}">`;
-                    html += `<option value="${tx.category}" selected>${getCategoryName(tx.category)}</option>`;
-                    html += categoryOptions;
-                    html += `</select>`;
-                    html += `</td>`;
-                    
-                    html += `<td class="col-holder" data-label="Portador">`;
-                    html += `<select class="review-holder" data-idx="${idx}">`;
-                    html += holderOptions;
-                    html += `</select>`;
-                    html += `</td>`;
-                    
-                    html += `<td class="col-type" data-label="Tipo">`;
-                    html += `<select class="review-type" data-idx="${idx}">`;
-                    html += `<option value="despesa" ${tx.type === 'despesa' ? 'selected' : ''}>Despesa</option>`;
-                    html += `<option value="receita" ${tx.type === 'receita' ? 'selected' : ''}>Receita</option>`;
-                    html += `</select>`;
-                    html += `</td>`;
-                    
-                    html += `<td class="col-actions" data-label="">`;
-                    html += `<button class="btn-remove-row" data-idx="${idx}" title="Remover"><i class="fas fa-trash"></i></button>`;
-                    html += `</td>`;
-                    
+                    const isLow = tx.category === 'outros';
+                    html += `<tr class="${isLow ? 'row-low-confidence' : ''}" data-idx="${idx}">`;
+                    html += `<td class="col-date" data-label="Data"><input type="date" class="review-date" data-idx="${idx}" value="${formatDateToString(new Date(tx.timestamp))}"></td>`;
+                    html += `<td class="col-desc" data-label="Descrição"><input type="text" class="review-desc" data-idx="${idx}" value="${escapeHtml(tx.description)}"></td>`;
+                    html += `<td class="col-amount" data-label="Valor"><input type="number" step="0.01" min="0" class="review-amount amount-field" data-idx="${idx}" value="${tx.amount.toFixed(2)}"></td>`;
+                    html += `<td class="col-cat" data-label="Categoria"><select class="review-cat" data-idx="${idx}"><option value="${tx.category}" selected>${getCategoryName(tx.category)}</option>${categoryOptions}</select></td>`;
+                    html += `<td class="col-holder" data-label="Portador"><select class="review-holder" data-idx="${idx}">${holderOptions}</select></td>`;
+                    html += `<td class="col-type" data-label="Tipo"><select class="review-type" data-idx="${idx}"><option value="despesa" ${tx.type === 'despesa' ? 'selected' : ''}>Despesa</option><option value="receita" ${tx.type === 'receita' ? 'selected' : ''}>Receita</option></select></td>`;
+                    html += `<td class="col-actions" data-label=""><button class="btn-remove-row" data-idx="${idx}"><i class="fas fa-trash"></i></button></td>`;
                     html += `</tr>`;
                 });
                 
                 html += '</tbody></table>';
                 reviewTableContainer.innerHTML = html;
                 
-                // Ajusta o portador selecionado em cada linha (por nome)
                 transactions.forEach((tx, idx) => {
                     const sel = reviewTableContainer.querySelector(`.review-holder[data-idx="${idx}"]`);
                     if (sel && tx.holder) {
-                        // Tenta achar o portador pelo nome exato
                         const found = holders.find(h => h.name === tx.holder);
                         if (found) sel.value = found.id;
                         else {
-                            // Se não existir, cria automaticamente
-                            const newHolder = {
-                                id: tx.holder.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-                                name: tx.holder,
-                                active: true,
-                                isDefault: false
-                            };
-                            // Evita duplicatas
-                            if (!holders.find(h => h.id === newHolder.id)) {
-                                holders.push(newHolder);
+                            const newId = tx.holder.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                            if (!holders.find(h => h.id === newId)) {
+                                holders.push({ id: newId, name: tx.holder, active: true, isDefault: false });
                                 saveHolders();
-                                // Adiciona a opção ao select
-                                const opt = document.createElement('option');
-                                opt.value = newHolder.id;
-                                opt.textContent = newHolder.name;
-                                sel.appendChild(opt);
-                                // Também atualiza os outros selects já renderizados
                                 reviewTableContainer.querySelectorAll('.review-holder').forEach(s => {
-                                    const dup = s.querySelector(`option[value="${newHolder.id}"]`);
-                                    if (!dup) {
+                                    if (!s.querySelector(`option[value="${newId}"]`)) {
                                         const o = document.createElement('option');
-                                        o.value = newHolder.id;
-                                        o.textContent = newHolder.name;
+                                        o.value = newId;
+                                        o.textContent = tx.holder;
                                         s.appendChild(o);
                                     }
                                 });
                             }
-                            sel.value = newHolder.id;
+                            sel.value = newId;
                         }
                     }
                 });
                 
-                // Event listeners
                 reviewTableContainer.querySelectorAll('.review-date, .review-desc, .review-amount, .review-cat, .review-holder, .review-type').forEach(el => {
-                    el.addEventListener('change', () => updateReviewTotal());
-                    el.addEventListener('input', () => updateReviewTotal());
+                    el.addEventListener('change', updateReviewTotal);
+                    el.addEventListener('input', updateReviewTotal);
                 });
                 
                 reviewTableContainer.querySelectorAll('.btn-remove-row').forEach(btn => {
@@ -1707,42 +1315,36 @@
                 });
             }
             
-            function escapeHtml(str) {
-                if (!str) return '';
-                return str.replace(/[&<>"']/g, m => ({
-                    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-                })[m]);
-            }
-            
             function getCategoryName(id) {
-                const cat = categories.find(c => c.id === id);
-                return cat ? cat.name : 'Outros';
+                const c = categories.find(x => x.id === id);
+                return c ? c.name : 'Outros';
             }
             
-            /**
-             * Remove uma linha da tabela de revisão
-             */
             function removeReviewRow(idx) {
                 importPreview.transactions.splice(idx, 1);
                 renderReviewTable(importPreview.transactions);
                 updateReviewTotal();
             }
             
-            /**
-             * Atualiza o total exibido no rodapé
-             */
             function updateReviewTotal() {
                 let total = 0;
                 reviewTableContainer.querySelectorAll('.review-amount').forEach(inp => {
                     const v = parseFloat(inp.value);
                     if (!isNaN(v)) total += v;
                 });
-                reviewTotal.textContent = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
+                
+                let html = `<span class="main-total">Total importado: ${fmtBRL(total)}</span>`;
+                if (importPreview && importPreview.validation) {
+                    const v = importPreview.validation;
+                    if (v.creditsTotal > 0 && v.declaredTotal !== null) {
+                        html += `<span class="sub-total">Total da fatura: ${fmtBRL(v.declaredTotal)} (já com créditos de ${fmtBRL(v.creditsTotal)})</span>`;
+                    } else if (v.declaredTotal !== null) {
+                        html += `<span class="sub-total">Total da fatura: ${fmtBRL(v.declaredTotal)}</span>`;
+                    }
+                }
+                reviewTotal.innerHTML = html;
             }
             
-            /**
-             * Coleta os dados editados e fecha o modal
-             */
             function collectReviewData() {
                 const rows = reviewTableContainer.querySelectorAll('tr[data-idx]');
                 const collected = [];
@@ -1754,18 +1356,12 @@
                     const cat = row.querySelector('.review-cat').value;
                     const holderId = row.querySelector('.review-holder').value;
                     const type = row.querySelector('.review-type').value;
-                    
                     const date = createDateFromString(dateStr);
                     if (!date || !desc || isNaN(amount)) return;
-                    
                     const holder = holders.find(h => h.id === holderId);
-                    
                     collected.push({
                         id: Date.now() + Math.random() + idx,
-                        description: desc,
-                        amount: amount,
-                        type: type,
-                        category: cat,
+                        description: desc, amount, type, category: cat,
                         date: formatDateToDisplay(date),
                         timestamp: date.getTime(),
                         month: date.getMonth(),
@@ -1779,21 +1375,13 @@
                 return collected;
             }
             
-            /**
-             * Confirma a importação: salva todas as transações
-             */
             function confirmImport() {
                 const collected = collectReviewData();
-                if (collected.length === 0) {
-                    alert('Nenhum lançamento válido para salvar.');
-                    return;
-                }
-                
+                if (collected.length === 0) { alert('Nenhum lançamento válido para salvar.'); return; }
                 collected.forEach(tx => transactions.push(tx));
                 saveTransactions();
                 renderTransactions();
                 updateSummary();
-                
                 closeReviewModal();
                 showImportFeedback('success', `${collected.length} lançamentos importados com sucesso!`);
             }
@@ -1808,18 +1396,14 @@
             // ========== EVENT LISTENERS ==========
             function setupEventListeners() {
                 themeToggle.addEventListener('click', toggleTheme);
-                
-                // Importação
                 importBtn.addEventListener('click', () => importFile.click());
                 importFile.addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (file) handleImportFile(file);
                 });
-                
                 cancelImportBtn.addEventListener('click', closeReviewModal);
                 confirmImportBtn.addEventListener('click', confirmImport);
                 
-                // Form
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
                     const description = document.getElementById('description').value;
@@ -1832,9 +1416,7 @@
                     if (!date) { alert('Data inválida!'); return; }
                     const parcelas = parseInt(document.getElementById('parcelas').value) || 1;
                     
-                    // Resolve holder (se vazio, usa o padrão)
-                    let holderName = 'Rodrigo A Prado';
-                    let finalHolderId = null;
+                    let holderName = 'Rodrigo A Prado', finalHolderId = null;
                     if (holderId) {
                         const h = holders.find(x => x.id === holderId);
                         if (h) { holderName = h.name; finalHolderId = h.id; }
@@ -1852,12 +1434,10 @@
                     } else {
                         addTransaction(description, amount, type, category, date, holderName, finalHolderId);
                     }
-                    
                     form.reset();
                     transactionDateInput.value = formatDateToString(new Date());
                 });
                 
-                // Categoria form
                 categoryForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     const name = document.getElementById('new-category-name').value;
@@ -1868,7 +1448,6 @@
                     document.getElementById('new-category-color').value = '#3498db';
                 });
                 
-                // Holder form
                 holderForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     const name = document.getElementById('new-holder-name').value;
@@ -1876,10 +1455,9 @@
                     holderForm.reset();
                 });
                 
-                // Período
                 prevPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'standard') {
-                        const s = new Date(customStartDate); const e2 = new Date(customEndDate);
+                        const s = new Date(customStartDate), e2 = new Date(customEndDate);
                         s.setMonth(s.getMonth() - 1); e2.setMonth(e2.getMonth() - 1);
                         customStartDate = s; customEndDate = e2;
                         startDateInput.value = formatDateToString(s);
@@ -1889,7 +1467,7 @@
                 });
                 nextPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'standard') {
-                        const s = new Date(customStartDate); const e2 = new Date(customEndDate);
+                        const s = new Date(customStartDate), e2 = new Date(customEndDate);
                         s.setMonth(s.getMonth() + 1); e2.setMonth(e2.getMonth() + 1);
                         customStartDate = s; customEndDate = e2;
                         startDateInput.value = formatDateToString(s);
@@ -1920,21 +1498,15 @@
                         if (s && e2 && s <= e2) {
                             customStartDate = s; customEndDate = e2;
                             updatePeriodDisplay();
-                        } else {
-                            alert('Período inválido.');
-                        }
+                        } else { alert('Período inválido.'); }
                     }
                 });
                 
                 closeDetailBtn.addEventListener('click', () => categoryDetail.classList.remove('show'));
                 voiceBtn.addEventListener('click', toggleListening);
                 voiceStatusClose.addEventListener('click', () => { stopListening(); hideVoiceStatus(); });
-                
-                // Fechar modal com ESC
                 document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && reviewModal.classList.contains('show')) {
-                        closeReviewModal();
-                    }
+                    if (e.key === 'Escape' && reviewModal.classList.contains('show')) closeReviewModal();
                 });
             }
             
@@ -1953,12 +1525,9 @@
             
             // ========== TRANSAÇÕES ==========
             function addTransaction(description, amount, type, category, date, holderName, holderId) {
-                const transaction = {
+                transactions.push({
                     id: Date.now() + Math.random(),
-                    description,
-                    amount,
-                    type,
-                    category,
+                    description, amount, type, category,
                     date: formatDateToDisplay(date),
                     timestamp: date.getTime(),
                     month: date.getMonth(),
@@ -1966,8 +1535,7 @@
                     holder: holderName || null,
                     holderId: holderId || null,
                     installment: null
-                };
-                transactions.push(transaction);
+                });
                 saveTransactions();
                 renderTransactions();
                 updateSummary();
@@ -1980,9 +1548,7 @@
                 updateSummary();
             }
             
-            function saveTransactions() {
-                localStorage.setItem('transactions', JSON.stringify(transactions));
-            }
+            function saveTransactions() { localStorage.setItem('transactions', JSON.stringify(transactions)); }
             
             function renderTransactions() {
                 transactionsList.innerHTML = '';
@@ -1991,14 +1557,12 @@
                     transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma transação cadastrada para este período</p></div>`;
                     return;
                 }
-                const sorted = [...period].sort((a, b) => b.timestamp - a.timestamp);
-                sorted.forEach(tx => {
+                [...period].sort((a, b) => b.timestamp - a.timestamp).forEach(tx => {
                     const li = document.createElement('li');
                     const cat = categories.find(c => c.id === tx.category);
                     const catColor = cat ? cat.color : '#95a5a6';
                     const catName = cat ? cat.name : tx.category;
                     const holderHtml = tx.holder ? `<span class="holder-badge"><i class="fas fa-user"></i> ${escapeHtml(tx.holder)}</span>` : '';
-                    
                     li.innerHTML = `
                         <div class="transaction-info">
                             <strong>${escapeHtml(tx.description)}</strong>
@@ -2021,116 +1585,84 @@
             
             function updateSummary() {
                 const period = getPeriodTransactions();
-                const totalIncome = period.filter(t => t.type === 'receita').reduce((s, t) => s + parseFloat(t.amount), 0);
-                const totalExpense = period.filter(t => t.type === 'despesa').reduce((s, t) => s + parseFloat(t.amount), 0);
-                const balance = totalIncome - totalExpense;
-                totalIncomeElement.textContent = `R$ ${totalIncome.toFixed(2)}`;
-                totalExpenseElement.textContent = `R$ ${totalExpense.toFixed(2)}`;
-                balanceElement.textContent = `R$ ${balance.toFixed(2)}`;
-                balanceElement.className = balance >= 0 ? 'positive' : 'negative';
+                const inc = period.filter(t => t.type === 'receita').reduce((s, t) => s + parseFloat(t.amount), 0);
+                const exp = period.filter(t => t.type === 'despesa').reduce((s, t) => s + parseFloat(t.amount), 0);
+                totalIncomeElement.textContent = `R$ ${inc.toFixed(2)}`;
+                totalExpenseElement.textContent = `R$ ${exp.toFixed(2)}`;
+                balanceElement.textContent = `R$ ${(inc - exp).toFixed(2)}`;
+                balanceElement.className = (inc - exp) >= 0 ? 'positive' : 'negative';
             }
             
             // ========== PORTADORES ==========
             function addHolder(name) {
                 const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                if (holders.find(h => h.id === id)) {
-                    alert('Já existe um portador com este nome!');
-                    return;
-                }
+                if (holders.find(h => h.id === id)) { alert('Já existe!'); return; }
                 holders.push({ id, name, active: true, isDefault: false });
                 saveHolders();
                 updateHoldersDropdown();
                 renderHolders();
             }
-            
             function editHolder(id, newName) {
                 const h = holders.find(x => x.id === id);
                 if (!h) return;
                 const oldName = h.name;
                 h.name = newName;
                 saveHolders();
-                // Atualiza transações antigas que usavam o nome antigo
                 let changed = 0;
-                transactions.forEach(tx => {
-                    if (tx.holder === oldName) { tx.holder = newName; changed++; }
-                });
+                transactions.forEach(tx => { if (tx.holder === oldName) { tx.holder = newName; changed++; } });
                 if (changed > 0) saveTransactions();
                 updateHoldersDropdown();
                 renderHolders();
                 renderTransactions();
             }
-            
             function deleteHolder(id) {
                 const h = holders.find(x => x.id === id);
                 if (!h) return;
-                if (h.isDefault) {
-                    alert('Não é possível excluir o portador padrão.');
-                    return;
-                }
-                const txCount = transactions.filter(t => t.holder === h.name).length;
-                if (!confirm(`Marcar o portador "${h.name}" como excluído?\n\n${txCount} transações vinculadas continuarão no histórico, mas ele não aparecerá mais nas opções.`)) return;
+                if (h.isDefault) { alert('Não é possível excluir o portador padrão.'); return; }
+                const count = transactions.filter(t => t.holder === h.name).length;
+                if (!confirm(`Marcar "${h.name}" como excluído?\n\n${count} transações continuam no histórico.`)) return;
                 h.active = false;
                 saveHolders();
                 updateHoldersDropdown();
                 renderHolders();
             }
-            
-            function saveHolders() {
-                localStorage.setItem('holders', JSON.stringify(holders));
-            }
-            
+            function saveHolders() { localStorage.setItem('holders', JSON.stringify(holders)); }
             function updateHoldersDropdown() {
                 holderSelect.innerHTML = '<option value="">(usar padrão)</option>';
                 holders.filter(h => h.active).forEach(h => {
-                    const opt = document.createElement('option');
-                    opt.value = h.id;
-                    opt.textContent = h.name + (h.isDefault ? ' (padrão)' : '');
-                    holderSelect.appendChild(opt);
+                    const o = document.createElement('option');
+                    o.value = h.id;
+                    o.textContent = h.name + (h.isDefault ? ' (padrão)' : '');
+                    holderSelect.appendChild(o);
                 });
             }
-            
             function renderHolders() {
                 holdersList.innerHTML = '';
-                if (holders.length === 0) {
-                    holdersList.innerHTML = `<div class="empty-state"><i class="fas fa-users"></i><p>Nenhum portador</p></div>`;
-                    return;
-                }
                 const active = holders.filter(h => h.active);
                 const inactive = holders.filter(h => !h.active);
-                
-                if (active.length > 0) {
-                    const h = document.createElement('h3');
-                    h.textContent = 'Ativos';
-                    h.style.gridColumn = '1 / -1';
-                    h.style.marginTop = '20px';
+                if (active.length) {
+                    const h = document.createElement('h3'); h.textContent = 'Ativos'; h.style.gridColumn = '1 / -1'; h.style.marginTop = '20px';
                     holdersList.appendChild(h);
-                    active.forEach(holder => holdersList.appendChild(createHolderElement(holder)));
+                    active.forEach(x => holdersList.appendChild(createHolderElement(x)));
                 }
-                if (inactive.length > 0) {
-                    const h = document.createElement('h3');
-                    h.textContent = 'Excluídos (ocultos)';
-                    h.style.gridColumn = '1 / -1';
-                    h.style.marginTop = '20px';
-                    h.style.color = 'var(--text-secondary)';
+                if (inactive.length) {
+                    const h = document.createElement('h3'); h.textContent = 'Excluídos'; h.style.gridColumn = '1 / -1'; h.style.marginTop = '20px'; h.style.color = 'var(--text-secondary)';
                     holdersList.appendChild(h);
-                    inactive.forEach(holder => holdersList.appendChild(createHolderElement(holder)));
+                    inactive.forEach(x => holdersList.appendChild(createHolderElement(x)));
                 }
             }
-            
             function createHolderElement(holder) {
                 const el = document.createElement('div');
                 el.className = 'category-card';
                 if (!holder.active) el.style.opacity = '0.5';
-                
                 const badges = [];
                 if (holder.isDefault) badges.push('<span class="holder-badge" style="background:var(--accent-blue);color:white;border:none">padrão</span>');
                 if (!holder.active) badges.push('<span class="holder-badge">excluído</span>');
-                
                 el.innerHTML = `
                     <i class="fas fa-user-circle" style="font-size:1.5rem;color:var(--accent-blue)"></i>
                     <div class="category-name">${escapeHtml(holder.name)} ${badges.join(' ')}</div>
-                    <button class="secondary" onclick="window.editHolder('${holder.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-                    ${!holder.isDefault ? `<button class="danger" onclick="window.deleteHolder('${holder.id}')" title="Excluir"><i class="fas fa-trash"></i></button>` : ''}
+                    <button class="secondary" onclick="window.editHolder('${holder.id}')"><i class="fas fa-edit"></i></button>
+                    ${!holder.isDefault ? `<button class="danger" onclick="window.deleteHolder('${holder.id}')"><i class="fas fa-trash"></i></button>` : ''}
                 `;
                 return el;
             }
@@ -2138,16 +1670,15 @@
             // ========== CATEGORIAS ==========
             function addCategory(name, type, color) {
                 const id = name.toLowerCase().replace(/\s+/g, '-');
-                if (categories.find(c => c.id === id)) { alert('Já existe uma categoria com este nome!'); return; }
+                if (categories.find(c => c.id === id)) { alert('Já existe!'); return; }
                 categories.push({ id, name, type, color });
                 saveCategories();
                 updateCategoriesDropdown();
                 renderCategories();
             }
-            
             function deleteCategory(id) {
                 if (transactions.filter(t => t.category === id).length > 0) {
-                    alert('Não é possível excluir: existem transações vinculadas a esta categoria!');
+                    alert('Não é possível excluir: existem transações vinculadas!');
                     return;
                 }
                 categories = categories.filter(c => c.id !== id);
@@ -2155,11 +1686,7 @@
                 updateCategoriesDropdown();
                 renderCategories();
             }
-            
-            function saveCategories() {
-                localStorage.setItem('categories', JSON.stringify(categories));
-            }
-            
+            function saveCategories() { localStorage.setItem('categories', JSON.stringify(categories)); }
             function updateCategoriesDropdown() {
                 categorySelect.innerHTML = '';
                 const exp = categories.filter(c => c.type === 'despesa');
@@ -2175,7 +1702,6 @@
                     categorySelect.appendChild(g);
                 }
             }
-            
             function renderCategories() {
                 categoriesList.innerHTML = '';
                 const exp = categories.filter(c => c.type === 'despesa');
@@ -2191,7 +1717,6 @@
                     inc.forEach(c => categoriesList.appendChild(createCategoryElement(c)));
                 }
             }
-            
             function createCategoryElement(category) {
                 const el = document.createElement('div');
                 el.className = 'category-card';
@@ -2205,7 +1730,6 @@
             
             // ========== GRÁFICOS ==========
             function isDarkMode() { return document.body.classList.contains('dark-mode'); }
-            
             function renderCharts() { renderExpensesChart(); renderIncomeVsExpensesChart(); }
             
             function renderExpensesChart() {
@@ -2217,16 +1741,16 @@
                 period.filter(t => t.type === 'despesa').forEach(t => {
                     byCat[t.category] = (byCat[t.category] || 0) + parseFloat(t.amount);
                 });
-                const labels = [], data = [], bgColors = [], catIds = [];
+                const labels = [], data = [], bg = [], catIds = [];
                 Object.keys(byCat).forEach(cid => {
                     const c = categories.find(x => x.id === cid);
-                    if (c) { labels.push(c.name); data.push(byCat[cid]); bgColors.push(c.color); catIds.push(cid); }
+                    if (c) { labels.push(c.name); data.push(byCat[cid]); bg.push(c.color); catIds.push(cid); }
                 });
                 if (window.expensesChart) window.expensesChart.destroy();
                 if (data.length > 0) {
                     window.expensesChart = new Chart(ctx, {
                         type: 'pie',
-                        data: { labels, datasets: [{ data, backgroundColor: bgColors, borderWidth: 1, borderColor: dark ? '#242830' : '#ffffff' }] },
+                        data: { labels, datasets: [{ data, backgroundColor: bg, borderWidth: 1, borderColor: dark ? '#242830' : '#ffffff' }] },
                         options: {
                             responsive: true,
                             plugins: { legend: { position: 'bottom', labels: { color: textColor } } },
@@ -2280,11 +1804,11 @@
                 const textColor = dark ? '#e8eaed' : '#2c3e50';
                 const gridColor = dark ? '#3a3f47' : '#eeeeee';
                 const monthly = {};
-                const monthNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                const mn = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
                 const today = new Date();
                 for (let i = 5; i >= 0; i--) {
                     const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                    const label = `${monthNames[d.getMonth()]}/${d.getFullYear()}`;
+                    const label = `${mn[d.getMonth()]}/${d.getFullYear()}`;
                     monthly[label] = { income: 0, expense: 0 };
                     transactions.forEach(tx => {
                         if (tx.month === d.getMonth() && tx.year === d.getFullYear()) {
@@ -2294,8 +1818,8 @@
                     });
                 }
                 const labels = Object.keys(monthly);
-                const incomeData = labels.map(l => monthly[l].income);
-                const expenseData = labels.map(l => monthly[l].expense);
+                const incData = labels.map(l => monthly[l].income);
+                const expData = labels.map(l => monthly[l].expense);
                 if (window.incomeVsExpensesChart) window.incomeVsExpensesChart.destroy();
                 if (labels.length > 0) {
                     window.incomeVsExpensesChart = new Chart(ctx, {
@@ -2303,8 +1827,8 @@
                         data: {
                             labels,
                             datasets: [
-                                { label: 'Receitas', data: incomeData, backgroundColor: '#27ae60', borderWidth: 1 },
-                                { label: 'Despesas', data: expenseData, backgroundColor: '#e74c3c', borderWidth: 1 }
+                                { label: 'Receitas', data: incData, backgroundColor: '#27ae60', borderWidth: 1 },
+                                { label: 'Despesas', data: expData, backgroundColor: '#e74c3c', borderWidth: 1 }
                             ]
                         },
                         options: {
@@ -2330,10 +1854,8 @@
             window.editHolder = function(id) {
                 const h = holders.find(x => x.id === id);
                 if (!h) return;
-                const newName = prompt('Novo nome do portador:', h.name);
-                if (newName && newName.trim() && newName.trim() !== h.name) {
-                    editHolder(id, newName.trim());
-                }
+                const newName = prompt('Novo nome:', h.name);
+                if (newName && newName.trim() && newName.trim() !== h.name) editHolder(id, newName.trim());
             };
         });
     </script>
