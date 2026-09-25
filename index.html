@@ -1114,6 +1114,14 @@
                 let currentSection = null;
                 let currentScope = 'demonstrativo';
                 
+                // Ano e mês do vencimento da fatura
+                const anoVenc = currentDueDate.year;
+                const mesVenc = currentDueDate.month; // 0-indexado
+                
+                // Mês anterior ao vencimento (com ajuste de ano se necessário)
+                const mesAnteriorVenc = mesVenc === 0 ? 11 : mesVenc - 1;
+                const anoMesAnteriorVenc = mesVenc === 0 ? anoVenc - 1 : anoVenc;
+                
                 for (let i = 0; i < lines.length; i++) {
                     const line = normalizeLine(lines[i]);
                     if (isIgnoredLine(line)) continue;
@@ -1170,18 +1178,25 @@
                     let date;
                     let finalDescription;
                     
+                    // Data original da compra no formato DD/MM
+                    const diaStr = String(tx.day).padStart(2, '0');
+                    const mesStr = String(tx.month + 1).padStart(2, '0');
+                    const dataCompraStr = `${diaStr}/${mesStr}`;
+                    
                     if (installment) {
-                        // PARCELA: data = dia 14 do mês do vencimento da fatura
-                        date = new Date(currentDueDate.year, currentDueDate.month, 14);
-                        // Descrição inclui data da compra original e número da parcela
-                        const diaCompra = String(tx.day).padStart(2, '0');
-                        const mesCompra = String(tx.month + 1).padStart(2, '0');
-                        finalDescription = `${cleanDesc} (${diaCompra}/${mesCompra} - ${installment})`;
+                        // PARCELA: data = 13 do mês do vencimento
+                        date = new Date(anoVenc, mesVenc, 13);
+                        finalDescription = `${cleanDesc} (${dataCompraStr} - ${installment})`;
                     } else {
-                        // COMPRA À VISTA: mantém a data original
-                        const year = resolveYear(tx.month, currentDueDate.month, currentDueDate.year);
-                        date = new Date(year, tx.month, tx.day);
-                        finalDescription = cleanDesc;
+                        // COMPRA À VISTA
+                        if (tx.month === mesVenc) {
+                            // Compra no MESMO mês do vencimento → dia 02
+                            date = new Date(anoVenc, mesVenc, 2);
+                        } else {
+                            // Compra em mês anterior → dia 28 do mês anterior
+                            date = new Date(anoMesAnteriorVenc, mesAnteriorVenc, 28);
+                        }
+                        finalDescription = `${cleanDesc} (${dataCompraStr})`;
                     }
                     
                     const transaction = {
