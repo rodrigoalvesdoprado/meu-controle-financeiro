@@ -80,14 +80,15 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'outros', name: 'Outros', type: 'despesa', color: '#95a5a6' }
     ];
 
-    let holders = JSON.parse(localStorage.getItem('holders')) || [
-        { id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true }
+    // Portadores base (pré-cadastro fixo).
+    // O primeiro é o padrão (isDefault: true). Os demais entram como ativos.
+    const DEFAULT_HOLDERS = [
+        { id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true },
+        { id: 'gisela-pinto-a-prado', name: 'Gisela Pinto A Prado', active: true, isDefault: false },
+        { id: 'eduardo-pinto-a-prado', name: 'Eduardo Pinto A Prado', active: true, isDefault: false }
     ];
 
-    if (!holders.find(h => h.isDefault)) {
-        holders.forEach(h => h.isDefault = false);
-        holders.push({ id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true });
-    }
+    let holders = JSON.parse(localStorage.getItem('holders')) || DEFAULT_HOLDERS.slice();
 
     // ========== TAGS DE CATEGORIZAÇÃO ==========
     const CATEGORY_TAGS = {
@@ -173,6 +174,99 @@ document.addEventListener('DOMContentLoaded', function() {
         return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
+    // ========== UTILITÁRIOS DE PORTADOR ==========
+    // Normaliza nome: remove acentos, colapsa espaços, coloca em maiúsculas.
+    function normalizeName(name) {
+        if (!name) return '';
+        return name
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toUpperCase();
+    }
+
+    // Gera chave de casamento: PRIMEIRO|ULTIMO (ignora nomes do meio).
+    function holderKeyFromName(name) {
+        const n = normalizeName(name);
+        if (!n) return '';
+        const parts = n.split(' ').filter(Boolean);
+        if (parts.length === 0) return '';
+        if (parts.length === 1) return parts[0];
+        return `${parts[0]}|${parts[parts.length - 1]}`;
+    }
+
+    // Cria um id estável a partir do nome (para novos portadores).
+    function makeHolderIdFromName(name) {
+        return normalizeName(name)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+    }
+
+    // Procura portador existente por chave; se não achar, cria.
+    // Retorna o objeto portador.
+    function ensureHolderFromFatura(name, cardNumber) {
+        const key = holderKeyFromName(name);
+        if (!key) return null;
+
+        // 1) casar por chave (primeiro|último)
+        let found = holders.find(h => holderKeyFromName(h.name) === key);
+        if (found) return found;
+
+        // 2) casar por id derivado do nome exato
+        const idFromName = makeHolderIdFromName(name);
+        found = holders.find(h => h.id === idFromName);
+        if (found) return found;
+
+        // 3) criar novo
+        let newId = idFromName;
+        let suffix = 2;
+        while (holders.find(h => h.id === newId)) {
+            newId = `${idFromName}-${suffix++}`;
+        }
+        const novo = {
+            id: newId,
+            name: name.trim(),
+            active: true,
+            isDefault: false
+        };
+        holders.push(novo);
+        saveHolders();
+        return novo;
+    }
+
+    // Garante que todos os portadores base existam (sem sobrescrever os que o usuário editou).
+    function ensureDefaultHolders() {
+        let changed = false;
+        DEFAULT_HOLDERS.forEach(def => {
+            const exists = holders.find(h => h.id === def.id);
+            if (!exists) {
+                // se já existe alguém com a mesma chave, não cria duplicado
+                const sameKey = holders.find(h => holderKeyFromName(h.name) === holderKeyFromName(def.name));
+                if (!sameKey) {
+                    holders.push({ ...def });
+                    changed = true;
+                }
+            }
+        });
+        // garantir exatamente um isDefault
+        const defaults = holders.filter(h => h.isDefault);
+        if (defaults.length === 0 && holders.length > 0) {
+            holders[0].isDefault = true;
+            changed = true;
+        } else if (defaults.length > 1) {
+            let first = true;
+            holders.forEach(h => {
+                if (h.isDefault) {
+                    if (first) { first = false; }
+                    else { h.isDefault = false; changed = true; }
+                }
+            });
+        }
+        if (changed) saveHolders();
+    }
+
     // ========== INICIALIZAÇÃO ==========
     init();
 
@@ -184,11 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!localStorage.getItem('holders')) localStorage.setItem('holders', JSON.stringify(holders));
         else holders = JSON.parse(localStorage.getItem('holders'));
 
-        if (!holders.find(h => h.isDefault)) {
-            holders.forEach(h => h.isDefault = false);
-            holders.push({ id: 'rodrigo-a-prado', name: 'Rodrigo A Prado', active: true, isDefault: true });
-            localStorage.setItem('holders', JSON.stringify(holders));
-        }
+        ensureDefaultHolders();
 
         transactionDateInput.value = formatDateToString(new Date());
         setupStandardPeriod();
@@ -443,8 +533,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return { description, installment: null };
     }
 
+    // Rejeita cabeçalhos de seção que têm o formato "TEXTO (Cartão NNNN)".
     function parseHolderLine(line) {
-        const m = line.match(/^(.+?)\s*\(Cartão\s+(\d+)\)\s*$/i);
+        const l = line.trim();
+        // Cabeçalhos de seção que NÃO são nomes de portador
+        if (/^(COMPRAS|COMPRAS\s+PARCELADAS|ANUIDADE|DEMONSTRATIVO)\b/i.test(l)) return null;
+        const m = l.match(/^(.+?)\s*\(Cartão\s+(\d+)\)\s*$/i);
         if (!m) return null;
         return { name: m[1].trim(), cardNumber: m[2] };
     }
@@ -500,10 +594,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return 'outros';
     }
 
-    function resolveYear(month, dueMonth, dueYear) {
-        return month > dueMonth ? dueYear - 1 : dueYear;
-    }
-
     function processInvoiceFile(content) {
         const lines = content.split(/\r?\n/);
         const transactions = [];
@@ -518,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let currentHolder = null;
         let currentCard = null;
-        let currentSection = null;
+        // 'demonstrativo' até o primeiro (Cartão NNNN); depois disso é sempre 'card'.
         let currentScope = 'demonstrativo';
 
         // Ano e mês do vencimento da fatura
@@ -545,9 +635,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const upper = line.toUpperCase();
-            if (upper === 'COMPRAS' || /^COMPRAS\s*\(Cartão/i.test(line)) { currentSection = 'compras'; continue; }
-            if (upper === 'COMPRAS PARCELADAS' || /^COMPRAS PARCELADAS\s*\(Cartão/i.test(line)) { currentSection = 'parceladas'; continue; }
-            if (upper === 'ANUIDADE') { currentSection = 'anuidade'; continue; }
+            // Cabeçalhos de seção (com ou sem "(Cartão NNNN)")
+            if (/^COMPRAS(\s*\(Cartão\s*\d+\))?\s*$/i.test(line)) continue;
+            if (/^COMPRAS\s+PARCELADAS(\s*\(Cartão\s*\d+\))?\s*$/i.test(line)) continue;
+            if (upper === 'ANUIDADE') continue;
 
             const totalInfo = parseTotalLine(line);
             if (totalInfo) {
@@ -574,6 +665,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!tx) continue;
             if (isNoiseTransaction(tx.description)) continue;
 
+            // Créditos/estornos do primeiro bloco "Demonstrativo" (antes do primeiro cartão)
             if (currentScope === 'demonstrativo') {
                 if (tx.type === 'receita') validation.creditsTotal += tx.amount;
                 continue;
@@ -585,7 +677,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let date;
             let finalDescription;
 
-            // Data original da compra no formato DD/MM
             const diaStr = String(tx.day).padStart(2, '0');
             const mesStr = String(tx.month + 1).padStart(2, '0');
             const dataCompraStr = `${diaStr}/${mesStr}`;
@@ -597,10 +688,8 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // COMPRA À VISTA
                 if (tx.month === mesVenc) {
-                    // Compra no MESMO mês do vencimento → dia 02
                     date = new Date(anoVenc, mesVenc, 2);
                 } else {
-                    // Compra em mês anterior → dia 28 do mês anterior
                     date = new Date(anoMesAnteriorVenc, mesAnteriorVenc, 28);
                 }
                 finalDescription = `${cleanDesc} (${dataCompraStr})`;
@@ -739,28 +828,32 @@ document.addEventListener('DOMContentLoaded', function() {
         html += '</tbody></table>';
         reviewTableContainer.innerHTML = html;
 
+        // Pré-seleciona o portador de cada linha, criando o portador se necessário.
         transactions.forEach((tx, idx) => {
             const sel = reviewTableContainer.querySelector(`.review-holder[data-idx="${idx}"]`);
-            if (sel && tx.holder) {
-                const found = holders.find(h => h.name === tx.holder);
-                if (found) sel.value = found.id;
-                else {
-                    const newId = tx.holder.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                    if (!holders.find(h => h.id === newId)) {
-                        holders.push({ id: newId, name: tx.holder, active: true, isDefault: false });
-                        saveHolders();
-                        reviewTableContainer.querySelectorAll('.review-holder').forEach(s => {
-                            if (!s.querySelector(`option[value="${newId}"]`)) {
-                                const o = document.createElement('option');
-                                o.value = newId;
-                                o.textContent = tx.holder;
-                                s.appendChild(o);
-                            }
-                        });
-                    }
-                    sel.value = newId;
-                }
+            if (!sel || !tx.holder) return;
+
+            const holder = ensureHolderFromFatura(tx.holder, tx.cardNumber);
+            if (!holder) return;
+
+            // Se o option ainda não existe no select, adiciona.
+            if (!sel.querySelector(`option[value="${holder.id}"]`)) {
+                const o = document.createElement('option');
+                o.value = holder.id;
+                o.textContent = holder.name;
+                sel.appendChild(o);
             }
+            sel.value = holder.id;
+
+            // Atualiza também todos os outros selects da tabela que ainda não têm esse option.
+            reviewTableContainer.querySelectorAll('.review-holder').forEach(s => {
+                if (!s.querySelector(`option[value="${holder.id}"]`)) {
+                    const o = document.createElement('option');
+                    o.value = holder.id;
+                    o.textContent = holder.name;
+                    s.appendChild(o);
+                }
+            });
         });
 
         reviewTableContainer.querySelectorAll('.review-date, .review-desc, .review-amount, .review-cat, .review-holder, .review-type').forEach(el => {
@@ -827,7 +920,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 timestamp: date.getTime(),
                 month: date.getMonth(),
                 year: date.getFullYear(),
-                holder: holder ? holder.name : 'Rodrigo A Prado',
+                holder: holder ? holder.name : (holders.find(h => h.isDefault)?.name || 'Rodrigo A Prado'),
                 holderId: holder ? holder.id : null,
                 cardNumber: importPreview.transactions[idx]?.cardNumber || null,
                 installment: importPreview.transactions[idx]?.installment || null
@@ -853,6 +946,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             renderTransactions();
             updateSummary();
+            renderHolders();
+            updateHoldersDropdown();
             closeReviewModal();
             showImportFeedback('success', `${collected.length} lançamentos importados com sucesso!`);
             console.log('[DEBUG] confirmImport finalizado com sucesso');
@@ -1030,7 +1125,6 @@ document.addEventListener('DOMContentLoaded', function() {
         transactionsList.innerHTML = '';
         const period = getPeriodTransactions();
 
-        // Atualiza o contador no header
         transactionsCountEl.textContent = period.length === 1
             ? '1 lançamento'
             : `${period.length} lançamentos`;
@@ -1078,7 +1172,6 @@ document.addEventListener('DOMContentLoaded', function() {
         balanceElement.textContent = `R$ ${(inc - exp).toFixed(2)}`;
         balanceElement.className = (inc - exp) >= 0 ? 'positive' : 'negative';
 
-        // Contadores
         countIncomeEl.textContent = incTx.length === 1 ? '(1 lançamento)' : `(${incTx.length} lançamentos)`;
         countExpenseEl.textContent = expTx.length === 1 ? '(1 lançamento)' : `(${expTx.length} lançamentos)`;
         countTotalEl.textContent = totalCount === 1 ? '(1 lançamento no total)' : `(${totalCount} lançamentos no total)`;
@@ -1086,8 +1179,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ========== PORTADORES ==========
     function addHolder(name) {
-        const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const id = makeHolderIdFromName(name);
+        if (!id) return;
         if (holders.find(h => h.id === id)) { alert('Já existe!'); return; }
+        // checar duplicidade por chave (primeiro|último)
+        const key = holderKeyFromName(name);
+        if (key && holders.find(h => holderKeyFromName(h.name) === key)) {
+            alert('Já existe um portador com esse nome (mesmo primeiro e último nome).');
+            return;
+        }
         holders.push({ id, name, active: true, isDefault: false });
         saveHolders();
         updateHoldersDropdown();
@@ -1349,7 +1449,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (newName && newName.trim() && newName.trim() !== h.name) editHolder(id, newName.trim());
     };
 
-    // Debug exposto para o console
     window.debugImport = {
         getPreview: () => importPreview,
         getTransactions: () => transactions,
