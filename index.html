@@ -712,6 +712,58 @@
             </div>
         </div>
     </div>
+        <!-- MODAL DE EDIÇÃO DE TRANSAÇÃO -->
+    <div class="edit-modal" id="editModal">
+        <div class="edit-panel">
+            <div class="edit-header">
+                <h2><i class="fas fa-edit"></i> Editar Lançamento</h2>
+                <button class="edit-close" id="editCloseBtn" title="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="edit-body">
+                <form id="editForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-description">Descrição</label>
+                            <input type="text" id="edit-description" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-amount">Valor (R$)</label>
+                            <input type="number" id="edit-amount" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-type">Tipo</label>
+                            <select id="edit-type">
+                                <option value="despesa">Despesa</option>
+                                <option value="receita">Receita</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-category">Categoria</label>
+                            <select id="edit-category" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-holder">Portador</label>
+                            <select id="edit-holder"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-date">Data</label>
+                            <input type="date" id="edit-date" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="edit-footer">
+                <button class="danger" id="editCancelBtn"><i class="fas fa-times"></i> Cancelar</button>
+                <button id="editSaveBtn"><i class="fas fa-check"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
         <script>
         document.addEventListener('DOMContentLoaded', function() {
             // ========== DOM ==========
