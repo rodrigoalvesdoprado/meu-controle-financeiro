@@ -300,6 +300,211 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
 .validation-info .v-header { font-weight: 700; color: var(--text-primary); padding-bottom: 5px; border-bottom: 1px solid var(--border-light); margin-bottom: 5px; }
 .validation-info .v-divider { border-top: 1px dashed var(--border); margin: 8px 0; }
 
+/* ============ TOTAIS POR PORTADOR ============ */
+.holder-totals-section { margin-top: 30px; }
+.holder-totals-hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    margin-top: -5px;
+}
+
+.holder-totals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.holder-totals-card {
+    background: var(--surface-alt);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: var(--shadow-md);
+    border-left: 4px solid var(--accent-blue);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.holder-totals-card.inactive { opacity: 0.6; }
+
+.holder-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light);
+}
+.holder-card-header i {
+    font-size: 1.6rem;
+    color: var(--accent-blue);
+    flex-shrink: 0;
+}
+.holder-card-header .holder-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    flex: 1;
+    word-break: break-word;
+}
+.holder-card-header .holder-name .holder-badge { margin-left: 6px; }
+
+.holder-card-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.holder-card-summary .summary-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 700;
+}
+.holder-card-summary .summary-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent-red);
+}
+.holder-card-summary .summary-value.receita-only { color: var(--accent-green); }
+
+.holder-card-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card-chip {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.card-chip:hover {
+    border-color: var(--accent-blue);
+    transform: translateX(3px);
+    box-shadow: var(--shadow-sm);
+}
+.card-chip .chip-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+.card-chip .chip-left i {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+.card-chip .chip-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.card-chip .chip-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    flex-shrink: 0;
+}
+.card-chip .chip-value {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent-red);
+}
+.card-chip .chip-value.receita { color: var(--accent-green); }
+.card-chip .chip-count {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.holder-totals-empty {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-secondary);
+    background: var(--surface-alt);
+    border-radius: 12px;
+    border: 1px dashed var(--border);
+}
+.holder-totals-empty i {
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 10px;
+}
+
+.holder-detail-panel {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--surface-alt);
+    border-radius: 12px;
+    border-left: 4px solid var(--accent-blue);
+    display: none;
+    color: var(--text-primary);
+}
+.holder-detail-panel.show { display: block; }
+.holder-detail-panel h3 {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.holder-detail-panel .close-detail {
+    margin-left: auto;
+    width: auto;
+    padding: 5px 15px;
+    background: var(--accent-red);
+    font-size: 14px;
+}
+.holder-detail-panel .close-detail:hover { background: var(--accent-red-hover); }
+.holder-detail-panel .holder-detail-total {
+    margin-top: 10px;
+    font-weight: bold;
+    text-align: right;
+}
+
+.holder-detail-list ul {
+    list-style: none;
+    padding: 0;
+}
+.holder-detail-list li {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.holder-detail-list li:last-child { border-bottom: none; }
+.holder-detail-list .tx-info { flex: 1; min-width: 0; }
+.holder-detail-list .tx-info strong {
+    display: block;
+    word-break: break-word;
+}
+.holder-detail-list .tx-info small {
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 3px;
+}
+.holder-detail-list .tx-value {
+    font-weight: bold;
+    white-space: nowrap;
+}
+.holder-detail-list .tx-value.despesa { color: var(--accent-red); }
+.holder-detail-list .tx-value.receita { color: var(--accent-green); }
+
 @media (max-width: 768px) {
     .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; font-size: 1rem; }
     .form-row { flex-direction: column; }
@@ -339,6 +544,10 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
     .review-table td input, .review-table td select { flex: 1; }
     .review-table .col-actions { justify-content: flex-end; }
     .review-table .col-actions::before { display: none; }
+
+    .holder-totals-grid { grid-template-columns: 1fr; }
+    .holder-detail-panel h3 { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .holder-detail-panel .close-detail { margin-left: 0; }
 }
 
 @media (display-mode: standalone) {
