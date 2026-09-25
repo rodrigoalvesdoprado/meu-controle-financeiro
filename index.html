@@ -6,7 +6,7 @@
     <title>Meu Controle Financeiro</title>
     
     <!-- Configurações PWA para App Nativo -->
-    <meta name="theme-color" content="#3498db">
+    <meta name="theme-color" content="#3498db" id="themeColorMeta">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Controle Financeiro">
@@ -14,6 +14,97 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ============================================
+           VARIÁVEIS DE TEMA (CLARO PADRÃO)
+           ============================================ */
+        :root {
+            /* Fundo geral */
+            --bg-gradient-1: #f5f7fa;
+            --bg-gradient-2: #c3cfe2;
+            
+            /* Superfícies */
+            --surface: #ffffff;
+            --surface-alt: #f8f9fa;
+            --surface-hover: #f9f9f9;
+            
+            /* Texto */
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --text-muted: #bdc3c7;
+            
+            /* Bordas */
+            --border: #ddd;
+            --border-light: #eee;
+            
+            /* Sombras */
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+            --shadow-xl: 0 6px 12px rgba(0,0,0,0.15);
+            
+            /* Cores de destaque (iguais nos dois temas) */
+            --accent-blue: #3498db;
+            --accent-blue-hover: #2980b9;
+            --accent-green: #27ae60;
+            --accent-green-hover: #219653;
+            --accent-red: #e74c3c;
+            --accent-red-hover: #c0392b;
+            --accent-purple: #9b59b6;
+            --accent-purple-hover: #8e44ad;
+            
+            /* Feedback de voz */
+            --voice-bg: #f3e5f5;
+            --voice-feedback-bg: #f0f9ff;
+            --voice-feedback-bg-success: #f0fdf4;
+            --voice-feedback-bg-interim: #fef9e7;
+            --voice-highlight: #e3f2fd;
+            
+            /* Theme color (para meta tag) */
+            --theme-color: #3498db;
+        }
+        
+        /* ============================================
+           TEMA ESCURO
+           ============================================ */
+        body.dark-mode {
+            --bg-gradient-1: #1a1d23;
+            --bg-gradient-2: #2c313a;
+            
+            --surface: #242830;
+            --surface-alt: #2c313a;
+            --surface-hover: #31363f;
+            
+            --text-primary: #e8eaed;
+            --text-secondary: #a0a4ab;
+            --text-muted: #6b7078;
+            
+            --border: #3a3f47;
+            --border-light: #31363f;
+            
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+            --shadow-xl: 0 6px 12px rgba(0,0,0,0.4);
+            
+            /* Cores de destaque ajustadas para melhor contraste no escuro */
+            --accent-blue: #4aa3e0;
+            --accent-blue-hover: #5cb0ec;
+            --accent-green: #2ecc71;
+            --accent-green-hover: #3ddb82;
+            --accent-red: #e74c3c;
+            --accent-red-hover: #f05b4a;
+            --accent-purple: #b07cc6;
+            --accent-purple-hover: #c18fd6;
+            
+            --voice-bg: #3a2c45;
+            --voice-feedback-bg: #1e2a36;
+            --voice-feedback-bg-success: #1e3628;
+            --voice-feedback-bg-interim: #3d3520;
+            --voice-highlight: #2c3e50;
+            
+            --theme-color: #1a1d23;
+        }
+        
         * {
             box-sizing: border-box;
             margin: 0;
@@ -22,26 +113,62 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
             margin: 0;
             padding: 15px;
-            color: #2c3e50;
+            color: var(--text-primary);
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
+            transition: background 0.3s ease, color 0.3s ease;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: var(--surface);
             padding: 25px;
             border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            box-shadow: var(--shadow-lg);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        /* ============================================
+           BOTÃO DE ALTERNÂNCIA DE TEMA
+           ============================================ */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: var(--surface);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .theme-toggle i {
+            transition: transform 0.4s ease;
         }
         
         h1 {
             text-align: center;
-            color: #2c3e50;
+            color: var(--text-primary);
             margin-bottom: 25px;
             font-size: 2.2rem;
             display: flex;
@@ -51,23 +178,24 @@
         }
         
         h2 {
-            color: #3498db;
+            color: var(--accent-blue);
             margin-bottom: 15px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid var(--border-light);
         }
         
         h3 {
-            color: #2c3e50;
+            color: var(--text-primary);
             margin: 15px 0 10px 0;
         }
         
         .form-container {
-            background: #f8f9fa;
+            background: var(--surface-alt);
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-md);
+            transition: background 0.3s ease;
         }
         
         .form-row {
@@ -86,27 +214,47 @@
             display: block;
             margin-bottom: 6px;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-primary);
         }
         
         input, select, button {
             width: 100%;
             padding: 12px 15px;
             margin: 5px 0;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 16px;
             transition: all 0.3s ease;
+            background: var(--surface);
+            color: var(--text-primary);
+            font-family: inherit;
         }
         
         input:focus, select:focus {
             outline: none;
-            border-color: #3498db;
+            border-color: var(--accent-blue);
             box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
         }
         
+        /* Corrige aparência do input date no dark mode */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0);
+            cursor: pointer;
+        }
+        
+        body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+        
+        /* Corrige input color no dark mode */
+        input[type="color"] {
+            padding: 4px;
+            height: 46px;
+            cursor: pointer;
+        }
+        
         button {
-            background: #27ae60;
+            background: var(--accent-green);
             color: white;
             border: none;
             font-weight: bold;
@@ -118,38 +266,38 @@
         }
         
         button:hover {
-            background: #219653;
+            background: var(--accent-green-hover);
             transform: translateY(-2px);
         }
         
         button.secondary {
-            background: #3498db;
+            background: var(--accent-blue);
         }
         
         button.secondary:hover {
-            background: #2980b9;
+            background: var(--accent-blue-hover);
         }
         
         button.danger {
-            background: #e74c3c;
+            background: var(--accent-red);
         }
         
         button.danger:hover {
-            background: #c0392b;
+            background: var(--accent-red-hover);
         }
         
         button.voice-btn {
-            background: #9b59b6;
+            background: var(--accent-purple);
             width: auto;
             padding: 12px 20px;
         }
         
         button.voice-btn:hover {
-            background: #8e44ad;
+            background: var(--accent-purple-hover);
         }
         
         button.voice-btn.listening {
-            background: #e74c3c;
+            background: var(--accent-red);
             animation: pulse 1s infinite;
         }
         
@@ -164,10 +312,11 @@
             padding: 10px 15px;
             margin: 10px 0;
             border-radius: 8px;
-            background: #f3e5f5;
-            border-left: 4px solid #9b59b6;
+            background: var(--voice-bg);
+            border-left: 4px solid var(--accent-purple);
             align-items: center;
             gap: 10px;
+            color: var(--text-primary);
         }
         
         .voice-status.show {
@@ -187,7 +336,7 @@
         .voice-status .status-close {
             background: none;
             border: none;
-            color: #7f8c8d;
+            color: var(--text-secondary);
             font-size: 1.2rem;
             cursor: pointer;
             width: auto;
@@ -195,18 +344,18 @@
         }
         
         .voice-status .status-close:hover {
-            color: #e74c3c;
+            color: var(--accent-red);
             transform: none;
         }
         
         .voice-feedback {
-            background: #f0f9ff;
-            border: 1px solid #3498db;
+            background: var(--voice-feedback-bg);
+            border: 1px solid var(--accent-blue);
             border-radius: 8px;
             padding: 12px;
             margin: 10px 0;
             display: none;
-            color: #2c3e50;
+            color: var(--text-primary);
             font-size: 14px;
         }
         
@@ -215,11 +364,11 @@
         }
         
         .voice-feedback strong {
-            color: #3498db;
+            color: var(--accent-blue);
         }
         
         .voice-feedback .highlight {
-            background: #e3f2fd;
+            background: var(--voice-highlight);
             padding: 2px 6px;
             border-radius: 4px;
         }
@@ -227,26 +376,28 @@
         .summary {
             margin: 25px 0;
             padding: 20px;
-            background: #f8f9fa;
+            background: var(--surface-alt);
             border-radius: 12px;
-            border-left: 4px solid #3498db;
+            border-left: 4px solid var(--accent-blue);
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
+            transition: background 0.3s ease;
         }
         
         .summary-item {
             text-align: center;
             padding: 15px;
             border-radius: 8px;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+            transition: background 0.3s ease;
         }
         
         .summary-item h3 {
             font-size: 1rem;
             margin-bottom: 10px;
-            color: #7f8c8d;
+            color: var(--text-secondary);
         }
         
         .summary-item p {
@@ -255,11 +406,11 @@
         }
         
         .positive {
-            color: #27ae60;
+            color: var(--accent-green);
         }
         
         .negative {
-            color: #e74c3c;
+            color: var(--accent-red);
         }
         
         .transactions ul {
@@ -269,15 +420,16 @@
         
         .transactions li {
             padding: 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
             transition: background 0.3s ease;
+            color: var(--text-primary);
         }
         
         .transactions li:hover {
-            background: #f9f9f9;
+            background: var(--surface-hover);
         }
         
         .transaction-info {
@@ -287,10 +439,11 @@
         .transaction-info strong {
             display: block;
             margin-bottom: 5px;
+            color: var(--text-primary);
         }
         
         .transaction-info small {
-            color: #7f8c8d;
+            color: var(--text-secondary);
             display: block;
             margin-top: 3px;
         }
@@ -319,10 +472,11 @@
         }
         
         .chart-wrapper {
-            background: white;
+            background: var(--surface);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-md);
+            transition: background 0.3s ease;
         }
         
         .chart-wrapper.clickable {
@@ -332,7 +486,7 @@
         
         .chart-wrapper.clickable:hover {
             transform: scale(1.02);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            box-shadow: var(--shadow-xl);
         }
         
         .category-badge {
@@ -349,33 +503,35 @@
         .tabs {
             display: flex;
             margin-bottom: 20px;
-            border-bottom: 2px solid #3498db;
-            background: #f8f9fa;
+            border-bottom: 2px solid var(--accent-blue);
+            background: var(--surface-alt);
             border-radius: 12px 12px 0 0;
             overflow: hidden;
+            transition: background 0.3s ease;
         }
         
         .tab {
             padding: 15px 25px;
             cursor: pointer;
-            background: #f8f9fa;
+            background: var(--surface-alt);
             border: none;
             font-weight: 600;
             flex: 1;
             text-align: center;
             transition: all 0.3s ease;
-            color: #7f8c8d;
+            color: var(--text-secondary);
+            border-radius: 0;
         }
         
         .tab.active {
-            background: #3498db;
+            background: var(--accent-blue);
             color: white;
             box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
         }
         
         .tab:hover:not(.active) {
-            background: #e3f2fd;
-            color: #3498db;
+            background: var(--surface-hover);
+            color: var(--accent-blue);
         }
         
         .tab-content {
@@ -394,13 +550,15 @@
         }
         
         .category-card {
-            background: white;
+            background: var(--surface);
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-sm);
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: background 0.3s ease;
+            color: var(--text-primary);
         }
         
         .category-color {
@@ -417,18 +575,18 @@
         .empty-state {
             text-align: center;
             padding: 40px;
-            color: #7f8c8d;
+            color: var(--text-secondary);
         }
         
         .empty-state i {
             font-size: 3rem;
             margin-bottom: 15px;
-            color: #bdc3c7;
+            color: var(--text-muted);
         }
         
-        /* CONTROLE DE PERÍODO - ATUALIZADO */
+        /* CONTROLE DE PERÍODO */
         .period-control {
-            background: #f8f9fa;
+            background: var(--surface-alt);
             padding: 15px;
             border-radius: 12px;
             margin-bottom: 20px;
@@ -436,6 +594,7 @@
             flex-wrap: wrap;
             gap: 15px;
             align-items: center;
+            transition: background 0.3s ease;
         }
         
         .period-mode {
@@ -452,12 +611,12 @@
         }
         
         .period-mode button.active-mode {
-            background: #3498db;
+            background: var(--accent-blue);
             transform: scale(1.05);
         }
         
         .period-mode button.active-mode:hover {
-            background: #2980b9;
+            background: var(--accent-blue-hover);
         }
         
         .period-date-inputs {
@@ -487,7 +646,7 @@
         .period-display {
             font-size: 1.2rem;
             font-weight: bold;
-            color: #2c3e50;
+            color: var(--text-primary);
             min-width: 180px;
             text-align: center;
         }
@@ -495,21 +654,22 @@
         .period-btn {
             width: auto;
             padding: 10px 15px;
-            background: #3498db;
+            background: var(--accent-blue);
         }
         
         .period-btn:hover {
-            background: #2980b9;
+            background: var(--accent-blue-hover);
         }
         
         /* Detalhes da categoria no gráfico */
         .category-detail {
             margin-top: 20px;
             padding: 15px;
-            background: #f8f9fa;
+            background: var(--surface-alt);
             border-radius: 12px;
-            border-left: 4px solid #3498db;
+            border-left: 4px solid var(--accent-blue);
             display: none;
+            color: var(--text-primary);
         }
         
         .category-detail.show {
@@ -527,17 +687,17 @@
             margin-left: auto;
             width: auto;
             padding: 5px 15px;
-            background: #e74c3c;
+            background: var(--accent-red);
             font-size: 14px;
         }
         
         .category-detail .close-detail:hover {
-            background: #c0392b;
+            background: var(--accent-red-hover);
         }
         
         /* Instalar App Banner */
         .install-banner {
-            background: #27ae60;
+            background: var(--accent-green);
             color: white;
             padding: 12px 20px;
             border-radius: 8px;
@@ -557,7 +717,7 @@
         .install-banner button {
             width: auto;
             background: white;
-            color: #27ae60;
+            color: var(--accent-green);
             padding: 8px 16px;
         }
         
@@ -578,6 +738,14 @@
         }
         
         @media (max-width: 768px) {
+            .theme-toggle {
+                top: 12px;
+                right: 12px;
+                width: 42px;
+                height: 42px;
+                font-size: 1rem;
+            }
+            
             .form-row {
                 flex-direction: column;
             }
@@ -640,7 +808,6 @@
                 min-width: auto;
             }
             
-            /* Melhorias para mobile */
             body {
                 padding: 10px;
             }
@@ -652,10 +819,11 @@
             
             h1 {
                 font-size: 1.8rem;
+                margin-top: 30px;
             }
             
             input, select, button {
-                font-size: 16px; /* Previne zoom no iOS */
+                font-size: 16px;
             }
         }
         
@@ -671,7 +839,6 @@
                 box-shadow: none;
             }
             
-            /* Esconde a barra de endereço em alguns dispositivos */
             @media (max-width: 768px) {
                 body {
                     padding: 5px;
@@ -681,6 +848,11 @@
     </style>
 </head>
 <body>
+    <!-- Botão de Alternância de Tema -->
+    <button class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro" aria-label="Alternar tema">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+    
     <!-- Banner para instalar o App -->
     <div class="install-banner" id="installBanner">
         <div>
@@ -693,7 +865,7 @@
     <div class="container">
         <h1><i class="fas fa-wallet"></i> Meu Controle Financeiro</h1>
         
-        <!-- CONTROLE DE PERÍODO ATUALIZADO -->
+        <!-- CONTROLE DE PERÍODO -->
         <div class="period-control">
             <div class="period-mode">
                 <button class="secondary active-mode" id="period-standard">Padrão (14/14)</button>
@@ -736,7 +908,6 @@
             <div class="form-container">
                 <h2>Adicionar Nova Transação</h2>
                 
-                <!-- Status do reconhecimento de voz -->
                 <div class="voice-status" id="voiceStatus">
                     <span class="status-icon">🎤</span>
                     <span class="status-text" id="voiceStatusText">Ouvindo... Fale agora</span>
@@ -745,7 +916,6 @@
                     </button>
                 </div>
                 
-                <!-- Feedback do reconhecimento -->
                 <div class="voice-feedback" id="voiceFeedback">
                     <strong>📝 Reconhecido:</strong>
                     <span id="voiceFeedbackText"></span>
@@ -871,7 +1041,6 @@
                 </div>
             </div>
             
-            <!-- Detalhes da categoria clicada -->
             <div class="category-detail" id="category-detail">
                 <h3>
                     <span id="detail-category-name">Categoria</span>
@@ -890,7 +1059,7 @@
     </div>
 
     <script>
-        // 🔷 CÓDIGO JAVASCRIPT COMPLETO COM RECONHECIMENTO DE VOZ E CORREÇÃO DE TIMEZONE
+        // 🔷 CÓDIGO JAVASCRIPT COMPLETO COM DARK MODE
         document.addEventListener('DOMContentLoaded', function() {
             // Elementos do DOM
             const form = document.getElementById('transaction-form');
@@ -938,6 +1107,11 @@
             const installButton = document.getElementById('installButton');
             let deferredPrompt;
             
+            // Elementos do tema
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeColorMeta = document.getElementById('themeColorMeta');
+            
             // Dados iniciais
             let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
             let categories = JSON.parse(localStorage.getItem('categories')) || [
@@ -960,7 +1134,7 @@
             let currentDate = new Date();
             let currentMonth = currentDate.getMonth();
             let currentYear = currentDate.getFullYear();
-            let periodMode = 'standard'; // 'standard' ou 'custom'
+            let periodMode = 'standard';
             let customStartDate = null;
             let customEndDate = null;
             
@@ -968,43 +1142,80 @@
             let recognition = null;
             let isListening = false;
             
+            // ========== FUNÇÕES DE TEMA (DARK MODE) ==========
+            
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-mode');
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                    themeColorMeta.setAttribute('content', '#1a1d23');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                    themeColorMeta.setAttribute('content', '#3498db');
+                }
+                
+                // Re-renderizar gráficos se a aba de relatórios estiver visível
+                const reportsTab = document.getElementById('reports-tab');
+                if (reportsTab && reportsTab.classList.contains('active')) {
+                    // Pequeno delay para o CSS aplicar antes de redesenhar
+                    setTimeout(() => {
+                        renderCharts();
+                    }, 50);
+                }
+            }
+            
+            function toggleTheme() {
+                const isDark = document.body.classList.contains('dark-mode');
+                const newTheme = isDark ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            }
+            
+            function initTheme() {
+                // 1. Verificar preferência salva
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    applyTheme(savedTheme);
+                    return;
+                }
+                
+                // 2. Verificar preferência do sistema
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                applyTheme(prefersDark ? 'dark' : 'light');
+                
+                // 3. Ouvir mudanças na preferência do sistema (só se não houver preferência salva)
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('theme')) {
+                        applyTheme(e.matches ? 'dark' : 'light');
+                    }
+                });
+            }
+            
+            // ========== FIM DAS FUNÇÕES DE TEMA ==========
+            
             // ========== FUNÇÕES DE UTILIDADE PARA DATAS ==========
             
-            /**
-             * Cria um objeto Date a partir de uma string de data (YYYY-MM-DD)
-             * Garantindo que a data seja interpretada corretamente no timezone local
-             */
             function createDateFromString(dateString) {
                 if (!dateString) return null;
-                
-                // Divide a string em partes: ano, mês, dia
                 const parts = dateString.split('-');
                 if (parts.length !== 3) return null;
-                
                 const year = parseInt(parts[0]);
-                const month = parseInt(parts[1]) - 1; // Mês em JS é 0-indexado
+                const month = parseInt(parts[1]) - 1;
                 const day = parseInt(parts[2]);
-                
-                // Cria a data no timezone local
                 return new Date(year, month, day);
             }
             
-            /**
-             * Formata uma data para string YYYY-MM-DD (padrão input date)
-             */
             function formatDateToString(date) {
                 if (!date || isNaN(date.getTime())) return '';
-                
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
-                
                 return `${year}-${month}-${day}`;
             }
             
-            /**
-             * Compara duas datas considerando apenas dia, mês e ano (sem timezone)
-             */
             function isSameDate(date1, date2) {
                 if (!date1 || !date2) return false;
                 return date1.getFullYear() === date2.getFullYear() &&
@@ -1012,29 +1223,18 @@
                        date1.getDate() === date2.getDate();
             }
             
-            /**
-             * Formata data para exibição no formato brasileiro
-             */
             function formatDateToDisplay(date) {
                 if (!date || isNaN(date.getTime())) return '';
-                
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const year = date.getFullYear();
-                
                 return `${day}/${month}/${year}`;
             }
             
-            /**
-             * Retorna o timestamp no início do dia (00:00:00) no timezone local
-             */
             function getStartOfDay(date) {
                 return new Date(date.getFullYear(), date.getMonth(), date.getDate());
             }
             
-            /**
-             * Retorna o timestamp no final do dia (23:59:59.999) no timezone local
-             */
             function getEndOfDay(date) {
                 return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
             }
@@ -1045,18 +1245,18 @@
             init();
             
             function init() {
-                // Salvar categorias padrão se não existirem
+                // Inicializar tema ANTES de tudo (evita flash)
+                initTheme();
+                
                 if (!localStorage.getItem('categories')) {
                     localStorage.setItem('categories', JSON.stringify(categories));
                 } else {
                     categories = JSON.parse(localStorage.getItem('categories'));
                 }
                 
-                // Configurar data atual no formulário
                 const today = new Date();
                 transactionDateInput.value = formatDateToString(today);
                 
-                // Configurar período padrão (14 do mês anterior até 14 do mês atual)
                 setupStandardPeriod();
                 
                 updateCategoriesDropdown();
@@ -1074,7 +1274,6 @@
                 let startDate = new Date(today.getFullYear(), today.getMonth(), 14);
                 let endDate = new Date(today.getFullYear(), today.getMonth() + 1, 14);
                 
-                // Se hoje for antes do dia 14, o período começa no dia 14 do mês anterior
                 if (today.getDate() < 14) {
                     startDate = new Date(today.getFullYear(), today.getMonth() - 1, 14);
                     endDate = new Date(today.getFullYear(), today.getMonth(), 14);
@@ -1083,11 +1282,9 @@
                 customStartDate = startDate;
                 customEndDate = endDate;
                 
-                // Atualizar inputs de data
                 startDateInput.value = formatDateToString(startDate);
                 endDateInput.value = formatDateToString(endDate);
                 
-                // Atualizar display do período
                 updatePeriodDisplay();
             }
             
@@ -1109,11 +1306,9 @@
                     currentPeriodElement.textContent = `${formatDateToDisplay(start)} - ${formatDateToDisplay(end)}`;
                 }
                 
-                // Atualizar transações e resumo
                 updateSummary();
                 renderTransactions();
                 
-                // Atualizar gráficos se a aba de relatórios estiver ativa
                 const reportsTab = document.getElementById('reports-tab');
                 if (reportsTab.classList.contains('active')) {
                     renderCharts();
@@ -1131,18 +1326,15 @@
             }
             
             function setupPWA() {
-                // Evento para detectar quando o app pode ser instalado
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault();
                     deferredPrompt = e;
                     
-                    // Mostra o banner de instalação
                     setTimeout(() => {
                         installBanner.classList.add('show');
                     }, 3000);
                 });
                 
-                // Botão de instalação
                 installButton.addEventListener('click', async () => {
                     if (deferredPrompt) {
                         deferredPrompt.prompt();
@@ -1156,7 +1348,6 @@
                     }
                 });
                 
-                // Esconde o banner se o app já estiver instalado
                 window.addEventListener('appinstalled', () => {
                     installBanner.classList.remove('show');
                     deferredPrompt = null;
@@ -1164,14 +1355,12 @@
             }
             
             function setupVoiceRecognition() {
-                // Verificar se o navegador suporta reconhecimento de voz
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                     voiceBtn.style.display = 'none';
                     console.warn('Reconhecimento de voz não suportado neste navegador.');
                     return;
                 }
                 
-                // Inicializar reconhecimento
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
                 recognition.lang = 'pt-BR';
@@ -1179,7 +1368,6 @@
                 recognition.interimResults = true;
                 recognition.maxAlternatives = 1;
                 
-                // Evento: resultado do reconhecimento
                 recognition.onresult = function(event) {
                     let finalTranscript = '';
                     let interimTranscript = '';
@@ -1193,23 +1381,19 @@
                         }
                     }
                     
-                    // Mostrar feedback
                     const text = finalTranscript || interimTranscript;
                     if (text) {
                         showVoiceFeedback(text, finalTranscript ? 'final' : 'interim');
                         
                         if (finalTranscript) {
-                            // Processar o texto final
                             processVoiceCommand(finalTranscript);
                         }
                     }
                 };
                 
-                // Evento: fim do reconhecimento
                 recognition.onend = function() {
                     stopListening();
                     
-                    // Se não houve resultado, mostrar mensagem
                     if (voiceStatus.classList.contains('show')) {
                         voiceStatusText.textContent = '⏱️ Nada foi ouvido. Tente novamente.';
                         setTimeout(() => {
@@ -1218,7 +1402,6 @@
                     }
                 };
                 
-                // Evento: erro
                 recognition.onerror = function(event) {
                     console.error('Erro no reconhecimento de voz:', event.error);
                     
@@ -1259,14 +1442,12 @@
                     recognition.start();
                     isListening = true;
                     
-                    // Atualizar UI
                     voiceBtn.classList.add('listening');
                     voiceBtn.innerHTML = '<i class="fas fa-stop"></i> Parar';
                     
                     voiceStatus.classList.add('show');
                     voiceStatusText.textContent = '🎤 Ouvindo... Fale agora';
                     
-                    // Esconder feedback anterior
                     voiceFeedback.classList.remove('show');
                     
                 } catch (error) {
@@ -1310,18 +1491,17 @@
                 if (type === 'final') {
                     voiceFeedbackText.innerHTML = `<span class="highlight">${text}</span>`;
                     voiceFeedback.style.borderColor = '#27ae60';
-                    voiceFeedback.style.background = '#f0fdf4';
+                    voiceFeedback.style.background = '';
                 } else {
                     voiceFeedbackText.textContent = text + ' (processando...)';
                     voiceFeedback.style.borderColor = '#f1c40f';
-                    voiceFeedback.style.background = '#fef9e7';
+                    voiceFeedback.style.background = '';
                 }
             }
             
             function processVoiceCommand(text) {
                 const lowerText = text.toLowerCase().trim();
                 
-                // Extrair informações
                 let tipo = null;
                 let valor = null;
                 let descricao = '';
@@ -1329,21 +1509,18 @@
                 let data = null;
                 let parcelas = 1;
                 
-                // Detectar tipo
                 if (lowerText.includes('receita') || lowerText.includes('ganhei') || lowerText.includes('salário') || lowerText.includes('salario')) {
                     tipo = 'receita';
                 } else if (lowerText.includes('despesa') || lowerText.includes('gastei') || lowerText.includes('paguei')) {
                     tipo = 'despesa';
                 }
                 
-                // Detectar valor (número com R$ ou reais)
                 const valorMatch = lowerText.match(/(\d+[\.,]\d+|\d+)\s*(reais|r\$|real)/i) || lowerText.match(/(\d+[\.,]\d+|\d+)/);
                 if (valorMatch) {
                     let valorStr = valorMatch[1].replace(',', '.');
                     valor = parseFloat(valorStr);
                 }
                 
-                // Detectar categoria
                 const categoriasDisponiveis = categories.map(c => c.name.toLowerCase());
                 for (const cat of categoriasDisponiveis) {
                     if (lowerText.includes(cat)) {
@@ -1353,30 +1530,17 @@
                     }
                 }
                 
-                // Se não encontrou categoria pelo nome, tentar por palavras-chave
                 if (!categoria) {
                     const keywords = {
-                        'alimentação': 'alimentacao',
-                        'mercado': 'alimentacao',
-                        'comida': 'alimentacao',
-                        'transporte': 'transporte',
-                        'uber': 'transporte',
-                        'gasolina': 'transporte',
-                        'moradia': 'moradia',
-                        'aluguel': 'moradia',
-                        'saúde': 'saude',
-                        'médico': 'saude',
-                        'lazer': 'lazer',
-                        'cinema': 'lazer',
-                        'educação': 'educacao',
-                        'curso': 'educacao',
-                        'vestuário': 'vestuario',
-                        'roupa': 'vestuario',
-                        'serviços': 'servicos',
-                        'salário': 'salario',
-                        'freelance': 'freelance',
-                        'investimentos': 'investimentos',
-                        'presentes': 'presentes'
+                        'alimentação': 'alimentacao', 'mercado': 'alimentacao', 'comida': 'alimentacao',
+                        'transporte': 'transporte', 'uber': 'transporte', 'gasolina': 'transporte',
+                        'moradia': 'moradia', 'aluguel': 'moradia',
+                        'saúde': 'saude', 'médico': 'saude',
+                        'lazer': 'lazer', 'cinema': 'lazer',
+                        'educação': 'educacao', 'curso': 'educacao',
+                        'vestuário': 'vestuario', 'roupa': 'vestuario',
+                        'serviços': 'servicos', 'salário': 'salario',
+                        'freelance': 'freelance', 'investimentos': 'investimentos', 'presentes': 'presentes'
                     };
                     
                     for (const [key, value] of Object.entries(keywords)) {
@@ -1390,33 +1554,26 @@
                     }
                 }
                 
-                // Detectar descrição (o que sobrar)
                 let descricaoParts = [];
                 const palavrasRemover = ['receita', 'despesa', 'gastei', 'paguei', 'ganhei', 'reais', 'real', 'r$'];
                 
-                // Remover palavras-chave da descrição
                 let descricaoRaw = text;
                 palavrasRemover.forEach(palavra => {
                     descricaoRaw = descricaoRaw.replace(new RegExp(palavra, 'gi'), '');
                 });
                 
-                // Remover valores
                 descricaoRaw = descricaoRaw.replace(/\d+[\.,]\d+|\d+/g, '');
                 
-                // Remover categorias
                 categoriasDisponiveis.forEach(cat => {
                     descricaoRaw = descricaoRaw.replace(new RegExp(cat, 'gi'), '');
                 });
                 
-                // Limpar espaços extras
                 descricao = descricaoRaw.trim();
                 
-                // Se não tiver descrição, usar texto genérico
                 if (!descricao) {
                     descricao = tipo === 'receita' ? 'Receita' : 'Despesa';
                 }
                 
-                // Detectar data (dia) - CORRIGIDO: usa a função createDateFromString
                 const diaMatch = lowerText.match(/dia\s*(\d+)/i);
                 if (diaMatch) {
                     const dia = parseInt(diaMatch[1]);
@@ -1424,22 +1581,18 @@
                     const mesAtual = hoje.getMonth();
                     const anoAtual = hoje.getFullYear();
                     
-                    // Verificar se o dia é no mês atual ou anterior
                     let dataObj = new Date(anoAtual, mesAtual, dia);
                     if (dataObj > hoje) {
-                        // Se for maior que hoje, provavelmente é do mês anterior
                         dataObj = new Date(anoAtual, mesAtual - 1, dia);
                     }
                     data = dataObj;
                 }
                 
-                // Detectar parcelas
                 const parcelasMatch = lowerText.match(/(\d+)\s*(x|vezes|parcela|parcelas)/i);
                 if (parcelasMatch) {
                     parcelas = parseInt(parcelasMatch[1]);
                 }
                 
-                // Preencher campos
                 const descInput = document.getElementById('description');
                 const amountInput = document.getElementById('amount');
                 const typeSelect = document.getElementById('type');
@@ -1454,18 +1607,15 @@
                 if (data) dateInput.value = formatDateToString(data);
                 if (parcelas > 1) parcelasInput.value = parcelas;
                 
-                // Feedback visual de campos preenchidos
                 highlightField(descInput, descricao);
                 highlightField(amountInput, valor);
                 highlightField(typeSelect, tipo);
                 highlightField(categorySelectEl, categoria);
                 highlightField(dateInput, data);
                 
-                // Mensagem de sucesso
                 voiceStatusText.textContent = '✅ Transação preenchida! Verifique os campos e clique em Adicionar.';
                 voiceStatusText.style.color = '#27ae60';
                 
-                // Esconder status após 3 segundos
                 setTimeout(() => {
                     hideVoiceStatus();
                     voiceStatusText.style.color = '';
@@ -1475,7 +1625,7 @@
             function highlightField(element, value) {
                 if (value) {
                     element.style.borderColor = '#27ae60';
-                    element.style.backgroundColor = '#f0fdf4';
+                    element.style.backgroundColor = 'rgba(39, 174, 96, 0.15)';
                     
                     setTimeout(() => {
                         element.style.borderColor = '';
@@ -1485,7 +1635,10 @@
             }
             
             function setupEventListeners() {
-                // Formulário de transação - CORRIGIDO com a função createDateFromString
+                // Toggle de tema
+                themeToggle.addEventListener('click', toggleTheme);
+                
+                // Formulário de transação
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
@@ -1494,7 +1647,6 @@
                     const type = document.getElementById('type').value;
                     const category = document.getElementById('category').value;
                     
-                    // CORREÇÃO: Usa createDateFromString para evitar problema de timezone
                     const dateString = document.getElementById('transaction-date').value;
                     const date = createDateFromString(dateString);
                     
@@ -1506,7 +1658,6 @@
                     const parcelas = parseInt(document.getElementById('parcelas').value) || 1;
                     
                     if (parcelas > 1) {
-                        // Adicionar transações parceladas
                         for (let i = 0; i < parcelas; i++) {
                             const parcelaDate = new Date(date);
                             parcelaDate.setMonth(parcelaDate.getMonth() + i);
@@ -1523,13 +1674,11 @@
                         addTransaction(description, amount, type, category, date);
                     }
                     
-                    // Reset do formulário
                     form.reset();
                     const today = new Date();
                     transactionDateInput.value = formatDateToString(today);
                 });
                 
-                // Formulário de categoria
                 categoryForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
@@ -1539,15 +1688,12 @@
                     
                     addCategory(name, type, color);
                     
-                    // Reset do formulário
                     categoryForm.reset();
                     document.getElementById('new-category-color').value = '#3498db';
                 });
                 
-                // Controles de período - CORRIGIDOS para usar dates sem timezone
                 prevPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'standard') {
-                        // Mover período um mês para trás
                         const start = new Date(customStartDate);
                         const end = new Date(customEndDate);
                         start.setMonth(start.getMonth() - 1);
@@ -1562,7 +1708,6 @@
                 
                 nextPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'standard') {
-                        // Mover período um mês para frente
                         const start = new Date(customStartDate);
                         const end = new Date(customEndDate);
                         start.setMonth(start.getMonth() + 1);
@@ -1575,16 +1720,12 @@
                     }
                 });
                 
-                // Alternar entre período padrão e personalizado
                 periodStandardBtn.addEventListener('click', function() {
                     periodMode = 'standard';
                     periodStandardBtn.classList.add('active-mode');
                     periodCustomBtn.classList.remove('active-mode');
                     
-                    // Recalcular período padrão baseado na data atual
                     setupStandardPeriod();
-                    
-                    // Habilitar navegação mensal
                     periodNav.style.display = 'flex';
                 });
                 
@@ -1593,16 +1734,13 @@
                     periodCustomBtn.classList.add('active-mode');
                     periodStandardBtn.classList.remove('active-mode');
                     
-                    // Usar as datas atuais dos inputs
                     customStartDate = createDateFromString(startDateInput.value);
                     customEndDate = createDateFromString(endDateInput.value);
                     updatePeriodDisplay();
                     
-                    // Desabilitar navegação mensal
                     periodNav.style.display = 'none';
                 });
                 
-                // Aplicar período personalizado - CORRIGIDO
                 applyPeriodBtn.addEventListener('click', function() {
                     if (periodMode === 'custom') {
                         const start = createDateFromString(startDateInput.value);
@@ -1618,15 +1756,12 @@
                     }
                 });
                 
-                // Fechar detalhe da categoria
                 closeDetailBtn.addEventListener('click', function() {
                     categoryDetail.classList.remove('show');
                 });
                 
-                // Botão de voz
                 voiceBtn.addEventListener('click', toggleListening);
                 
-                // Fechar status de voz
                 voiceStatusClose.addEventListener('click', function() {
                     stopListening();
                     hideVoiceStatus();
@@ -1638,15 +1773,12 @@
                     tab.addEventListener('click', () => {
                         const tabId = tab.getAttribute('data-tab');
                         
-                        // Remover classe active de todas as tabs e conteúdos
                         tabs.forEach(t => t.classList.remove('active'));
                         tabContents.forEach(tc => tc.classList.remove('active'));
                         
-                        // Adicionar classe active à tab clicada e seu conteúdo
                         tab.classList.add('active');
                         document.getElementById(`${tabId}-tab`).classList.add('active');
                         
-                        // Se for a aba de relatórios, atualizar os gráficos
                         if (tabId === 'reports') {
                             renderCharts();
                         }
@@ -1655,9 +1787,8 @@
             }
             
             function addTransaction(description, amount, type, category, date) {
-                // O timestamp é criado a partir da data já corrigida
                 const transaction = {
-                    id: Date.now() + Math.random(), // ID único
+                    id: Date.now() + Math.random(),
                     description,
                     amount,
                     type,
@@ -1682,7 +1813,6 @@
             }
             
             function addCategory(name, type, color) {
-                // Gerar ID único baseado no nome (em minúsculo e sem espaços)
                 const id = name.toLowerCase().replace(/\s+/g, '-');
                 
                 const category = {
@@ -1692,7 +1822,6 @@
                     color
                 };
                 
-                // Verificar se a categoria já existe
                 const existingCategory = categories.find(cat => cat.id === id);
                 if (existingCategory) {
                     alert('Já existe uma categoria com este nome!');
@@ -1706,7 +1835,6 @@
             }
             
             function deleteCategory(id) {
-                // Não permitir exclusão se houver transações usando esta categoria
                 const transactionsWithCategory = transactions.filter(transaction => transaction.category === id);
                 
                 if (transactionsWithCategory.length > 0) {
@@ -1729,14 +1857,11 @@
             }
             
             function updateCategoriesDropdown() {
-                // Limpar dropdown
                 categorySelect.innerHTML = '';
                 
-                // Agrupar categorias por tipo
                 const expenseCategories = categories.filter(cat => cat.type === 'despesa');
                 const incomeCategories = categories.filter(cat => cat.type === 'receita');
                 
-                // Adicionar categorias de despesa
                 if (expenseCategories.length > 0) {
                     const group = document.createElement('optgroup');
                     group.label = 'Despesas';
@@ -1751,7 +1876,6 @@
                     categorySelect.appendChild(group);
                 }
                 
-                // Adicionar categorias de receita
                 if (incomeCategories.length > 0) {
                     const group = document.createElement('optgroup');
                     group.label = 'Receitas';
@@ -1768,7 +1892,6 @@
             }
             
             function renderCategories() {
-                // Limpar lista
                 categoriesList.innerHTML = '';
                 
                 if (categories.length === 0) {
@@ -1781,11 +1904,9 @@
                     return;
                 }
                 
-                // Agrupar categorias por tipo
                 const expenseCategories = categories.filter(cat => cat.type === 'despesa');
                 const incomeCategories = categories.filter(cat => cat.type === 'receita');
                 
-                // Renderizar categorias de despesa
                 if (expenseCategories.length > 0) {
                     const heading = document.createElement('h3');
                     heading.textContent = 'Despesas';
@@ -1799,7 +1920,6 @@
                     });
                 }
                 
-                // Renderizar categorias de receita
                 if (incomeCategories.length > 0) {
                     const heading = document.createElement('h3');
                     heading.textContent = 'Receitas';
@@ -1830,10 +1950,8 @@
             }
             
             function renderTransactions() {
-                // Limpar lista
                 transactionsList.innerHTML = '';
                 
-                // Filtrar transações pelo período atual
                 const periodTransactions = getPeriodTransactions();
                 
                 if (periodTransactions.length === 0) {
@@ -1846,13 +1964,11 @@
                     return;
                 }
                 
-                // Ordenar transações por data (mais recente primeiro)
                 const sortedTransactions = [...periodTransactions].sort((a, b) => b.timestamp - a.timestamp);
                 
                 sortedTransactions.forEach(transaction => {
                     const li = document.createElement('li');
                     
-                    // Encontrar a categoria para obter a cor
                     const category = categories.find(cat => cat.id === transaction.category);
                     const categoryColor = category ? category.color : '#95a5a6';
                     const categoryName = category ? category.name : transaction.category;
@@ -1867,7 +1983,7 @@
                                 • ${transaction.date}
                             </small>
                         </div>
-                        <div class="transaction-amount" style="color: ${transaction.type === 'receita' ? '#27ae60' : '#e74c3c'}">
+                        <div class="transaction-amount" style="color: ${transaction.type === 'receita' ? 'var(--accent-green)' : 'var(--accent-red)'}">
                             ${transaction.type === 'receita' ? '+' : '-'} R$ ${transaction.amount.toFixed(2)}
                         </div>
                         <div class="transaction-actions">
@@ -1882,7 +1998,6 @@
             }
             
             function updateSummary() {
-                // Filtrar transações pelo período atual
                 const periodTransactions = getPeriodTransactions();
                 
                 const totalIncome = periodTransactions
@@ -1907,10 +2022,16 @@
                 renderIncomeVsExpensesChart();
             }
             
+            // Detecta se está em dark mode para ajustar cores dos gráficos
+            function isDarkMode() {
+                return document.body.classList.contains('dark-mode');
+            }
+            
             function renderExpensesChart() {
                 const ctx = document.getElementById('expenses-chart').getContext('2d');
+                const dark = isDarkMode();
+                const textColor = dark ? '#e8eaed' : '#2c3e50';
                 
-                // Agrupar despesas por categoria (apenas do período atual)
                 const periodTransactions = getPeriodTransactions();
                 const expensesByCategory = {};
                 
@@ -1923,7 +2044,6 @@
                         expensesByCategory[transaction.category] += parseFloat(transaction.amount);
                     });
                 
-                // Preparar dados para o gráfico
                 const labels = [];
                 const data = [];
                 const backgroundColors = [];
@@ -1939,7 +2059,6 @@
                     }
                 });
                 
-                // Criar ou atualizar o gráfico
                 if (window.expensesChart) {
                     window.expensesChart.destroy();
                 }
@@ -1952,14 +2071,18 @@
                             datasets: [{
                                 data: data,
                                 backgroundColor: backgroundColors,
-                                borderWidth: 1
+                                borderWidth: 1,
+                                borderColor: dark ? '#242830' : '#ffffff'
                             }]
                         },
                         options: {
                             responsive: true,
                             plugins: {
                                 legend: {
-                                    position: 'bottom'
+                                    position: 'bottom',
+                                    labels: {
+                                        color: textColor
+                                    }
                                 }
                             },
                             onClick: function(event, elements) {
@@ -1974,7 +2097,7 @@
                 } else {
                     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
                     ctx.font = '16px Arial';
-                    ctx.fillStyle = '#7f8c8d';
+                    ctx.fillStyle = dark ? '#a0a4ab' : '#7f8c8d';
                     ctx.textAlign = 'center';
                     ctx.fillText('Nenhuma despesa para exibir', ctx.canvas.width / 2, ctx.canvas.height / 2);
                 }
@@ -1989,7 +2112,6 @@
                     return;
                 }
                 
-                // Filtrar transações da categoria
                 const categoryTransactions = periodTransactions
                     .filter(t => t.category === categoryId && t.type === 'despesa')
                     .sort((a, b) => b.timestamp - a.timestamp);
@@ -1999,14 +2121,11 @@
                     return;
                 }
                 
-                // Calcular total
                 const total = categoryTransactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
                 
-                // Atualizar detalhes
                 detailCategoryName.textContent = `${category.name} (Despesas)`;
                 detailTotal.textContent = `R$ ${total.toFixed(2)}`;
                 
-                // Construir lista de transações
                 detailTransactionsList.innerHTML = '';
                 const ul = document.createElement('ul');
                 ul.style.listStyle = 'none';
@@ -2015,7 +2134,7 @@
                 categoryTransactions.forEach(transaction => {
                     const li = document.createElement('li');
                     li.style.padding = '10px';
-                    li.style.borderBottom = '1px solid #eee';
+                    li.style.borderBottom = '1px solid var(--border-light)';
                     li.style.display = 'flex';
                     li.style.justifyContent = 'space-between';
                     li.style.alignItems = 'center';
@@ -2024,9 +2143,9 @@
                         <div>
                             <strong>${transaction.description}</strong>
                             <br>
-                            <small>${transaction.date}</small>
+                            <small style="color: var(--text-secondary);">${transaction.date}</small>
                         </div>
-                        <div style="font-weight: bold; color: #e74c3c;">
+                        <div style="font-weight: bold; color: var(--accent-red);">
                             - R$ ${transaction.amount.toFixed(2)}
                         </div>
                     `;
@@ -2035,26 +2154,19 @@
                 });
                 
                 detailTransactionsList.appendChild(ul);
-                
-                // Mostrar detalhe
                 categoryDetail.classList.add('show');
-                
-                // Scroll para o detalhe
                 categoryDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
             function renderIncomeVsExpensesChart() {
                 const ctx = document.getElementById('income-vs-expenses-chart').getContext('2d');
+                const dark = isDarkMode();
+                const textColor = dark ? '#e8eaed' : '#2c3e50';
+                const gridColor = dark ? '#3a3f47' : '#eeeeee';
                 
-                // Calcular totais por mês (dos últimos 6 meses)
                 const monthlyData = {};
                 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
                 
-                // Usar o período atual para determinar os meses
-                const startDate = new Date(customStartDate);
-                const endDate = new Date(customEndDate);
-                
-                // Pegar os últimos 6 meses a partir do mês atual
                 const today = new Date();
                 for (let i = 5; i >= 0; i--) {
                     const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
@@ -2075,12 +2187,10 @@
                     });
                 }
                 
-                // Preparar dados para o gráfico
                 const labels = Object.keys(monthlyData);
                 const incomeData = labels.map(label => monthlyData[label].income);
                 const expenseData = labels.map(label => monthlyData[label].expense);
                 
-                // Criar ou atualizar o gráfico
                 if (window.incomeVsExpensesChart) {
                     window.incomeVsExpensesChart.destroy();
                 }
@@ -2109,7 +2219,28 @@
                             responsive: true,
                             scales: {
                                 y: {
-                                    beginAtZero: true
+                                    beginAtZero: true,
+                                    ticks: {
+                                        color: textColor
+                                    },
+                                    grid: {
+                                        color: gridColor
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        color: textColor
+                                    },
+                                    grid: {
+                                        color: gridColor
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: textColor
+                                    }
                                 }
                             }
                         }
@@ -2117,7 +2248,7 @@
                 } else {
                     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
                     ctx.font = '16px Arial';
-                    ctx.fillStyle = '#7f8c8d';
+                    ctx.fillStyle = dark ? '#a0a4ab' : '#7f8c8d';
                     ctx.textAlign = 'center';
                     ctx.fillText('Nenhum dado para exibir', ctx.canvas.width / 2, ctx.canvas.height / 2);
                 }
