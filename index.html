@@ -1376,15 +1376,35 @@
             }
             
             function confirmImport() {
-                const collected = collectReviewData();
-                if (collected.length === 0) { alert('Nenhum lançamento válido para salvar.'); return; }
-                collected.forEach(tx => transactions.push(tx));
-                saveTransactions();
-                renderTransactions();
-                updateSummary();
-                closeReviewModal();
-                showImportFeedback('success', `${collected.length} lançamentos importados com sucesso!`);
-            }
+                try {
+                    console.log('[DEBUG] confirmImport iniciado');
+                    const collected = collectReviewData();
+                    console.log('[DEBUG] Lançamentos coletados:', collected.length);
+                    console.log('[DEBUG] Primeiros 3:', collected.slice(0, 3));
+                    
+                    if (collected.length === 0) {
+                        alert('Nenhum lançamento válido para salvar. Verifique se a tabela está visível.');
+                        return;
+                    }
+                    
+                    collected.forEach(tx => transactions.push(tx));
+                    console.log('[DEBUG] Total de transações no array agora:', transactions.length);
+                    
+                    saveTransactions();
+                    console.log('[DEBUG] Salvo no localStorage');
+                    
+                    renderTransactions();
+                    updateSummary();
+                    closeReviewModal();
+                    console.log('[DEBUG] Modal fechado');
+                    
+                    showImportFeedback('success', `${collected.length} lançamentos importados com sucesso!`);
+                    console.log('[DEBUG] confirmImport finalizado com sucesso');
+                } catch(err) {
+                    console.error('[ERRO em confirmImport]:', err);
+                    alert('Erro ao salvar: ' + err.message);
+                }
+            }    
             
             function closeReviewModal() {
                 reviewModal.classList.remove('show');
@@ -1846,7 +1866,13 @@
                     ctx.fillText('Nenhum dado para exibir', ctx.canvas.width / 2, ctx.canvas.height / 2);
                 }
             }
-            
+                        // Expor funções para debug pelo console
+            window.debugImport = {
+                getPreview: () => importPreview,
+                getTransactions: () => transactions,
+                collectReviewData,
+                confirmImport
+            };
             // ========== GLOBAIS ==========
             window.deleteTransaction = deleteTransaction;
             window.deleteCategory = deleteCategory;
