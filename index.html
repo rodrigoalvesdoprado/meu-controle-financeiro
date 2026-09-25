@@ -1916,7 +1916,20 @@
                 });
                 cancelImportBtn.addEventListener('click', closeReviewModal);
                 confirmImportBtn.addEventListener('click', confirmImport);
-                
+                                // Listeners do modal de edição
+                editSaveBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    saveEditedTransaction();
+                });
+                editCancelBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    closeEditModal();
+                });
+                editCloseBtn.addEventListener('click', closeEditModal);
+                editForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    saveEditedTransaction();
+                });
                 // Filtros de portador
                 holderFilterTx.addEventListener('change', (e) => {
                     currentHolderFilterTx = e.target.value;
