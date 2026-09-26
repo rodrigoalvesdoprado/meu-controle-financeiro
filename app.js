@@ -1188,7 +1188,6 @@ function generateId() {
         });
         cancelImportBtn.addEventListener('click', closeReviewModal);
         confirmImportBtn.addEventListener('click', confirmImport);
-        document.getElementById('clearPeriodBtn').addEventListener('click', clearPeriodTransactions);
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1362,29 +1361,6 @@ transactionsList.addEventListener('keydown', (e) => {
         updateSummary();
         renderHolderTotals();
     }
-
-    function clearPeriodTransactions() {
-    const period = getPeriodTransactions();
-    if (period.length === 0) {
-        showToast('Nenhum lançamento no período.', 'error');
-        return;
-    }
-    const label = currentPeriodElement.textContent || 'período atual';
-    const plural = period.length === 1 ? 'lançamento' : 'lançamentos';
-    if (!confirm(`Apagar ${period.length} ${plural} do período "${label}"?\n\nEssa ação não pode ser desfeita.`)) return;
-
-    const idsToRemove = new Set(period.map(t => String(t.id)));
-    transactions = transactions.filter(t => !idsToRemove.has(String(t.id)));
-    saveTransactions();
-
-    renderTransactions();
-    updateSummary();
-    renderHolderTotals();
-    const rt = document.getElementById('reports-tab');
-    if (rt && rt.classList.contains('active')) renderCharts();
-
-    showToast(`${period.length} ${plural} apagado${period.length === 1 ? '' : 's'}.`, 'success');
-}
 
     function saveTransactions() { localStorage.setItem('transactions', JSON.stringify(transactions)); }
 
