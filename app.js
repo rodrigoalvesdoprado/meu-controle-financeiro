@@ -917,12 +917,10 @@ function processOpenInvoiceFile(content, dueInfo) {
         // Extrai parcela, se houver
         const { description: cleanDesc, installment } = extractInstallment(tx.description);
 
-        // Cálculo de data
-        let year = anoVenc;
-        if (tx.month > mesVenc) year = anoVenc - 1; // mês maior que vencimento => ano anterior
-
-        const date = new Date(year, tx.month, tx.day);
-        const dataCompraStr = `${String(tx.day).padStart(2,'0')}/${String(tx.month + 1).padStart(2,'0')}`;
+// Cálculo de data — fatura aberta: TODOS os lançamentos vão para o mês/ano do vencimento.
+// Mantém o dia da compra; mês e ano são os do vencimento.
+const date = new Date(anoVenc, mesVenc, tx.day);
+const dataCompraStr = `${String(tx.day).padStart(2,'0')}/${String(mesVenc + 1).padStart(2,'0')}`;
 
         // Descrição final: igual à fechada, mas sem "cidade" (não tem no arquivo)
         const finalDescription = installment
@@ -978,123 +976,116 @@ function countPeriodTransactions() {
         return 'outros';
     }
 
-    function processInvoiceFile(content) {
-        const lines = content.split(/\r?\n/);
-        const transactions = [];
-        const validation = {
-            perCard: {},
-            creditsTotal: 0,
-            cardExpensesTotal: 0,
-            netCalculated: 0,
-            declaredTotal: null,
-            demonstrativoTotalDeclared: null
-        };
+function processInvoiceFile(content) {
+    const lines = content.split(/\r?\n/);
+    const transactions = [];
+    const validation = {
+        perCard: {},
+        creditsTotal: 0,
+        cardExpensesTotal: 0,
+        netCalculated: 0,
+        declaredTotal: null,
+        demonstrativoTotalDeclared: null
+    };
 
-        let currentHolder = null;
-        let currentCard = null;
-        let currentScope = 'demonstrativo';
+    let currentHolder = null;
+    let currentCard = null;
+    let currentScope = 'demonstrativo';
 
-        const anoVenc = currentDueDate.year;
-        const mesVenc = currentDueDate.month;
+    const anoVenc = currentDueDate.year;
+    const mesVenc = currentDueDate.month;
 
-        const mesAnteriorVenc = mesVenc === 0 ? 11 : mesVenc - 1;
-        const anoMesAnteriorVenc = mesVenc === 0 ? anoVenc - 1 : anoVenc;
+    // Último dia do mês do vencimento (para limitar dias 29/30/31)
+    const ultimoDiaDoMesVenc = new Date(anoVenc, mesVenc + 1, 0).getDate();
 
-        for (let i = 0; i < lines.length; i++) {
-            const line = normalizeLine(lines[i]);
-            if (isIgnoredLine(line)) continue;
+    for (let i = 0; i < lines.length; i++) {
+        const line = normalizeLine(lines[i]);
+        if (isIgnoredLine(line)) continue;
 
-            const holderInfo = parseHolderLine(line);
-            if (holderInfo) {
-                currentHolder = holderInfo.name;
-                currentCard = holderInfo.cardNumber;
-                currentScope = 'card';
-                if (!validation.perCard[currentCard]) {
-                    validation.perCard[currentCard] = { holder: currentHolder, compras: 0, parceladas: 0, final: 0 };
-                }
-                continue;
+        const holderInfo = parseHolderLine(line);
+        if (holderInfo) {
+            currentHolder = holderInfo.name;
+            currentCard = holderInfo.cardNumber;
+            currentScope = 'card';
+            if (!validation.perCard[currentCard]) {
+                validation.perCard[currentCard] = { holder: currentHolder, compras: 0, parceladas: 0, final: 0 };
             }
-
-            const upper = line.toUpperCase();
-            if (/^COMPRAS(\s*\(Cartão\s*\d+\))?\s*$/i.test(line)) continue;
-            if (/^COMPRAS\s+PARCELADAS(\s*\(Cartão\s*\d+\))?\s*$/i.test(line)) continue;
-            if (upper === 'ANUIDADE') continue;
-
-            const totalInfo = parseTotalLine(line);
-            if (totalInfo) {
-                if (totalInfo.type === 'compras' && currentCard) {
-                    validation.perCard[currentCard].compras = totalInfo.value;
-                } else if (totalInfo.type === 'parceladas' && currentCard) {
-                    validation.perCard[currentCard].parceladas = totalInfo.value;
-                } else if (totalInfo.type === 'final-cartao') {
-                    if (!validation.perCard[totalInfo.cardNumber]) {
-                        validation.perCard[totalInfo.cardNumber] = { holder: null, compras: 0, parceladas: 0, final: 0 };
-                    }
-                    validation.perCard[totalInfo.cardNumber].final = totalInfo.value;
-                } else if (totalInfo.type === 'total-fatura') {
-                    validation.declaredTotal = totalInfo.value;
-                } else if (totalInfo.type === 'total-simples') {
-                    if (currentScope === 'demonstrativo' && totalInfo.letter === 'C') {
-                        validation.demonstrativoTotalDeclared = totalInfo.value;
-                    }
-                }
-                continue;
-            }
-
-            const tx = parseTransactionLine(line);
-            if (!tx) continue;
-            if (isNoiseTransaction(tx.description)) continue;
-
-            if (currentScope === 'demonstrativo') {
-                if (tx.type === 'receita') validation.creditsTotal += tx.amount;
-                continue;
-            }
-
-            const { description: cleanDesc, installment } = extractInstallment(tx.description);
-            const categoryId = categorizeDescription(cleanDesc);
-
-            let date;
-            let finalDescription;
-
-            const diaStr = String(tx.day).padStart(2, '0');
-            const mesStr = String(tx.month + 1).padStart(2, '0');
-            const dataCompraStr = `${diaStr}/${mesStr}`;
-
-            if (installment) {
-                date = new Date(anoVenc, mesVenc, 13);
-                finalDescription = `${cleanDesc} (${dataCompraStr} - ${installment})`;
-            } else {
-                if (tx.month === mesVenc) {
-                    date = new Date(anoVenc, mesVenc, 2);
-                } else {
-                    date = new Date(anoMesAnteriorVenc, mesAnteriorVenc, 28);
-                }
-                finalDescription = `${cleanDesc} (${dataCompraStr})`;
-            }
-
-            const transaction = {
-                //id: Date.now() + Math.random() + Math.random(),
-                id: generateId(),
-                description: finalDescription,
-                amount: tx.amount,
-                type: tx.type,
-                category: categoryId,
-                date: formatDateToDisplay(date),
-                timestamp: date.getTime(),
-                month: date.getMonth(),
-                year: date.getFullYear(),
-                holder: currentHolder,
-                cardNumber: currentCard,
-                installment: installment
-            };
-
-            transactions.push(transaction);
-            validation.cardExpensesTotal += tx.amount;
+            continue;
         }
 
-        validation.netCalculated = validation.cardExpensesTotal - validation.creditsTotal;
-        return { transactions, validation };
+        const upper = line.toUpperCase();
+        if (/^COMPRAS(\s*\(Cartão\s*\d+\))?\s*$/i.test(line)) continue;
+        if (/^COMPRAS\s+PARCELADAS(\s*\(Cartão\s*\d+\))?\s*$/i.test(line)) continue;
+        if (upper === 'ANUIDADE') continue;
+
+        const totalInfo = parseTotalLine(line);
+        if (totalInfo) {
+            if (totalInfo.type === 'compras' && currentCard) {
+                validation.perCard[currentCard].compras = totalInfo.value;
+            } else if (totalInfo.type === 'parceladas' && currentCard) {
+                validation.perCard[currentCard].parceladas = totalInfo.value;
+            } else if (totalInfo.type === 'final-cartao') {
+                if (!validation.perCard[totalInfo.cardNumber]) {
+                    validation.perCard[totalInfo.cardNumber] = { holder: null, compras: 0, parceladas: 0, final: 0 };
+                }
+                validation.perCard[totalInfo.cardNumber].final = totalInfo.value;
+            } else if (totalInfo.type === 'total-fatura') {
+                validation.declaredTotal = totalInfo.value;
+            } else if (totalInfo.type === 'total-simples') {
+                if (currentScope === 'demonstrativo' && totalInfo.letter === 'C') {
+                    validation.demonstrativoTotalDeclared = totalInfo.value;
+                }
+            }
+            continue;
+        }
+
+        const tx = parseTransactionLine(line);
+        if (!tx) continue;
+        if (isNoiseTransaction(tx.description)) continue;
+
+        if (currentScope === 'demonstrativo') {
+            if (tx.type === 'receita') validation.creditsTotal += tx.amount;
+            continue;
+        }
+
+        const { description: cleanDesc, installment } = extractInstallment(tx.description);
+        const categoryId = categorizeDescription(cleanDesc);
+
+        // ---- Descrição: mantém o mês original da compra (opção b) ----
+        const diaStr = String(tx.day).padStart(2, '0');
+        const mesStr = String(tx.month + 1).padStart(2, '0');
+        const dataCompraStr = `${diaStr}/${mesStr}`;
+
+        // ---- Data salva: mês/ano do vencimento, dia da compra limitado ao último dia do mês ----
+        const diaFinal = Math.min(tx.day, ultimoDiaDoMesVenc);
+        const date = new Date(anoVenc, mesVenc, diaFinal);
+
+        const finalDescription = installment
+            ? `${cleanDesc} (${dataCompraStr} - ${installment})`
+            : `${cleanDesc} (${dataCompraStr})`;
+
+        const transaction = {
+            id: generateId(),
+            description: finalDescription,
+            amount: tx.amount,
+            type: tx.type,
+            category: categoryId,
+            date: formatDateToDisplay(date),
+            timestamp: date.getTime(),
+            month: date.getMonth(),
+            year: date.getFullYear(),
+            holder: currentHolder,
+            cardNumber: currentCard,
+            installment: installment
+        };
+
+        transactions.push(transaction);
+        validation.cardExpensesTotal += tx.amount;
     }
+
+    validation.netCalculated = validation.cardExpensesTotal - validation.creditsTotal;
+    return { transactions, validation };
+}
 
 function handleImportFile(file, type) {
     if (!file) return;
