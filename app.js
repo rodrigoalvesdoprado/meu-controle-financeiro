@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
 const DEFAULT_CATEGORIES = [
     // ---- Despesas ----
     { id: 'alimentacao', name: 'Supermercado', type: 'despesa', color: '#e74c3c' },
+    { id: 'padaria', name: 'Padaria', type: 'despesa', color: '#f39c12' },
     { id: 'restaurantes', name: 'Restaurantes', type: 'despesa', color: '#e67e22' },
     { id: 'transporte', name: 'Transporte', type: 'despesa', color: '#3498db' },
     { id: 'moradia', name: 'Moradia', type: 'despesa', color: '#2ecc71' },
@@ -119,7 +120,14 @@ const CATEGORY_TAGS = {
         'nosso maiolini', 'maiolini',
         'alvorada', 'bueno', 'solmar',
         'abc atacado', 'atacad', 'atacado',
-        'supermercado', 'supermercad', 'hipermerc',
+        'supermercado', 'supermercad', 'hipermerc'
+    ],
+
+    // ---- PADARIA ----
+    'padaria': [
+        'padaria bello pao', 'padaria bello pão', 'bello pao', 'bello pão',
+        'padaria princesa', 'padaria dom enio', 'dom enio',
+        'padaria floresta',
         'padaria', 'panificad'
     ],
 
@@ -206,7 +214,7 @@ const CATEGORY_TAGS = {
     ],
 
     // ---- LAZER ----
-    // Observação: 'amazon prime', 'amazon music' e 'deezer' foram movidos para 'streaming'.
+    // 'amazon prime', 'amazon music' e 'deezer' foram movidos para 'streaming'.
     'lazer': [
         'prime video',
         'crunchyroll', 'paramount',
