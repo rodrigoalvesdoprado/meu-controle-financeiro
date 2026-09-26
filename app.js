@@ -892,7 +892,7 @@ function processOpenInvoiceFile(content, dueInfo) {
     const mesVenc = dueInfo.month;
 
     // Último dia do mês do vencimento (para limitar dias 29/30/31)
-    const ultimoDiaDoMesVenc = new Date(anoVenc, mesVenc + 1, 0).getDate();
+    //const ultimoDiaDoMesVenc = new Date(anoVenc, mesVenc + 1, 0).getDate();
 
     let currentHolder = null;
     let currentCard = null;
@@ -920,14 +920,13 @@ function processOpenInvoiceFile(content, dueInfo) {
         // Extrai parcela, se houver
         const { description: cleanDesc, installment } = extractInstallment(tx.description);
 
-        // ---- Descrição: mantém o mês original da compra (opção b) ----
-        const diaStr = String(tx.day).padStart(2, '0');
-        const mesStr = String(tx.month + 1).padStart(2, '0');
-        const dataCompraStr = `${diaStr}/${mesStr}`;
+// ---- Descrição: mantém a data original da compra ----
+const diaStr = String(tx.day).padStart(2, '0');
+const mesStr = String(tx.month + 1).padStart(2, '0');
+const dataCompraStr = `${diaStr}/${mesStr}`;
 
-        // ---- Data salva: mês/ano do vencimento, dia da compra limitado ao último dia do mês ----
-        const diaFinal = Math.min(tx.day, ultimoDiaDoMesVenc);
-        const date = new Date(anoVenc, mesVenc, diaFinal);
+// ---- Data salva: sempre no mês/ano do vencimento, dia fixo 10 ----
+const date = new Date(anoVenc, mesVenc, 10);
 
         const finalDescription = installment
             ? `${cleanDesc} (${dataCompraStr} - ${installment})`
@@ -1002,7 +1001,7 @@ function processInvoiceFile(content) {
     const mesVenc = currentDueDate.month;
 
     // Último dia do mês do vencimento (para limitar dias 29/30/31)
-    const ultimoDiaDoMesVenc = new Date(anoVenc, mesVenc + 1, 0).getDate();
+    //const ultimoDiaDoMesVenc = new Date(anoVenc, mesVenc + 1, 0).getDate();
 
     for (let i = 0; i < lines.length; i++) {
         const line = normalizeLine(lines[i]);
@@ -1057,18 +1056,17 @@ function processInvoiceFile(content) {
         const { description: cleanDesc, installment } = extractInstallment(tx.description);
         const categoryId = categorizeDescription(cleanDesc);
 
-        // ---- Descrição: mantém o mês original da compra (opção b) ----
-        const diaStr = String(tx.day).padStart(2, '0');
-        const mesStr = String(tx.month + 1).padStart(2, '0');
-        const dataCompraStr = `${diaStr}/${mesStr}`;
+// ---- Descrição: mantém a data original da compra ----
+const diaStr = String(tx.day).padStart(2, '0');
+const mesStr = String(tx.month + 1).padStart(2, '0');
+const dataCompraStr = `${diaStr}/${mesStr}`;
 
-        // ---- Data salva: mês/ano do vencimento, dia da compra limitado ao último dia do mês ----
-        const diaFinal = Math.min(tx.day, ultimoDiaDoMesVenc);
-        const date = new Date(anoVenc, mesVenc, diaFinal);
+// ---- Data salva: sempre no mês/ano do vencimento, dia fixo 10 ----
+const date = new Date(anoVenc, mesVenc, 10);
 
-        const finalDescription = installment
-            ? `${cleanDesc} (${dataCompraStr} - ${installment})`
-            : `${cleanDesc} (${dataCompraStr})`;
+const finalDescription = installment
+    ? `${cleanDesc} (${dataCompraStr} - ${installment})`
+    : `${cleanDesc} (${dataCompraStr})`;
 
         const transaction = {
             id: generateId(),
