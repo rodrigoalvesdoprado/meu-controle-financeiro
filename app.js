@@ -884,12 +884,15 @@ function processOpenInvoiceFile(content, dueInfo) {
         totalDespesas: 0,
         totalReceitas: 0,
         netCalculated: 0,
-        declaredTotal: null,     // não há no arquivo aberto
+        declaredTotal: null,
         perCard: {}
     };
 
     const anoVenc = dueInfo.year;
     const mesVenc = dueInfo.month;
+
+    // Último dia do mês do vencimento (para limitar dias 29/30/31)
+    const ultimoDiaDoMesVenc = new Date(anoVenc, mesVenc + 1, 0).getDate();
 
     let currentHolder = null;
     let currentCard = null;
@@ -917,12 +920,15 @@ function processOpenInvoiceFile(content, dueInfo) {
         // Extrai parcela, se houver
         const { description: cleanDesc, installment } = extractInstallment(tx.description);
 
-// Cálculo de data — fatura aberta: TODOS os lançamentos vão para o mês/ano do vencimento.
-// Mantém o dia da compra; mês e ano são os do vencimento.
-const date = new Date(anoVenc, mesVenc, tx.day);
-const dataCompraStr = `${String(tx.day).padStart(2,'0')}/${String(mesVenc + 1).padStart(2,'0')}`;
+        // ---- Descrição: mantém o mês original da compra (opção b) ----
+        const diaStr = String(tx.day).padStart(2, '0');
+        const mesStr = String(tx.month + 1).padStart(2, '0');
+        const dataCompraStr = `${diaStr}/${mesStr}`;
 
-        // Descrição final: igual à fechada, mas sem "cidade" (não tem no arquivo)
+        // ---- Data salva: mês/ano do vencimento, dia da compra limitado ao último dia do mês ----
+        const diaFinal = Math.min(tx.day, ultimoDiaDoMesVenc);
+        const date = new Date(anoVenc, mesVenc, diaFinal);
+
         const finalDescription = installment
             ? `${cleanDesc} (${dataCompraStr} - ${installment})`
             : `${cleanDesc} (${dataCompraStr})`;
