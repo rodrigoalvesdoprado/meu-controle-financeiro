@@ -72,22 +72,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== DADOS ==========
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 
-    const DEFAULT_CATEGORIES = [
-        { id: 'alimentacao', name: 'Alimentação', type: 'despesa', color: '#e74c3c' },
-        { id: 'restaurantes', name: 'Restaurantes', type: 'despesa', color: '#e67e22' },
-        { id: 'transporte', name: 'Transporte', type: 'despesa', color: '#3498db' },
-        { id: 'moradia', name: 'Moradia', type: 'despesa', color: '#2ecc71' },
-        { id: 'saude', name: 'Saúde', type: 'despesa', color: '#9b59b6' },
-        { id: 'lazer', name: 'Lazer', type: 'despesa', color: '#f1c40f' },
-        { id: 'educacao', name: 'Educação', type: 'despesa', color: '#1abc9c' },
-        { id: 'vestuario', name: 'Vestuário', type: 'despesa', color: '#d35400' },
-        { id: 'servicos', name: 'Serviços', type: 'despesa', color: '#7f8c8d' },
-        { id: 'salario', name: 'Salário', type: 'receita', color: '#27ae60' },
-        { id: 'freelance', name: 'Freelance', type: 'receita', color: '#2980b9' },
-        { id: 'investimentos', name: 'Investimentos', type: 'receita', color: '#8e44ad' },
-        { id: 'presentes', name: 'Presentes', type: 'receita', color: '#e67e22' },
-        { id: 'outros', name: 'Outros', type: 'despesa', color: '#95a5a6' }
-    ];
+const DEFAULT_CATEGORIES = [
+    // ---- Despesas ----
+    { id: 'alimentacao', name: 'Supermercado', type: 'despesa', color: '#e74c3c' },
+    { id: 'restaurantes', name: 'Restaurantes', type: 'despesa', color: '#e67e22' },
+    { id: 'transporte', name: 'Transporte', type: 'despesa', color: '#3498db' },
+    { id: 'moradia', name: 'Moradia', type: 'despesa', color: '#2ecc71' },
+    { id: 'saude', name: 'Saúde', type: 'despesa', color: '#9b59b6' },
+    { id: 'lazer', name: 'Lazer', type: 'despesa', color: '#f1c40f' },
+    { id: 'educacao', name: 'Educação', type: 'despesa', color: '#1abc9c' },
+    { id: 'vestuario', name: 'Vestuário', type: 'despesa', color: '#d35400' },
+    { id: 'servicos', name: 'Serviços', type: 'despesa', color: '#7f8c8d' },
+    { id: 'hospedagem', name: 'Hospedagem', type: 'despesa', color: '#16a085' },
+    { id: 'streaming', name: 'Streaming', type: 'despesa', color: '#8e44ad' },
+    { id: 'catarse-h-s', name: 'Catarse H S', type: 'despesa', color: '#c0392b' },
+    { id: 'outros', name: 'Outros', type: 'despesa', color: '#95a5a6' },
+    // ---- Receitas ----
+    { id: 'salario', name: 'Salário', type: 'receita', color: '#27ae60' },
+    { id: 'freelance', name: 'Freelance', type: 'receita', color: '#2980b9' },
+    { id: 'investimentos', name: 'Investimentos', type: 'receita', color: '#8e44ad' },
+    { id: 'presentes', name: 'Presentes', type: 'receita', color: '#e67e22' },
+    { id: 'proventos', name: 'Proventos', type: 'receita', color: '#16a085' }
+];
 
     let categories = JSON.parse(localStorage.getItem('categories')) || DEFAULT_CATEGORIES.slice();
 
@@ -106,168 +112,185 @@ document.addEventListener('DOMContentLoaded', function() {
     //   Saúde        -> farmácias, drogarias, manipulação, óticas, clínicas, academias
     //   Transporte   -> postos de combustível, apps de transporte, pedágios, estacionamentos
     //   Serviços     -> oficinas, auto elétrico, telecom, contas, seguros, assinaturas digitais
-    const CATEGORY_TAGS = {
-        // ---- ALIMENTAÇÃO (só mercado / mantimentos) ----
-        'alimentacao': [
-            'supermercados bh', 'supermercado bh',
-            'nosso maiolini', 'maiolini',
-            'alvorada', 'bueno', 'solmar',
-            'abc atacado', 'atacad', 'atacado',
-            'supermercado', 'supermercad', 'hipermerc',
-            'padaria', 'panificad'
-        ],
+const CATEGORY_TAGS = {
+    // ---- SUPERMERCADO (ex-Alimentação) ----
+    'alimentacao': [
+        'supermercados bh', 'supermercado bh', 'supermercado alvorada',
+        'nosso maiolini', 'maiolini',
+        'alvorada', 'bueno', 'solmar',
+        'abc atacado', 'atacad', 'atacado',
+        'supermercado', 'supermercad', 'hipermerc',
+        'padaria', 'panificad'
+    ],
 
-        // ---- RESTAURANTES (alimentação fora de casa) ----
-        'restaurantes': [
-            'madrugadao bebidas',
-            'bfs alimentacao', 'bfs aliment',
-            'tanic mar', 'tania mar',
-            'serve pronto',
-            'cheirin', 'cheiro',
-            'assaggiare',
-            'giancarlo', 'vanderlei',
-            'jim com top', 'jim com',
-            'mach enio', 'machenio',
-            'peixe e cia', 'peixe',
-            'nippon', 'sushi',
-            'mcdonald', 'burger',
-            'pizzaria', 'pizza',
-            'churrasc', 'churrasco',
-            'restaurante', 'restaur',
-            'lanchonet',
-            'espartanos',
-            'fuganti',
-            'mineirinha',
-            'velhote',
-            'fe bar',
-            'grill',
-            'ifood', 'ifd',
-            'comida', 'food',
-            'sabor',
-            'bebida', 'cerveja',
-            'bar '
-        ],
+    // ---- RESTAURANTES ----
+    'restaurantes': [
+        'madrugadao bebidas',
+        'bfs alimentacao', 'bfs aliment',
+        'tanic mar', 'tania mar',
+        'serve pronto',
+        'cheirin bao', 'cheirin', 'cheiro',
+        'assaggiare',
+        'giancarlo', 'vanderlei',
+        'jim com top', 'jim com', 'jim',
+        'mach enio', 'machenio',
+        'peixe e cia', 'peixe',
+        'nippon', 'sushi',
+        'mcdonald', 'burger',
+        'pizzaria', 'pizza',
+        'churrasc', 'churrasco',
+        'restaurante', 'restaur',
+        'lanchonet',
+        'espartanos',
+        'fuganti',
+        'mineirinha',
+        'velhote',
+        'fe bar',
+        'grill',
+        'ifood', 'ifd',
+        'comida', 'food',
+        'sabor',
+        'miolos',
+        'bebida', 'cerveja',
+        'bar '
+    ],
 
-        // ---- TRANSPORTE ----
-        'transporte': [
-            'autopostodatorre', 'auto-posto', 'auto posto', 'autoposto',
-            'posto',
-            'combustivel', 'gasolina', 'etanol',
-            'lr transportes', 'l r transportes',
-            'estacionamento',
-            'pedagio',
-            'sem parar', 'semparar', 'veloe',
-            'uber', 'taxi', '99 '
-        ],
+    // ---- TRANSPORTE ----
+    'transporte': [
+        'autopostodatorre', 'auto-posto', 'auto posto', 'autoposto',
+        'posto',
+        'combustivel', 'gasolina', 'etanol',
+        'estacionamento',
+        'pedagio',
+        'sem parar', 'semparar', 'veloe',
+        'uber', 'taxi', '99app'
+    ],
 
-        // ---- SAÚDE ----
-        'saude': [
-            'manipulacao', 'manipulação', 'manipulac',
-            'drogasil', 'drogaria', 'driga', 'farmacia', 'farmácia', 'farmac',
-            'laborat',
-            'clinica', 'clínica',
-            'hospital',
-            'medic', 'médic',
-            'odonto', 'dentista',
-            'otica', 'ótica',
-            'wellhub',
-            'smart fit', 'smartfit',
-            'academia'
-        ],
+    // ---- SAÚDE ----
+    'saude': [
+        'manipulacao', 'manipulação', 'manipulac',
+        'drogasil', 'drogaria', 'droga',
+        'farmacia', 'farmácia', 'farmac',
+        'laborat',
+        'clinica', 'clínica',
+        'hospital',
+        'medic', 'médic',
+        'odonto', 'dentista',
+        'otica', 'ótica',
+        'wellhub',
+        'smart fit', 'smartfit',
+        'academia'
+    ],
 
-        // ---- MORADIA ----
-        'moradia': [
-            'casa do tapec', 'casa petropolis',
-            'guara compensados', 'compensados',
-            'construc', 'construção',
-            'leroy', 'telha', 'tinta',
-            'moveis', 'móveis',
-            'eletro',
-            'material',
-            'casa '
-        ],
+    // ---- MORADIA ----
+    'moradia': [
+        'casa do tapec', 'casa petropolis',
+        'guara compensados', 'compensados',
+        'construc', 'construção',
+        'leroy', 'telha', 'tinta',
+        'moveis', 'móveis',
+        'eletro',
+        'material',
+        'casa '
+    ],
 
-        // ---- EDUCAÇÃO ----
-        'educacao': [
-            'universidade', 'faculdade',
-            'colegio', 'colégio',
-            'escola',
-            'hotmart', 'udemy', 'alura',
-            'livraria', 'livro',
-            'curso', 'ensino'
-        ],
+    // ---- EDUCAÇÃO ----
+    'educacao': [
+        'marista',
+        'universidade', 'faculdade',
+        'colegio', 'colégio',
+        'escola',
+        'hotmart', 'udemy', 'alura',
+        'livraria', 'livro',
+        'curso', 'ensino'
+    ],
 
-        // ---- LAZER ----
-        'lazer': [
-            'amazon music', 'amazon prime',
-            'prime video',
-            'crunchyroll', 'paramount',
-            'globoplay',
-            'netflix', 'spotify', 'deezer',
-            'disney', 'hbo', 'max ',
-            'cinema', 'cinemark',
-            'playstation', 'xbox', 'nintendo',
-            'ingresso', 'show ', 'teatro',
-            'hotel', 'pousada', 'viagem',
-            'elegance', 'ks eventos',
-            'streaming', 'game'
-        ],
+    // ---- LAZER ----
+    // Observação: 'amazon prime', 'amazon music' e 'deezer' foram movidos para 'streaming'.
+    'lazer': [
+        'prime video',
+        'crunchyroll', 'paramount',
+        'globoplay',
+        'netflix', 'spotify',
+        'disney', 'hbo', 'max ',
+        'cinema', 'cinemark',
+        'playstation', 'xbox', 'nintendo',
+        'ingresso', 'show ', 'teatro',
+        'elegance', 'ks eventos',
+        'streaming', 'game'
+    ],
 
-        // ---- VESTUÁRIO ----
-        'vestuario': [
-            'mercado da moda',
-            'hortela tricot', 'hortelã tricot',
-            'loja unanime', 'unanime',
-            'edegenius', 'jeans',
-            'riachuelo', 'renner', 'c&a', 'ce a', 'zara',
-            'hering', 'colcci',
-            'oakley', 'nike', 'adidas', 'puma',
-            'calcado', 'calçado', 'sapat',
-            'tenis', 'tênis',
-            'roupa', 'moda',
-            'basari'
-        ],
+    // ---- VESTUÁRIO ----
+    'vestuario': [
+        'mercado da moda',
+        'hortela tricot', 'hortelã tricot',
+        'loja unanime', 'unanime',
+        'edegenius', 'jeans',
+        'riachuelo', 'renner', 'c&a', 'ce a', 'zara',
+        'hering', 'colcci',
+        'oakley', 'nike', 'adidas', 'puma',
+        'calcado', 'calçado', 'sapat',
+        'tenis', 'tênis',
+        'roupa', 'moda',
+        'basari'
+    ],
 
-        // ---- SERVIÇOS ----
-        'servicos': [
-            'auto eletrico', 'auto elétrico',
-            'oficina', 'mecanic', 'mecânic',
-            'sodiba',
-            'net pgt', 'net ',
-            'claro', 'vivo', 'tim ', 'oi ',
-            'internet', 'telefone', 'celular',
-            'porto seguro', 'mapfre', 'seguro',
-            'cpfl', 'energia',
-            'agua', 'água', 'gas ', 'gás ',
-            'iptu', 'condominio', 'condomínio',
-            'anuidade',
-            'apple.com', 'apple com',
-            'microsoft', 'adobe', 'google',
-            'conta ', 'fatura'
-        ],
+    // ---- SERVIÇOS ----
+    'servicos': [
+        'auto eletrico', 'auto elétrico',
+        'oficina', 'mecanic', 'mecânic',
+        'sodiba',
+        'net pgt', 'net ',
+        'claro', 'vivo', 'tim ', 'oi ',
+        'internet', 'telefone', 'celular',
+        'porto seguro', 'mapfre', 'seguro',
+        'cpfl', 'energia',
+        'agua', 'água', 'gas ', 'gás ',
+        'iptu', 'condominio', 'condomínio',
+        'anuidade',
+        'apple.com', 'apple com',
+        'microsoft', 'adobe', 'google',
+        'conta ', 'fatura'
+    ],
 
-        // ---- PRESENTES ----
-        'presentes': [
-            'etc e tal',
-            'presente',
-            'flor', 'floresta'
-        ],
+    // ---- PRESENTES ----
+    'presentes': [
+        'etc e tal',
+        'presente',
+        'flor', 'floresta'
+    ],
 
-        // ---- INVESTIMENTOS ----
-        'investimentos': [
-            'investimento', 'tesouro', 'poupanca', 'poupança',
-            'cdb', 'acao', 'ação', 'fundo'
-        ],
+    // ---- INVESTIMENTOS ----
+    'investimentos': [
+        'investimento', 'tesouro', 'poupanca', 'poupança',
+        'cdb', 'acao', 'ação', 'fundo'
+    ],
 
-        // ---- RECEITAS ----
-        'salario': [
-            'pagamento salario', 'holerite', 'salario', 'salário'
-        ],
-        'freelance': [
-            'servico prestado', 'serviço prestado',
-            'freelance', 'freela'
-        ]
-    };
+    // ---- HOSPEDAGEM ----
+    'hospedagem': [
+        'hotel', 'pousada', 'hostel',
+        'apcef', 'solar das águas', 'solar das aguas'
+    ],
+
+    // ---- STREAMING ----
+    'streaming': [
+        'amazon prime', 'amazon music',
+        'dl google', 'deezer'
+    ],
+
+    // ---- RECEITAS ----
+    'salario': [
+        'pagamento salario', 'holerite', 'salario', 'salário'
+    ],
+    'freelance': [
+        'servico prestado', 'serviço prestado',
+        'freelance', 'freela'
+    ],
+    'proventos': [
+        'provento', 'dividendo', 'jcp', 'juros sobre capital',
+        'rendimento', 'rendimentos'
+    ]
+};
 
     // ========== ESTADO ==========
     let periodMode = 'standard';
