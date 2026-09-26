@@ -56,14 +56,21 @@
         </div>
 
         <div class="tab-content active" id="transactions-tab">
-            <div class="import-section">
-                <div class="import-info">
-                    <h3><i class="fas fa-file-import"></i> Importar Fatura</h3>
-                    <p>Envie o arquivo <strong>faturaDDMMAAAA.txt</strong> com os lançamentos da fatura</p>
-                </div>
-                <button class="import-btn" id="importBtn"><i class="fas fa-upload"></i> Selecionar Arquivo</button>
-                <input type="file" id="importFile" accept=".txt" style="display: none;">
-            </div>
+<div class="import-section">
+    <div class="import-info">
+        <h3><i class="fas fa-file-import"></i> Importar Fatura</h3>
+        <p>Envie o arquivo <strong>faturaDDMMAAAA.txt</strong></p>
+    </div>
+    <div class="import-buttons">
+        <button class="import-btn" id="importClosedBtn">
+            <i class="fas fa-lock"></i> Fechada
+        </button>
+        <button class="import-btn" id="importOpenBtn">
+            <i class="fas fa-lock-open"></i> Aberta
+        </button>
+    </div>
+    <input type="file" id="importFile" accept=".txt" style="display: none;">
+</div>
 
             <div class="import-feedback" id="importFeedback"></div>
 
