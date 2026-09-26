@@ -148,6 +148,20 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
 .transactions-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
 .transactions-header h2 { margin-bottom: 0; }
 .transactions-header .count-badge { background: var(--accent-blue); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+/* ---- Ações do cabeçalho de Lançamentos do Período ---- */
+.transactions-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.clear-period-btn {
+    width: auto;
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 20px;
+    margin: 0;
+}
 
 .transactions ul { list-style: none; padding: 0; }
 .transactions li { padding: 15px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; transition: background 0.3s ease; color: var(--text-primary); }
