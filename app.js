@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const themeIcon = document.getElementById('themeIcon');
     const themeColorMeta = document.getElementById('themeColorMeta');
 
-    const importBtn = document.getElementById('importBtn');
+    //const importBtn = document.getElementById('importBtn');
     const importFile = document.getElementById('importFile');
     const importFeedback = document.getElementById('importFeedback');
     const reviewModal = document.getElementById('reviewModal');
@@ -84,6 +84,7 @@ const DEFAULT_CATEGORIES = [
     { id: 'educacao', name: 'Educação', type: 'despesa', color: '#1abc9c' },
     { id: 'vestuario', name: 'Vestuário', type: 'despesa', color: '#d35400' },
     { id: 'servicos', name: 'Serviços', type: 'despesa', color: '#7f8c8d' },
+    { id: 'veiculo', name: 'Veículo', type: 'despesa', color: '#34495e' },
     { id: 'hospedagem', name: 'Hospedagem', type: 'despesa', color: '#16a085' },
     { id: 'streaming', name: 'Streaming', type: 'despesa', color: '#8e44ad' },
     { id: 'catarse-h-s', name: 'Catarse H S', type: 'despesa', color: '#c0392b' },
@@ -160,7 +161,7 @@ const CATEGORY_TAGS = {
         'sabor',
         'miolos',
         'bebida', 'cerveja',
-        'bar '
+        'bar ', 'sorveteria', 'chocolate', 'parrilla', 'senor brasa', 'predileta'
     ],
 
     // ---- TRANSPORTE ----
@@ -239,8 +240,8 @@ const CATEGORY_TAGS = {
         'oakley', 'nike', 'adidas', 'puma',
         'calcado', 'calçado', 'sapat',
         'tenis', 'tênis',
-        'roupa', 'moda',
-        'basari'
+        'roupa', 'moda'
+
     ],
 
     // ---- SERVIÇOS ----
@@ -260,7 +261,14 @@ const CATEGORY_TAGS = {
         'microsoft', 'adobe', 'google',
         'conta ', 'fatura'
     ],
-
+// ---- VEÍCULO ----
+'veiculo': [
+    'basari',
+    'concessionaria', 'veiculo', 'carro', 'moto',
+    'pneu', 'ipva', 'licenciamento',
+    'auto pecas', 'autopecas'
+],
+    
     // ---- PRESENTES ----
     'presentes': [
         'etc e tal',
@@ -308,6 +316,7 @@ const CATEGORY_TAGS = {
     let isListening = false;
     let importPreview = null;
     let currentDueDate = null;
+    let importType = 'fechada';
 
     // ========== TEMA ==========
     function applyTheme(theme) {
@@ -728,16 +737,25 @@ function generateId() {
         return noiseKeywords.some(k => d.includes(k));
     }
 
-    function extractInstallment(description) {
-        const m = description.match(/^(.+?)\s+(\d{2})\s+DE\s+(\d{2})\s+(.+)$/i);
-        if (m) {
-            return {
-                description: `${m[1].trim()} ${m[4].trim()}`,
-                installment: `${m[2]}/${m[3]}`
-            };
-        }
-        return { description, installment: null };
+function extractInstallment(description) {
+    // Formato fechada: "DESC 02 DE 07"
+    let m = description.match(/^(.+?)\s+(\d{2})\s+DE\s+(\d{2})\s+(.+)$/i);
+    if (m) {
+        return {
+            description: `${m[1].trim()} ${m[4].trim()}`,
+            installment: `${m[2]}/${m[3]}`
+        };
     }
+    // Formato aberta: "DESC 02 07" (dois números no final, 2 dígitos cada)
+    m = description.match(/^(.+?)\s+(\d{2})\s+(\d{2})$/);
+    if (m) {
+        return {
+            description: m[1].trim(),
+            installment: `${m[2]}/${m[3]}`
+        };
+    }
+    return { description, installment: null };
+}
 
     function parseHolderLine(line) {
         const l = line.trim();
@@ -784,6 +802,168 @@ function generateId() {
             type: m[5].toUpperCase() === 'D' ? 'despesa' : 'receita'
         };
     }
+
+    function parseOpenTransactionLine(line) {
+    // Linhas da fatura aberta usam TAB como separador:
+    // "DD/MM\tDESCRITIVO\t[CRÉDITO]\t[DÉBITO]"
+    const parts = line.split('\t');
+    if (parts.length < 3) return null;
+
+    const datePart = parts[0].trim();
+    const dateMatch = datePart.match(/^(\d{2})\/(\d{2})$/);
+    if (!dateMatch) return null;
+
+    const description = parts[1].trim();
+    if (!description) return null;
+
+    // Valor: pode estar na coluna de crédito ou de débito.
+    // Pode ter espaços extras ou vir vazio.
+    let creditoStr = (parts[2] || '').trim();
+    let debitoStr = (parts[3] || '').trim();
+
+    // Normaliza "1.234,56" -> 1234.56
+    function parseBRL(s) {
+        if (!s) return null;
+        const cleaned = s.replace(/\./g, '').replace(',', '.');
+        const v = parseFloat(cleaned);
+        return isNaN(v) ? null : v;
+    }
+
+    const credito = parseBRL(creditoStr);
+    const debito = parseBRL(debitoStr);
+
+    if (credito === null && debito === null) return null;
+
+    // Crédito = receita; débito = despesa
+    let type, amount;
+    if (debito !== null && debito > 0) {
+        type = 'despesa';
+        amount = debito;
+    } else if (credito !== null && credito > 0) {
+        type = 'receita';
+        amount = credito;
+    } else {
+        return null;
+    }
+
+    return {
+        day: parseInt(dateMatch[1]),
+        month: parseInt(dateMatch[2]) - 1,
+        description,
+        amount,
+        type
+    };
+}
+
+    function parseOpenHolderLine(line) {
+    // Formatos aceitos:
+    // "RODRIGO ALVES PRADO - 651677XXXXXX8411"
+    // "Seta  RODRIGO ALVES PRADO - 651677XXXXXX8411"
+    const m = line.match(/^(?:Seta\s+)?(.+?)\s*-\s*651677XXXXXX(\d+)\s*$/i);
+    if (!m) return null;
+    return { name: m[1].trim(), cardNumber: m[2].trim() };
+}
+
+    function isIgnoredOpenLine(line) {
+    const l = line.trim();
+    if (!l) return true;
+    if (l === 'Movimentações Internacionais') return true;
+    if (l === 'Movimentações Nacionais em Reais (R$)') return true;
+    if (l === 'Movimentações Nacionais em Reais (R$)' ) return true; // redundância inofensiva
+    if (l === '* Não foram encontrados lançamentos') return true;
+    if (l.startsWith('DATA\tDESCRITIVO')) return true;
+    if (l.startsWith('DATA DESCRITIVO')) return true; // caso venha com espaços
+    return false;
+}
+
+function processOpenInvoiceFile(content, dueInfo) {
+    const lines = content.split(/\r?\n/);
+    const transactions = [];
+    const validation = {
+        totalCount: 0,
+        totalDespesas: 0,
+        totalReceitas: 0,
+        netCalculated: 0,
+        declaredTotal: null,     // não há no arquivo aberto
+        perCard: {}
+    };
+
+    const anoVenc = dueInfo.year;
+    const mesVenc = dueInfo.month;
+
+    let currentHolder = null;
+    let currentCard = null;
+
+    for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        const line = raw.replace(/\s+$/, ''); // remove espaços no fim, preserva TABs
+        if (isIgnoredOpenLine(line)) continue;
+
+        // Cabeçalho de portador/cartão
+        const holderInfo = parseOpenHolderLine(line.trim());
+        if (holderInfo) {
+            currentHolder = holderInfo.name;
+            currentCard = holderInfo.cardNumber;
+            if (!validation.perCard[currentCard]) {
+                validation.perCard[currentCard] = { holder: currentHolder, count: 0, total: 0 };
+            }
+            continue;
+        }
+
+        // Linha de transação
+        const tx = parseOpenTransactionLine(line);
+        if (!tx) continue;
+
+        // Extrai parcela, se houver
+        const { description: cleanDesc, installment } = extractInstallment(tx.description);
+
+        // Cálculo de data
+        let year = anoVenc;
+        if (tx.month > mesVenc) year = anoVenc - 1; // mês maior que vencimento => ano anterior
+
+        const date = new Date(year, tx.month, tx.day);
+        const dataCompraStr = `${String(tx.day).padStart(2,'0')}/${String(tx.month + 1).padStart(2,'0')}`;
+
+        // Descrição final: igual à fechada, mas sem "cidade" (não tem no arquivo)
+        const finalDescription = installment
+            ? `${cleanDesc} (${dataCompraStr} - ${installment})`
+            : `${cleanDesc} (${dataCompraStr})`;
+
+        const categoryId = categorizeDescription(cleanDesc);
+
+        const transaction = {
+            id: generateId(),
+            description: finalDescription,
+            amount: tx.amount,
+            type: tx.type,
+            category: categoryId,
+            date: formatDateToDisplay(date),
+            timestamp: date.getTime(),
+            month: date.getMonth(),
+            year: date.getFullYear(),
+            holder: currentHolder,
+            cardNumber: currentCard,
+            installment: installment
+        };
+
+        transactions.push(transaction);
+        validation.totalCount++;
+        if (tx.type === 'receita') validation.totalReceitas += tx.amount;
+        else validation.totalDespesas += tx.amount;
+
+        if (currentCard && validation.perCard[currentCard]) {
+            validation.perCard[currentCard].count++;
+            validation.perCard[currentCard].total += tx.amount;
+        }
+    }
+
+    validation.netCalculated = validation.totalDespesas - validation.totalReceitas;
+    return { transactions, validation };
+}
+
+function countPeriodTransactions() {
+    return getPeriodTransactions().length;
+}
 
     function categorizeDescription(description) {
         const d = description.toLowerCase();
@@ -916,33 +1096,64 @@ function generateId() {
         return { transactions, validation };
     }
 
-    function handleImportFile(file) {
-        if (!file) return;
-        const dueInfo = extractDueDateFromFilename(file.name);
-        if (!dueInfo) {
-            showImportFeedback('error', 'Nome do arquivo inválido. Esperado: faturaDDMMAAAA.txt (ex: fatura23092026.txt)');
-            return;
-        }
-        currentDueDate = dueInfo;
+function handleImportFile(file, type) {
+    if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const { transactions: parsed, validation } = processInvoiceFile(e.target.result);
-                if (parsed.length === 0) {
-                    showImportFeedback('error', 'Nenhum lançamento encontrado. Verifique o formato.');
+    const dueInfo = extractDueDateFromFilename(file.name);
+    if (!dueInfo) {
+        showImportFeedback('error', 'Nome do arquivo inválido. Esperado: faturaDDMMAAAA.txt (ex: fatura23092026.txt)');
+        return;
+    }
+    currentDueDate = dueInfo;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            let parsed, validation;
+
+            if (type === 'aberta') {
+                ({ transactions: parsed, validation } = processOpenInvoiceFile(e.target.result, dueInfo));
+            } else {
+                ({ transactions: parsed, validation } = processInvoiceFile(e.target.result));
+            }
+
+            if (!parsed || parsed.length === 0) {
+                showImportFeedback('error', 'Nenhum lançamento encontrado. Verifique o formato.');
+                return;
+            }
+
+            // ---- Alerta de duplicidade no período aberto na tela ----
+            const existingCount = getPeriodTransactions().length;
+            if (existingCount > 0) {
+                const label = currentPeriodElement.textContent || 'período atual';
+                const plural = existingCount === 1 ? 'lançamento' : 'lançamentos';
+                const ok = confirm(
+                    `Já existem ${existingCount} ${plural} no período "${label}".\n\n` +
+                    `Deseja apagar TODOS os lançamentos desse período e prosseguir com a importação?`
+                );
+                if (!ok) {
+                    showImportFeedback('error', 'Importação cancelada pelo usuário.');
                     return;
                 }
-                importPreview = { transactions: parsed, validation };
-                openReviewModal();
-            } catch (err) {
-                console.error(err);
-                showImportFeedback('error', 'Erro ao processar: ' + err.message);
+                // Apaga os lançamentos do período aberto na tela
+                const idsToRemove = new Set(getPeriodTransactions().map(t => String(t.id)));
+                transactions = transactions.filter(t => !idsToRemove.has(String(t.id)));
+                saveTransactions();
+                renderTransactions();
+                updateSummary();
+                renderHolderTotals();
             }
-        };
-        reader.onerror = function() { showImportFeedback('error', 'Erro ao ler o arquivo.'); };
-        reader.readAsText(file, 'UTF-8');
-    }
+
+            importPreview = { transactions: parsed, validation, type };
+            openReviewModal();
+        } catch (err) {
+            console.error(err);
+            showImportFeedback('error', 'Erro ao processar: ' + err.message);
+        }
+    };
+    reader.onerror = function() { showImportFeedback('error', 'Erro ao ler o arquivo.'); };
+    reader.readAsText(file, 'UTF-8');
+}
 
     function showToast(message, type) {
     let container = document.getElementById('toastContainer');
@@ -974,10 +1185,13 @@ function generateId() {
 
     function openReviewModal() {
         const { transactions, validation } = importPreview;
-        reviewSummary.innerHTML = `
-            <span><strong>${transactions.length}</strong> lançamentos</span>
-            <span>Vencimento: <strong>${String(currentDueDate.day).padStart(2,'0')}/${String(currentDueDate.month+1).padStart(2,'0')}/${currentDueDate.year}</strong></span>
-        `;
+const tipoLabel = importPreview.type === 'aberta' ? 'Aberta' : 'Fechada';
+document.querySelector('#reviewModal .review-header h2').innerHTML =
+    `<i class="fas fa-clipboard-check"></i> Revisar Lançamentos da Fatura ${tipoLabel}`;
+reviewSummary.innerHTML = `
+    <span><strong>${transactions.length}</strong> lançamentos</span>
+    <span>Vencimento: <strong>${String(currentDueDate.day).padStart(2,'0')}/${String(currentDueDate.month+1).padStart(2,'0')}/${currentDueDate.year}</strong></span>
+`;
         renderValidationInfo(validation);
         renderReviewTable(transactions);
         updateReviewTotal();
@@ -986,6 +1200,33 @@ function generateId() {
     }
 
     function renderValidationInfo(validation) {
+            // Validação simplificada para fatura aberta
+    if (validation && validation.totalCount !== undefined && validation.declaredTotal === null) {
+        let html = '<div class="v-header"><i class="fas fa-calculator"></i> Resumo da Fatura Aberta</div>';
+        html += `<div class="v-row"><span class="label">Total de lançamentos:</span><span class="value">${validation.totalCount}</span></div>`;
+        html += `<div class="v-row"><span class="label">Total de despesas:</span><span class="value" style="color:var(--accent-red)">${fmtBRL(validation.totalDespesas)}</span></div>`;
+        html += `<div class="v-row"><span class="label">Total de receitas/créditos:</span><span class="value" style="color:var(--accent-green)">${fmtBRL(validation.totalReceitas)}</span></div>`;
+        html += `<div class="v-divider"></div>`;
+        html += `<div class="v-row"><span class="label"><strong>Líquido (despesas − créditos):</strong></span><span class="value"><strong>${fmtBRL(validation.netCalculated)}</strong></span></div>`;
+
+        // Totais por cartão (opcional)
+        const cardEntries = Object.entries(validation.perCard || {});
+        if (cardEntries.length > 0) {
+            html += '<div class="v-divider"></div>';
+            html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Por cartão:</div>';
+            cardEntries.forEach(([card, data]) => {
+                html += `<div class="v-row" style="font-size:12px;">
+                    <span class="label">Cartão ${card} (${escapeHtml(data.holder || '')}):</span>
+                    <span class="value">${data.count} lanç. — ${fmtBRL(data.total)}</span>
+                </div>`;
+            });
+        }
+
+        validationInfo.innerHTML = html;
+        return;
+    }
+
+    // ---- Validação da fatura fechada (código atual) ----
         let html = '';
         html += '<div class="v-header"><i class="fas fa-calculator"></i> Validação da Fatura</div>';
 
@@ -1181,11 +1422,22 @@ function generateId() {
     // ========== EVENT LISTENERS ==========
     function setupEventListeners() {
         themeToggle.addEventListener('click', toggleTheme);
-        importBtn.addEventListener('click', () => importFile.click());
-        importFile.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) handleImportFile(file);
-        });
+const importClosedBtn = document.getElementById('importClosedBtn');
+const importOpenBtn = document.getElementById('importOpenBtn');
+
+importClosedBtn.addEventListener('click', () => {
+    importType = 'fechada';
+    importFile.click();
+});
+importOpenBtn.addEventListener('click', () => {
+    importType = 'aberta';
+    importFile.click();
+});
+importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleImportFile(file, importType);
+    importFile.value = ''; // permite reimportar o mesmo arquivo
+});
         cancelImportBtn.addEventListener('click', closeReviewModal);
         confirmImportBtn.addEventListener('click', confirmImport);
         document.getElementById('clearPeriodBtn').addEventListener('click', clearPeriodTransactions);
