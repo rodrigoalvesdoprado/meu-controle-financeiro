@@ -235,32 +235,6 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
 .import-section .import-info p { font-size: 13px; opacity: 0.9; margin: 0; }
 .import-section button.import-btn { width: auto; background: white; color: var(--accent-blue); font-weight: bold; padding: 12px 22px; flex-shrink: 0; margin: 0; }
 .import-section button.import-btn:hover { background: #f0f0f0; transform: translateY(-2px); color: var(--accent-blue); }
-/* ---- Botões de importação (fechada / aberta) ---- */
-.import-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-.import-section button.import-btn {
-    width: auto;
-    background: white;
-    color: var(--accent-blue);
-    font-weight: bold;
-    padding: 12px 22px;
-    flex-shrink: 0;
-    margin: 0;
-    transition: all 0.2s ease;
-}
-.import-section button.import-btn:hover {
-    background: #f0f0f0;
-    transform: translateY(-2px);
-}
-#importOpenBtn {
-    color: var(--accent-purple);
-}
-#importOpenBtn:hover {
-    color: var(--accent-purple);
-}
 
 .import-feedback { display: none; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; align-items: center; gap: 10px; border-left: 4px solid; }
 .import-feedback.show { display: flex; }
