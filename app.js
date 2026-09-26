@@ -364,6 +364,13 @@ const CATEGORY_TAGS = {
         if (!str) return '';
         return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]);
     }
+    // Gera um id único. Usa crypto.randomUUID quando disponível; senão, fallback.
+function generateId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+    }
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
     function fmtBRL(v) {
         return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
@@ -886,7 +893,8 @@ const CATEGORY_TAGS = {
             }
 
             const transaction = {
-                id: Date.now() + Math.random() + Math.random(),
+                //id: Date.now() + Math.random() + Math.random(),
+                id: generateId(),
                 description: finalDescription,
                 amount: tx.amount,
                 type: tx.type,
@@ -936,6 +944,28 @@ const CATEGORY_TAGS = {
         reader.readAsText(file, 'UTF-8');
     }
 
+    function showToast(message, type) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + (type === 'error' ? 'toast-error' : 'toast-success');
+    toast.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i> <span>${escapeHtml(message)}</span>`;
+    container.appendChild(toast);
+
+    // Força o navegador a "ver" o elemento antes de animar
+    requestAnimationFrame(() => toast.classList.add('show'));
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
+    
     function showImportFeedback(type, message) {
         importFeedback.className = 'import-feedback show ' + type;
         importFeedback.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
@@ -1101,7 +1131,8 @@ const CATEGORY_TAGS = {
             if (!date || !desc || isNaN(amount)) return;
             const holder = holders.find(h => h.id === holderId);
             collected.push({
-                id: Date.now() + Math.random() + idx,
+                //id: Date.now() + Math.random() + idx,
+                id: generateId(),
                 description: desc, amount, type, category: cat,
                 date: formatDateToDisplay(date),
                 timestamp: date.getTime(),
@@ -1262,6 +1293,26 @@ const CATEGORY_TAGS = {
         }
         voiceBtn.addEventListener('click', toggleListening);
         voiceStatusClose.addEventListener('click', () => { stopListening(); hideVoiceStatus(); });
+        // ---- Edição inline de categoria na lista de Lançamentos ----
+transactionsList.addEventListener('click', (e) => {
+    const badge = e.target.closest('.category-badge.clickable');
+    if (!badge) return;
+    // Evita abrir dois selects ao mesmo tempo
+    if (transactionsList.querySelector('.tx-category-select')) return;
+    openCategoryInlineEditor(badge);
+});
+
+transactionsList.addEventListener('change', (e) => {
+    const sel = e.target.closest('.tx-category-select');
+    if (!sel) return;
+    updateTransactionCategory(sel.getAttribute('data-id'), sel.value);
+});
+
+transactionsList.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && e.target.classList.contains('tx-category-select')) {
+        e.target.blur();
+    }
+});
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && reviewModal.classList.contains('show')) closeReviewModal();
         });
@@ -1286,7 +1337,8 @@ const CATEGORY_TAGS = {
     // ========== TRANSAÇÕES ==========
     function addTransaction(description, amount, type, category, date, holderName, holderId) {
         transactions.push({
-            id: Date.now() + Math.random(),
+            //id: Date.now() + Math.random(),
+            id: generateId(),
             description, amount, type, category,
             date: formatDateToDisplay(date),
             timestamp: date.getTime(),
@@ -1312,43 +1364,123 @@ const CATEGORY_TAGS = {
 
     function saveTransactions() { localStorage.setItem('transactions', JSON.stringify(transactions)); }
 
-    function renderTransactions() {
-        transactionsList.innerHTML = '';
-        const period = getPeriodTransactions();
+function renderTransactions() {
+    transactionsList.innerHTML = '';
+    const period = getPeriodTransactions();
 
-        transactionsCountEl.textContent = period.length === 1
-            ? '1 lançamento'
-            : `${period.length} lançamentos`;
+    transactionsCountEl.textContent = period.length === 1
+        ? '1 lançamento'
+        : `${period.length} lançamentos`;
 
-        if (period.length === 0) {
-            transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma transação cadastrada para este período</p></div>`;
-            return;
-        }
-        [...period].sort((a, b) => b.timestamp - a.timestamp).forEach(tx => {
-            const li = document.createElement('li');
-            const cat = categories.find(c => c.id === tx.category);
-            const catColor = cat ? cat.color : '#95a5a6';
-            const catName = cat ? cat.name : tx.category;
-            const holderHtml = tx.holder ? `<span class="holder-badge"><i class="fas fa-user"></i> ${escapeHtml(tx.holder)}</span>` : '';
-            li.innerHTML = `
-                <div class="transaction-info">
-                    <strong>${escapeHtml(tx.description)}</strong>
-                    <small>
-                        <span class="category-badge" style="background-color: ${catColor}">${catName}</span>
-                        ${holderHtml}
-                        • ${tx.date}
-                    </small>
-                </div>
-                <div class="transaction-amount" style="color: ${tx.type === 'receita' ? 'var(--accent-green)' : 'var(--accent-red)'}">
-                    ${tx.type === 'receita' ? '+' : '-'} R$ ${tx.amount.toFixed(2)}
-                </div>
-                <div class="transaction-actions">
-                    <button class="danger" onclick="window.deleteTransaction(${tx.id})"><i class="fas fa-trash"></i></button>
-                </div>
-            `;
-            transactionsList.appendChild(li);
-        });
+    if (period.length === 0) {
+        transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma transação cadastrada para este período</p></div>`;
+        return;
     }
+
+    [...period].sort((a, b) => b.timestamp - a.timestamp).forEach(tx => {
+        const li = document.createElement('li');
+        const cat = categories.find(c => c.id === tx.category);
+        const catColor = cat ? cat.color : '#95a5a6';
+        const catName = cat ? cat.name : tx.category;
+        const holderHtml = tx.holder ? `<span class="holder-badge"><i class="fas fa-user"></i> ${escapeHtml(tx.holder)}</span>` : '';
+
+        li.innerHTML = `
+            <div class="transaction-info">
+                <strong>${escapeHtml(tx.description)}</strong>
+                <small>
+                    <span class="category-badge clickable"
+                          style="background-color: ${catColor}"
+                          data-id="${escapeHtml(String(tx.id))}"
+                          data-cat="${escapeHtml(tx.category)}"
+                          data-type="${tx.type}"
+                          title="Clique para editar a categoria">${escapeHtml(catName)}</span>
+                    ${holderHtml}
+                    • ${tx.date}
+                </small>
+            </div>
+            <div class="transaction-amount" style="color: ${tx.type === 'receita' ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                ${tx.type === 'receita' ? '+' : '-'} R$ ${tx.amount.toFixed(2)}
+            </div>
+            <div class="transaction-actions">
+                <button class="danger" onclick="window.deleteTransaction('${escapeHtml(String(tx.id))}')"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        transactionsList.appendChild(li);
+    });
+}
+
+function updateTransactionCategory(id, newCategoryId) {
+    const tx = transactions.find(t => String(t.id) === String(id));
+    if (!tx) return;
+    if (tx.category === newCategoryId) return; // nada mudou
+
+    const cat = categories.find(c => c.id === newCategoryId);
+    if (!cat) return;
+
+    // Regra: só aceita categoria do mesmo tipo da transação.
+    if (cat.type !== tx.type) {
+        showToast('Categoria incompatível com o tipo do lançamento.', 'error');
+        return;
+    }
+
+    tx.category = newCategoryId;
+    saveTransactions();
+
+    renderTransactions();
+    updateSummary();
+    renderHolderTotals();
+
+    const rt = document.getElementById('reports-tab');
+    if (rt && rt.classList.contains('active')) {
+        renderCharts();
+    }
+
+    showToast('Categoria atualizada.', 'success');
+}
+
+function openCategoryInlineEditor(badge) {
+    const id = badge.getAttribute('data-id');
+    const currentCat = badge.getAttribute('data-cat');
+    const type = badge.getAttribute('data-type');
+
+    // Monta as opções — só categorias do mesmo tipo
+    const options = categories
+        .filter(c => c.type === type)
+        .map(c => `<option value="${escapeHtml(c.id)}" ${c.id === currentCat ? 'selected' : ''}>${escapeHtml(c.name)}</option>`)
+        .join('');
+
+    const select = document.createElement('select');
+    select.className = 'tx-category-select';
+    select.setAttribute('data-id', id);
+    select.innerHTML = options;
+
+    // Substitui o badge pelo select
+    badge.replaceWith(select);
+    select.focus();
+
+    // Abre o dropdown quando o navegador suportar
+    if (typeof select.showPicker === 'function') {
+        try { select.showPicker(); } catch (_) { /* alguns navegadores exigem gesto do usuário */ }
+    }
+
+    // Se perder o foco sem mudar, volta a ser badge
+    select.addEventListener('blur', () => {
+        if (!select.isConnected) return;
+        // Se ainda está no DOM, foi blur sem change → restaura badge
+        const cat = categories.find(c => c.id === currentCat);
+        const catColor = cat ? cat.color : '#95a5a6';
+        const catName = cat ? cat.name : currentCat;
+        const span = document.createElement('span');
+        span.className = 'category-badge clickable';
+        span.style.backgroundColor = catColor;
+        span.setAttribute('data-id', id);
+        span.setAttribute('data-cat', currentCat);
+        span.setAttribute('data-type', type);
+        span.setAttribute('title', 'Clique para editar a categoria');
+        span.textContent = catName;
+        select.replaceWith(span);
+    });
+}
 
     function updateSummary() {
         const period = getPeriodTransactions();
