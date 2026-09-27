@@ -723,4 +723,37 @@ select.tx-category-select:focus {
         justify-content: center;
     }
 }
+
+    /* ---- Cabeçalhos clicáveis da tabela de revisão ---- */
+.review-table th.review-th.sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+.review-table th.review-th.sortable:hover {
+    color: var(--accent-blue);
+    background: var(--surface-hover);
+}
+.review-table th.review-th.sortable.active {
+    color: var(--accent-blue);
+}
+.review-table th.review-th.sortable .sort-arrow {
+    font-size: 10px;
+    margin-left: 2px;
+}
+
+@media (max-width: 768px) {
+    /* No mobile a tabela vira cards; o cabeçalho não aparece */
+    .review-table thead { display: none; }
+
+    /* Controle de ordenação alternativo que aparece só no mobile */
+    .review-mobile-sort {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+}
+    
 }
