@@ -325,6 +325,9 @@ const CATEGORY_TAGS = {
     let holderDetailSortDir   = localStorage.getItem('holderDetailSortDir')   || 'desc';
     let holderDetailState     = null; // { holder, cardNumber, txs } do último clique
 
+    let reviewSortField = localStorage.getItem('reviewSortField') || 'date';
+    let reviewSortDir   = localStorage.getItem('reviewSortDir')   || 'asc';
+
     // ========== TEMA ==========
     function applyTheme(theme) {
         if (theme === 'dark') {
@@ -1039,73 +1042,158 @@ function generateId() {
         validationInfo.innerHTML = html;
     }
 
-    function renderReviewTable(transactions) {
-        const categoryOptions = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        const holderOptions = holders.map(h => `<option value="${h.id}" ${!h.active ? 'disabled' : ''}>${h.name}${!h.active ? ' (excluído)' : ''}</option>`).join('');
+// Lê os valores atuais da tabela e grava de volta em importPreview.transactions,
+// para que a ordenação não descarte edições do usuário.
+function syncPreviewFromDOM() {
+    if (!importPreview) return;
+    const rows = reviewTableContainer.querySelectorAll('tr[data-txid]');
+    rows.forEach(row => {
+        const txid = row.getAttribute('data-txid');
+        const tx = importPreview.transactions.find(t => String(t.id) === String(txid));
+        if (!tx) return;
 
-        let html = '<table class="review-table"><thead><tr>';
-        html += '<th class="col-date">Data</th><th class="col-desc">Descrição</th><th class="col-amount">Valor</th>';
-        html += '<th class="col-cat">Categoria</th><th class="col-holder">Portador</th><th class="col-type">Tipo</th><th class="col-actions"></th>';
-        html += '</tr></thead><tbody>';
+        const dateStr = row.querySelector('.review-date').value;
+        const desc = row.querySelector('.review-desc').value;
+        const amount = parseFloat(row.querySelector('.review-amount').value);
+        const cat = row.querySelector('.review-cat').value;
+        const holderId = row.querySelector('.review-holder').value;
+        const type = row.querySelector('.review-type').value;
 
-        transactions.forEach((tx, idx) => {
-            const isLow = tx.category === 'outros';
-            html += `<tr class="${isLow ? 'row-low-confidence' : ''}" data-idx="${idx}">`;
-            html += `<td class="col-date" data-label="Data"><input type="date" class="review-date" data-idx="${idx}" value="${formatDateToString(new Date(tx.timestamp))}"></td>`;
-            html += `<td class="col-desc" data-label="Descrição"><input type="text" class="review-desc" data-idx="${idx}" value="${escapeHtml(tx.description)}"></td>`;
-            html += `<td class="col-amount" data-label="Valor"><input type="number" step="0.01" min="0" class="review-amount amount-field" data-idx="${idx}" value="${tx.amount.toFixed(2)}"></td>`;
-            html += `<td class="col-cat" data-label="Categoria"><select class="review-cat" data-idx="${idx}"><option value="${tx.category}" selected>${getCategoryName(tx.category)}</option>${categoryOptions}</select></td>`;
-            html += `<td class="col-holder" data-label="Portador"><select class="review-holder" data-idx="${idx}">${holderOptions}</select></td>`;
-            html += `<td class="col-type" data-label="Tipo"><select class="review-type" data-idx="${idx}"><option value="despesa" ${tx.type === 'despesa' ? 'selected' : ''}>Despesa</option><option value="receita" ${tx.type === 'receita' ? 'selected' : ''}>Receita</option></select></td>`;
-            html += `<td class="col-actions" data-label=""><button class="btn-remove-row" data-idx="${idx}"><i class="fas fa-trash"></i></button></td>`;
-            html += `</tr>`;
-        });
+        const date = createDateFromString(dateStr);
+        if (date) {
+            tx.date = formatDateToDisplay(date);
+            tx.timestamp = date.getTime();
+            tx.month = date.getMonth();
+            tx.year = date.getFullYear();
+        }
+        if (desc) tx.description = desc;
+        if (!isNaN(amount)) tx.amount = amount;
+        tx.category = cat;
+        tx.type = type;
 
-        html += '</tbody></table>';
-        reviewTableContainer.innerHTML = html;
+        const holder = holders.find(h => h.id === holderId);
+        if (holder) {
+            tx.holder = holder.name;
+            tx.holderId = holder.id;
+        }
+    });
+}
+    
+function renderReviewTable(transactions) {
+    const categoryOptions = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    const holderOptions = holders.map(h => `<option value="${h.id}" ${!h.active ? 'disabled' : ''}>${h.name}${!h.active ? ' (excluído)' : ''}</option>`).join('');
 
-        transactions.forEach((tx, idx) => {
-            const sel = reviewTableContainer.querySelector(`.review-holder[data-idx="${idx}"]`);
-            if (!sel || !tx.holder) return;
+    const arrow = (field) => {
+        if (reviewSortField !== field) return '';
+        return reviewSortDir === 'asc' ? ' ▲' : ' ▼';
+    };
+    const thClass = (field) => reviewSortField === field ? ' class="review-th sortable active"' : ' class="review-th sortable"';
 
-            const holder = ensureHolderFromFatura(tx.holder, tx.cardNumber);
-            if (!holder) return;
+    let html = '<table class="review-table"><thead><tr>';
+    html += `<th class="col-date review-th sortable${reviewSortField === 'date' ? ' active' : ''}" data-sort="date">Data${arrow('date')}</th>`;
+    html += `<th class="col-desc review-th sortable${reviewSortField === 'description' ? ' active' : ''}" data-sort="description">Descrição${arrow('description')}</th>`;
+    html += `<th class="col-amount review-th sortable${reviewSortField === 'amount' ? ' active' : ''}" data-sort="amount">Valor${arrow('amount')}</th>`;
+    html += `<th class="col-cat review-th sortable${reviewSortField === 'category' ? ' active' : ''}" data-sort="category">Categoria${arrow('category')}</th>`;
+    html += `<th class="col-holder review-th sortable${reviewSortField === 'holder' ? ' active' : ''}" data-sort="holder">Portador${arrow('holder')}</th>`;
+    html += `<th class="col-type review-th sortable${reviewSortField === 'type' ? ' active' : ''}" data-sort="type">Tipo${arrow('type')}</th>`;
+    html += '<th class="col-actions"></th>';
+    html += '</tr></thead><tbody>';
 
-            if (!sel.querySelector(`option[value="${holder.id}"]`)) {
+    // Ordena (o array é clonado para não mexer na ordem "oficial" do preview)
+    const sorted = [...transactions].sort(compareReviewTransactions);
+
+    sorted.forEach((tx) => {
+        const originalIdx = transactions.indexOf(tx);
+        const isLow = tx.category === 'outros';
+        html += `<tr class="${isLow ? 'row-low-confidence' : ''}" data-idx="${originalIdx}" data-txid="${escapeHtml(String(tx.id))}">`;
+        html += `<td class="col-date" data-label="Data"><input type="date" class="review-date" data-txid="${escapeHtml(String(tx.id))}" value="${formatDateToString(new Date(tx.timestamp))}"></td>`;
+        html += `<td class="col-desc" data-label="Descrição"><input type="text" class="review-desc" data-txid="${escapeHtml(String(tx.id))}" value="${escapeHtml(tx.description)}"></td>`;
+        html += `<td class="col-amount" data-label="Valor"><input type="number" step="0.01" min="0" class="review-amount amount-field" data-txid="${escapeHtml(String(tx.id))}" value="${tx.amount.toFixed(2)}"></td>`;
+        html += `<td class="col-cat" data-label="Categoria"><select class="review-cat" data-txid="${escapeHtml(String(tx.id))}"><option value="${tx.category}" selected>${getCategoryName(tx.category)}</option>${categoryOptions}</select></td>`;
+        html += `<td class="col-holder" data-label="Portador"><select class="review-holder" data-txid="${escapeHtml(String(tx.id))}">${holderOptions}</select></td>`;
+        html += `<td class="col-type" data-label="Tipo"><select class="review-type" data-txid="${escapeHtml(String(tx.id))}"><option value="despesa" ${tx.type === 'despesa' ? 'selected' : ''}>Despesa</option><option value="receita" ${tx.type === 'receita' ? 'selected' : ''}>Receita</option></select></td>`;
+        html += `<td class="col-actions" data-label=""><button class="btn-remove-row" data-txid="${escapeHtml(String(tx.id))}"><i class="fas fa-trash"></i></button></td>`;
+        html += `</tr>`;
+    });
+
+    html += '</tbody></table>';
+    reviewTableContainer.innerHTML = html;
+
+    // Resolve o portador de cada linha (como antes, mas agora por txid)
+    transactions.forEach((tx) => {
+        if (!tx.holder) return;
+        const holder = ensureHolderFromFatura(tx.holder, tx.cardNumber);
+        if (!holder) return;
+
+        const sel = reviewTableContainer.querySelector(`.review-holder[data-txid="${escapeHtml(String(tx.id))}"]`);
+        if (!sel) return;
+
+        if (!sel.querySelector(`option[value="${holder.id}"]`)) {
+            const o = document.createElement('option');
+            o.value = holder.id;
+            o.textContent = holder.name;
+            sel.appendChild(o);
+        }
+        sel.value = holder.id;
+
+        // Garante a opção em todos os outros selects
+        reviewTableContainer.querySelectorAll('.review-holder').forEach(s => {
+            if (!s.querySelector(`option[value="${holder.id}"]`)) {
                 const o = document.createElement('option');
                 o.value = holder.id;
                 o.textContent = holder.name;
-                sel.appendChild(o);
+                s.appendChild(o);
             }
-            sel.value = holder.id;
-
-            reviewTableContainer.querySelectorAll('.review-holder').forEach(s => {
-                if (!s.querySelector(`option[value="${holder.id}"]`)) {
-                    const o = document.createElement('option');
-                    o.value = holder.id;
-                    o.textContent = holder.name;
-                    s.appendChild(o);
-                }
-            });
         });
+    });
 
-        reviewTableContainer.querySelectorAll('.review-date, .review-desc, .review-amount, .review-cat, .review-holder, .review-type').forEach(el => {
-            el.addEventListener('change', updateReviewTotal);
-            el.addEventListener('input', updateReviewTotal);
-        });
+    // Listeners de edição (não chamam mais re-render; só atualizam total)
+    reviewTableContainer.querySelectorAll('.review-date, .review-desc, .review-amount, .review-cat, .review-holder, .review-type').forEach(el => {
+        el.addEventListener('change', updateReviewTotal);
+        el.addEventListener('input', updateReviewTotal);
+    });
 
-        reviewTableContainer.querySelectorAll('.btn-remove-row').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
-                removeReviewRow(idx);
-            });
+    // Remoção por txid
+    reviewTableContainer.querySelectorAll('.btn-remove-row').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const txid = e.currentTarget.getAttribute('data-txid');
+            removeReviewRowById(txid);
         });
-    }
+    });
+
+    // Cabeçalhos clicáveis
+    reviewTableContainer.querySelectorAll('th.review-th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const field = th.getAttribute('data-sort');
+            if (!field) return;
+            // Coleta edições ANTES de reordenar
+            syncPreviewFromDOM();
+            if (reviewSortField === field) {
+                reviewSortDir = reviewSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                reviewSortField = field;
+                reviewSortDir = 'asc';
+            }
+            localStorage.setItem('reviewSortField', reviewSortField);
+            localStorage.setItem('reviewSortDir', reviewSortDir);
+            renderReviewTable(importPreview.transactions);
+        });
+    });
+}
 
     function getCategoryName(id) {
         const c = categories.find(x => x.id === id);
         return c ? c.name : 'Outros';
     }
+
+    function removeReviewRowById(txid) {
+    if (!importPreview) return;
+    // Preserva edições antes de remover
+    syncPreviewFromDOM();
+    importPreview.transactions = importPreview.transactions.filter(t => String(t.id) !== String(txid));
+    renderReviewTable(importPreview.transactions);
+    updateReviewTotal();
+}
 
     function removeReviewRow(idx) {
         importPreview.transactions.splice(idx, 1);
@@ -1132,36 +1220,41 @@ function generateId() {
         reviewTotal.innerHTML = html;
     }
 
-    function collectReviewData() {
-        const rows = reviewTableContainer.querySelectorAll('tr[data-idx]');
-        const collected = [];
-        rows.forEach(row => {
-            const idx = parseInt(row.getAttribute('data-idx'));
-            const dateStr = row.querySelector('.review-date').value;
-            const desc = row.querySelector('.review-desc').value;
-            const amount = parseFloat(row.querySelector('.review-amount').value);
-            const cat = row.querySelector('.review-cat').value;
-            const holderId = row.querySelector('.review-holder').value;
-            const type = row.querySelector('.review-type').value;
-            const date = createDateFromString(dateStr);
-            if (!date || !desc || isNaN(amount)) return;
-            const holder = holders.find(h => h.id === holderId);
-            collected.push({
-                //id: Date.now() + Math.random() + idx,
-                id: generateId(),
-                description: desc, amount, type, category: cat,
-                date: formatDateToDisplay(date),
-                timestamp: date.getTime(),
-                month: date.getMonth(),
-                year: date.getFullYear(),
-                holder: holder ? holder.name : (holders.find(h => h.isDefault)?.name || 'Rodrigo A Prado'),
-                holderId: holder ? holder.id : null,
-                cardNumber: importPreview.transactions[idx]?.cardNumber || null,
-                installment: importPreview.transactions[idx]?.installment || null
-            });
+function collectReviewData() {
+    // Preserva o que está na tela (caso o usuário salve sem ter reordenado)
+    syncPreviewFromDOM();
+
+    const rows = reviewTableContainer.querySelectorAll('tr[data-txid]');
+    const collected = [];
+    rows.forEach(row => {
+        const txid = row.getAttribute('data-txid');
+        const dateStr = row.querySelector('.review-date').value;
+        const desc = row.querySelector('.review-desc').value;
+        const amount = parseFloat(row.querySelector('.review-amount').value);
+        const cat = row.querySelector('.review-cat').value;
+        const holderId = row.querySelector('.review-holder').value;
+        const type = row.querySelector('.review-type').value;
+        const date = createDateFromString(dateStr);
+        if (!date || !desc || isNaN(amount)) return;
+        const holder = holders.find(h => h.id === holderId);
+
+        const original = importPreview.transactions.find(t => String(t.id) === String(txid));
+
+        collected.push({
+            id: generateId(),
+            description: desc, amount, type, category: cat,
+            date: formatDateToDisplay(date),
+            timestamp: date.getTime(),
+            month: date.getMonth(),
+            year: date.getFullYear(),
+            holder: holder ? holder.name : (holders.find(h => h.isDefault)?.name || 'Rodrigo A Prado'),
+            holderId: holder ? holder.id : null,
+            cardNumber: original?.cardNumber || null,
+            installment: original?.installment || null
         });
-        return collected;
-    }
+    });
+    return collected;
+}
 
     function confirmImport() {
         try {
@@ -1456,6 +1549,53 @@ function compareTransactions(a, b) {
     if (sortDir === 'desc') result = -result;
 
     // Desempate SEMPRE por data mais recente primeiro
+    if (result === 0) {
+        result = b.timestamp - a.timestamp;
+    }
+
+    return result;
+}
+
+function compareReviewTransactions(a, b) {
+    let result = 0;
+
+    switch (reviewSortField) {
+        case 'description': {
+            result = (a.description || '').localeCompare(b.description || '', 'pt-BR', { sensitivity: 'base' });
+            break;
+        }
+        case 'amount': {
+            result = parseFloat(a.amount) - parseFloat(b.amount);
+            break;
+        }
+        case 'category': {
+            const ca = getCategoryName(a.category);
+            const cb = getCategoryName(b.category);
+            result = ca.localeCompare(cb, 'pt-BR', { sensitivity: 'base' });
+            break;
+        }
+        case 'holder': {
+            // Usa o nome do portador resolvido (holderId → nome), com fallback ao texto bruto
+            const ha = holders.find(h => h.id === a.holderId)?.name || a.holder || '';
+            const hb = holders.find(h => h.id === b.holderId)?.name || b.holder || '';
+            result = ha.localeCompare(hb, 'pt-BR', { sensitivity: 'base' });
+            break;
+        }
+        case 'type': {
+            // Ordem alfabética: 'despesa' antes de 'receita'
+            result = (a.type || '').localeCompare(b.type || '', 'pt-BR', { sensitivity: 'base' });
+            break;
+        }
+        case 'date':
+        default: {
+            result = a.timestamp - b.timestamp;
+            break;
+        }
+    }
+
+    if (reviewSortDir === 'desc') result = -result;
+
+    // Desempate por data mais recente primeiro
     if (result === 0) {
         result = b.timestamp - a.timestamp;
     }
