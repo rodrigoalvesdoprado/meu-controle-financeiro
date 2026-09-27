@@ -540,8 +540,39 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
     .review-table tr { background: var(--surface-alt); border-radius: 10px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); }
     .review-table tr:hover td { background: transparent; }
     .review-table td { border: none; padding: 5px 0; display: flex; align-items: center; gap: 8px; }
-    .review-table td::before { content: attr(data-label); font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; min-width: 70px; flex-shrink: 0; }
-    .review-table td input, .review-table td select { flex: 1; }
+.review-table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    flex: 0 0 auto;
+    width: 82px;          /* largura fixa previsível; cabe "Descrição" e "Portador" */
+    flex-shrink: 0;
+}
+.review-table td input,
+.review-table td select {
+    flex: 1 1 auto;
+    min-width: 0;         /* ESSENCIAL: permite encolher abaixo do tamanho natural */
+    width: 100%;
+}
+    /* Remove as setinhas do input numérico no mobile — libera ~20px à direita */
+.review-table input[type="number"]::-webkit-outer-spin-button,
+.review-table input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.review-table input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Dá um respiro extra à coluna de valor, que é a mais apertada */
+.review-table .col-amount input {
+    text-align: right;
+    font-variant-numeric: tabular-nums; /* alinha os dígitos verticalmente */
+    padding-right: 8px;
+}
     .review-table .col-actions { justify-content: flex-end; }
     .review-table .col-actions::before { display: none; }
 
