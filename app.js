@@ -956,7 +956,7 @@ function isNoiseTransaction(description) {
 
         return { transactions, validation };
     }
-    }
+    
 
     function handleImportFile(file) {
         if (!file) return;
