@@ -73,6 +73,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const sortDirBtn = document.getElementById('sort-dir-btn');
     const sortDirIcon = document.getElementById('sort-dir-icon');
 
+    const holderDetailSortFieldSelect = document.getElementById('holder-detail-sort-field');
+    const holderDetailSortDirBtn      = document.getElementById('holder-detail-sort-dir-btn');
+    const holderDetailSortDirIcon     = document.getElementById('holder-detail-sort-dir-icon');
+
     // ========== DADOS ==========
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 
@@ -316,6 +320,10 @@ const CATEGORY_TAGS = {
     //let sortDir = localStorage.getItem('sortDir') || 'desc'; // 'asc' | 'desc'
     let sortField = 'date';
     let sortDir   = 'desc';
+    
+    let holderDetailSortField = localStorage.getItem('holderDetailSortField') || 'date';
+    let holderDetailSortDir   = localStorage.getItem('holderDetailSortDir')   || 'desc';
+    let holderDetailState     = null; // { holder, cardNumber, txs } do último clique
 
     // ========== TEMA ==========
     function applyTheme(theme) {
@@ -1349,6 +1357,24 @@ sortDirBtn.addEventListener('click', () => {
     updateSortDirIcon();
     renderTransactions();
 });
+
+        // ---- Ordenação do detalhe do cartão ----
+if (holderDetailSortFieldSelect) {
+    holderDetailSortFieldSelect.addEventListener('change', () => {
+        holderDetailSortField = holderDetailSortFieldSelect.value;
+        localStorage.setItem('holderDetailSortField', holderDetailSortField);
+        renderHolderDetailList();
+    });
+}
+if (holderDetailSortDirBtn) {
+    holderDetailSortDirBtn.addEventListener('click', () => {
+        holderDetailSortDir = holderDetailSortDir === 'asc' ? 'desc' : 'asc';
+        localStorage.setItem('holderDetailSortDir', holderDetailSortDir);
+        updateHolderDetailSortIcon();
+        renderHolderDetailList();
+    });
+}
+        
     }
 
     function setupTabs() {
@@ -1713,56 +1739,112 @@ function openCategoryInlineEditor(badge) {
         });
     }
 
-    function showCardDetails(holder, cardNumber, txs) {
-        if (!holderDetail || !holderDetailTitle || !holderDetailList || !holderDetailTotal) return;
+function compareHolderDetailTransactions(a, b) {
+    let result = 0;
 
-        const cardLabel = cardNumber === '__sem_cartao__' ? 'Sem cartão' : `Cartão ${cardNumber}`;
-        holderDetailTitle.textContent = `${holder.name} — ${cardLabel}`;
-
-        const sorted = [...txs].sort((a, b) => b.timestamp - a.timestamp);
-
-        let totalDesp = 0, totalRec = 0;
-        sorted.forEach(tx => {
-            if (tx.type === 'receita') totalRec += parseFloat(tx.amount);
-            else totalDesp += parseFloat(tx.amount);
-        });
-        const liquido = totalDesp - totalRec;
-
-        const ul = document.createElement('ul');
-        sorted.forEach(tx => {
-            const li = document.createElement('li');
-            const cat = categories.find(c => c.id === tx.category);
-            const catColor = cat ? cat.color : '#95a5a6';
-            const catName = cat ? cat.name : tx.category;
-            const valueClass = tx.type === 'receita' ? 'tx-value receita' : 'tx-value despesa';
-            const sign = tx.type === 'receita' ? '+' : '-';
-
-            li.innerHTML = `
-                <div class="tx-info">
-                    <strong>${escapeHtml(tx.description)}</strong>
-                    <small>
-                        <span class="category-badge" style="background-color: ${catColor}">${catName}</span>
-                        • ${tx.date}
-                        ${tx.installment ? ' • Parcela ' + escapeHtml(tx.installment) : ''}
-                    </small>
-                </div>
-                <div class="${valueClass}">${sign} ${fmtBRL(parseFloat(tx.amount))}</div>
-            `;
-            ul.appendChild(li);
-        });
-
-        holderDetailList.innerHTML = '';
-        holderDetailList.appendChild(ul);
-
-        let totalHtml = `Total: <strong>${fmtBRL(liquido)}</strong>`;
-        if (totalRec > 0) {
-            totalHtml += ` <small style="color:var(--text-secondary);font-weight:normal;">(despesas ${fmtBRL(totalDesp)} − receitas ${fmtBRL(totalRec)})</small>`;
+    switch (holderDetailSortField) {
+        case 'description': {
+            result = (a.description || '').localeCompare(b.description || '', 'pt-BR', { sensitivity: 'base' });
+            break;
         }
-        holderDetailTotal.innerHTML = totalHtml;
-
-        holderDetail.classList.add('show');
-        holderDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        case 'category': {
+            const ca = getCategoryName(a.category);
+            const cb = getCategoryName(b.category);
+            result = ca.localeCompare(cb, 'pt-BR', { sensitivity: 'base' });
+            break;
+        }
+        case 'amount': {
+            result = parseFloat(a.amount) - parseFloat(b.amount);
+            break;
+        }
+        case 'date':
+        default: {
+            result = a.timestamp - b.timestamp;
+            break;
+        }
     }
+
+    if (holderDetailSortDir === 'desc') result = -result;
+
+    // Desempate sempre por data mais recente primeiro
+    if (result === 0) {
+        result = b.timestamp - a.timestamp;
+    }
+
+    return result;
+}
+
+function updateHolderDetailSortIcon() {
+    if (!holderDetailSortDirIcon) return;
+    holderDetailSortDirIcon.classList.remove('fa-arrow-up', 'fa-arrow-down');
+    holderDetailSortDirIcon.classList.add(holderDetailSortDir === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down');
+    holderDetailSortDirBtn.title = holderDetailSortDir === 'asc'
+        ? 'Ordem crescente (clique para inverter)'
+        : 'Ordem decrescente (clique para inverter)';
+}
+
+function renderHolderDetailList() {
+    if (!holderDetailState) return;
+    const { holder, cardNumber, txs } = holderDetailState;
+
+    const cardLabel = cardNumber === '__sem_cartao__' ? 'Sem cartão' : `Cartão ${cardNumber}`;
+    holderDetailTitle.textContent = `${holder.name} — ${cardLabel}`;
+
+    let totalDesp = 0, totalRec = 0;
+    txs.forEach(tx => {
+        if (tx.type === 'receita') totalRec += parseFloat(tx.amount);
+        else totalDesp += parseFloat(tx.amount);
+    });
+    const liquido = totalDesp - totalRec;
+
+    const sorted = [...txs].sort(compareHolderDetailTransactions);
+
+    const ul = document.createElement('ul');
+    sorted.forEach(tx => {
+        const li = document.createElement('li');
+        const cat = categories.find(c => c.id === tx.category);
+        const catColor = cat ? cat.color : '#95a5a6';
+        const catName = cat ? cat.name : tx.category;
+        const valueClass = tx.type === 'receita' ? 'tx-value receita' : 'tx-value despesa';
+        const sign = tx.type === 'receita' ? '+' : '-';
+
+        li.innerHTML = `
+            <div class="tx-info">
+                <strong>${escapeHtml(tx.description)}</strong>
+                <small>
+                    <span class="category-badge" style="background-color: ${catColor}">${catName}</span>
+                    • ${tx.date}
+                    ${tx.installment ? ' • Parcela ' + escapeHtml(tx.installment) : ''}
+                </small>
+            </div>
+            <div class="${valueClass}">${sign} ${fmtBRL(parseFloat(tx.amount))}</div>
+        `;
+        ul.appendChild(li);
+    });
+
+    holderDetailList.innerHTML = '';
+    holderDetailList.appendChild(ul);
+
+    let totalHtml = `Total: <strong>${fmtBRL(liquido)}</strong>`;
+    if (totalRec > 0) {
+        totalHtml += ` <small style="color:var(--text-secondary);font-weight:normal;">(despesas ${fmtBRL(totalDesp)} − receitas ${fmtBRL(totalRec)})</small>`;
+    }
+    holderDetailTotal.innerHTML = totalHtml;
+}
+
+function showCardDetails(holder, cardNumber, txs) {
+    if (!holderDetail || !holderDetailTitle || !holderDetailList || !holderDetailTotal) return;
+
+    holderDetailState = { holder, cardNumber, txs };
+
+    holderDetailSortFieldSelect.value = holderDetailSortField;
+    updateHolderDetailSortIcon();
+
+    renderHolderDetailList();
+
+    holderDetail.classList.add('show');
+    holderDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
     // ========== PORTADORES ==========
     function addHolder(name) {
