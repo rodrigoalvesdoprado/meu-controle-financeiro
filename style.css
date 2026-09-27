@@ -535,15 +535,36 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
     .review-footer { flex-direction: column; align-items: stretch; }
     .review-footer .btn-group { width: 100%; max-width: none; }
 
-    .review-table, .review-table thead, .review-table tbody, .review-table tr, .review-table td, .review-table th { display: block; }
-    .review-table thead { display: none; }
-    .review-table tr { background: var(--surface-alt); border-radius: 10px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); }
-    .review-table tr:hover td { background: transparent; }
-    .review-table td { border: none; padding: 5px 0; display: flex; align-items: center; gap: 8px; }
+/* ===== Tabela de revisão no mobile: layout de cards com grid ===== */
+.review-table,
+.review-table thead,
+.review-table tbody,
+.review-table tr,
+.review-table td,
+.review-table th {
+    display: block;
+}
+
+.review-table thead { display: none; }
+
+.review-table tr {
+    background: var(--surface-alt);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-light);
+}
+.review-table tr:hover td { background: transparent; }
+
+/* Cada td vira uma linha "label | campo" */
 .review-table td {
-    /* Reforça: o td precisa poder encolher para o input caber */
+    border: none;
+    padding: 6px 0;
+    display: grid;
+    grid-template-columns: 78px 1fr;   /* label fixo, campo flexível */
+    align-items: center;
+    gap: 10px;
     min-width: 0;
-    overflow: hidden;
 }
 
 .review-table td::before {
@@ -552,19 +573,21 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
     font-weight: 700;
     color: var(--text-secondary);
     text-transform: uppercase;
-    flex: 0 0 auto;
-    width: 78px;
-    flex-shrink: 0;
+    /* Não precisa mais de width, flex ou nada: o grid posiciona */
 }
 
+/* O campo ocupa a coluna 1fr inteira, sem brigar com flex */
 .review-table td input,
 .review-table td select {
-    flex: 1 1 0;         /* 0 em vez de auto: ignora largura intrínseca */
+    width: 100%;
     min-width: 0;
-    width: auto;         /* deixa o flex calcular; width: 100% brigava com o flex */
     max-width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    margin: 0;
 }
-    /* Remove as setinhas do input numérico no mobile — libera ~20px à direita */
+
+/* Remove spinner numérico (redundante agora, mas mantém) */
 .review-table input[type="number"]::-webkit-outer-spin-button,
 .review-table input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -575,14 +598,19 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
     appearance: textfield;
 }
 
-/* Dá um respiro extra à coluna de valor, que é a mais apertada */
+/* Valor alinhado à direita com dígitos tabulares */
 .review-table .col-amount input {
     text-align: right;
-    font-variant-numeric: tabular-nums; /* alinha os dígitos verticalmente */
-    padding-right: 8px;
+    font-variant-numeric: tabular-nums;
 }
-    .review-table .col-actions { justify-content: flex-end; }
-    .review-table .col-actions::before { display: none; }
+
+/* A linha de ações (botão lixeira) não tem label */
+.review-table .col-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 8px;
+}
+.review-table .col-actions::before { display: none; }
 
     .holder-totals-grid { grid-template-columns: 1fr; }
     .holder-detail-panel h3 { flex-direction: column; align-items: flex-start; gap: 6px; }
