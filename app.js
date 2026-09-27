@@ -734,18 +734,17 @@ function generateId() {
         return false;
     }
 
-    function isNoiseTransaction(description) {
-        const d = description.toLowerCase();
-        const noiseKeywords = [
-            'total da fatura anterior', 'obrigado pelo pagamento',
-            'ajuste cred', 'ajuste crédito', 'ajuste credito', 'ajuste de',
-            'pagamento efetuado', 'saldo anterior', 'juros', 'iof',
-            'anuidade', 'isent',
-            'total compras', 'total final', 'valor total desta fatura',
-            'total '
-        ];
-        return noiseKeywords.some(k => d.includes(k));
-    }
+function isNoiseTransaction(description) {
+    const d = description.toLowerCase();
+    const noiseKeywords = [
+        'total da fatura anterior', 'obrigado pelo pagamento',
+        'pagamento efetuado', 'saldo anterior', 'juros', 'iof',
+        'anuidade', 'isent',
+        'total compras', 'total final', 'valor total desta fatura',
+        'total '
+    ];
+    return noiseKeywords.some(k => d.includes(k));
+}
 
     function extractInstallment(description) {
         const m = description.match(/^(.+?)\s+(\d{2})\s+DE\s+(\d{2})\s+(.+)$/i);
