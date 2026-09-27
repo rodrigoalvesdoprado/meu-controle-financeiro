@@ -145,10 +145,24 @@
             </div>
 
             <div class="transactions">
-                <div class="transactions-header">
-                    <h2>Lançamentos do Período</h2>
-                    <span class="count-badge" id="transactions-count">0 lançamentos</span>
-                </div>
+<div class="transactions-header">
+    <h2>Lançamentos do Período</h2>
+    <span class="count-badge" id="transactions-count">0 lançamentos</span>
+</div>
+
+<div class="transactions-sort">
+    <label for="sort-field">Ordenar por:</label>
+    <select id="sort-field">
+        <option value="date">Data</option>
+        <option value="description">Descrição</option>
+        <option value="category">Categoria</option>
+        <option value="amount">Valor</option>
+        <option value="holder">Portador</option>
+    </select>
+    <button class="secondary sort-dir-btn" id="sort-dir-btn" title="Inverter ordem">
+        <i class="fas fa-arrow-down" id="sort-dir-icon"></i>
+    </button>
+</div>
                 <ul id="transactions-list"></ul>
             </div>
         </div>
