@@ -688,4 +688,39 @@ select.tx-category-select:focus {
         justify-content: center;
     }
 }
+
+    /* ---- Ordenação no painel de detalhe do cartão ---- */
+.holder-detail-sort {
+    margin: 10px 0 12px 0;
+    padding: 8px 12px;
+}
+
+.holder-detail-sort label {
+    font-size: 13px;
+}
+
+.holder-detail-sort select {
+    min-width: 140px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.holder-detail-sort .sort-dir-btn {
+    padding: 6px 10px;
+}
+
+@media (max-width: 768px) {
+    .holder-detail-sort {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .holder-detail-sort select {
+        width: 100%;
+        min-width: 0;
+    }
+    .holder-detail-sort .sort-dir-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
 }
