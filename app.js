@@ -931,7 +931,31 @@ function isNoiseTransaction(description) {
         }
 
         validation.netCalculated = validation.cardExpensesTotal - validation.creditsTotal;
+
+        // ========== LANÇAMENTO CONSOLIDADO DE CRÉDITOS DO DEMONSTRATIVO ==========
+        if (validation.creditsTotal > 0.001) {
+            const creditDate = new Date(anoVenc, mesVenc, 2);
+            transactions.push({
+                id: generateId(),
+                description: `Créditos/estornos da fatura (demonstrativo)`,
+                amount: parseFloat(validation.creditsTotal.toFixed(2)),
+                type: 'receita',
+                category: 'outros',
+                date: formatDateToDisplay(creditDate),
+                timestamp: creditDate.getTime(),
+                month: creditDate.getMonth(),
+                year: creditDate.getFullYear(),
+                holder: null,
+                holderId: null,
+                cardNumber: null,
+                installment: null,
+                isCreditAdjustment: true
+            });
+        }
+        // =========================================================================
+
         return { transactions, validation };
+    }
     }
 
     function handleImportFile(file) {
@@ -1201,21 +1225,37 @@ function renderReviewTable(transactions) {
     }
 
     function updateReviewTotal() {
-        let total = 0;
-        reviewTableContainer.querySelectorAll('.review-amount').forEach(inp => {
-            const v = parseFloat(inp.value);
-            if (!isNaN(v)) total += v;
+        let totalDespesas = 0;
+        let totalReceitas = 0;
+
+        reviewTableContainer.querySelectorAll('tr[data-txid]').forEach(row => {
+            const amountInput = row.querySelector('.review-amount');
+            const typeSelect  = row.querySelector('.review-type');
+            if (!amountInput) return;
+
+            const v = parseFloat(amountInput.value);
+            if (isNaN(v)) return;
+
+            const type = typeSelect ? typeSelect.value : 'despesa';
+            if (type === 'receita') totalReceitas += v;
+            else                    totalDespesas += v;
         });
 
-        let html = `<span class="main-total">Total importado: ${fmtBRL(total)}</span>`;
+        const liquido = totalDespesas - totalReceitas;
+
+        let html = `<span class="main-total">Despesas: ${fmtBRL(totalDespesas)}</span>`;
+        if (totalReceitas > 0.001) {
+            html += `<span class="sub-total">Receitas: ${fmtBRL(totalReceitas)}</span>`;
+            html += `<span class="sub-total">Líquido a pagar: <strong>${fmtBRL(liquido)}</strong></span>`;
+        }
+
         if (importPreview && importPreview.validation) {
             const v = importPreview.validation;
-            if (v.creditsTotal > 0 && v.declaredTotal !== null) {
-                html += `<span class="sub-total">Total da fatura: ${fmtBRL(v.declaredTotal)} (já com créditos de ${fmtBRL(v.creditsTotal)})</span>`;
-            } else if (v.declaredTotal !== null) {
-                html += `<span class="sub-total">Total da fatura: ${fmtBRL(v.declaredTotal)}</span>`;
+            if (v.declaredTotal !== null) {
+                html += `<span class="sub-total">Total declarado na fatura: ${fmtBRL(v.declaredTotal)}</span>`;
             }
         }
+
         reviewTotal.innerHTML = html;
     }
 
