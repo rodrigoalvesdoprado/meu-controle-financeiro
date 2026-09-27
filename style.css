@@ -284,7 +284,6 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
 .review-footer .review-total { font-size: 1rem; color: var(--text-primary); line-height: 1.5; }
 .review-footer .review-total .main-total { font-size: 1.1rem; font-weight: bold; display: block; }
 .review-footer .review-total .sub-total { font-size: 12px; color: var(--text-secondary); font-weight: normal; display: block; margin-top: 2px; }
-.review-footer .review-total .sub-total strong { color: var(--accent-blue); font-size: 1.05rem; }
 .review-footer .btn-group { flex: 1; justify-content: flex-end; max-width: 500px; }
 
 .validation-info {
