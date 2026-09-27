@@ -540,6 +540,12 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
     .review-table tr { background: var(--surface-alt); border-radius: 10px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); }
     .review-table tr:hover td { background: transparent; }
     .review-table td { border: none; padding: 5px 0; display: flex; align-items: center; gap: 8px; }
+.review-table td {
+    /* Reforça: o td precisa poder encolher para o input caber */
+    min-width: 0;
+    overflow: hidden;
+}
+
 .review-table td::before {
     content: attr(data-label);
     font-size: 11px;
@@ -547,14 +553,16 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
     color: var(--text-secondary);
     text-transform: uppercase;
     flex: 0 0 auto;
-    width: 82px;          /* largura fixa previsível; cabe "Descrição" e "Portador" */
+    width: 78px;
     flex-shrink: 0;
 }
+
 .review-table td input,
 .review-table td select {
-    flex: 1 1 auto;
-    min-width: 0;         /* ESSENCIAL: permite encolher abaixo do tamanho natural */
-    width: 100%;
+    flex: 1 1 0;         /* 0 em vez de auto: ignora largura intrínseca */
+    min-width: 0;
+    width: auto;         /* deixa o flex calcular; width: 100% brigava com o flex */
+    max-width: 100%;
 }
     /* Remove as setinhas do input numérico no mobile — libera ~20px à direita */
 .review-table input[type="number"]::-webkit-outer-spin-button,
@@ -662,7 +670,11 @@ select.tx-category-select:focus {
 @media (display-mode: standalone) {
     body { padding: 10px 5px; }
     .container { border-radius: 0; min-height: calc(100vh - 20px); box-shadow: none; }
-    @media (max-width: 768px) { body { padding: 5px; } }
+}
+
+@media (display-mode: standalone) and (max-width: 768px) {
+    body { padding: 5px; }
+}
 
 /* ---- Controle de ordenação dos lançamentos ---- */
 .transactions-sort {
