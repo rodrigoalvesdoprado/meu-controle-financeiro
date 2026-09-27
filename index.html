@@ -240,14 +240,28 @@
                 <p class="holder-totals-hint">Respeita o período selecionado no topo da tela. Clique em um cartão para ver os lançamentos.</p>
                 <div class="holder-totals-grid" id="holder-totals-container"></div>
 
-                <div class="holder-detail-panel" id="holder-detail">
-                    <h3>
-                        <span id="holder-detail-title">Detalhes</span>
-                        <button class="close-detail" id="holder-detail-close"><i class="fas fa-times"></i> Fechar</button>
-                    </h3>
-                    <div id="holder-detail-list"></div>
-                    <p class="holder-detail-total">Total: <span id="holder-detail-total">R$ 0,00</span></p>
-                </div>
+<div class="holder-detail-panel" id="holder-detail">
+    <h3>
+        <span id="holder-detail-title">Detalhes</span>
+        <button class="close-detail" id="holder-detail-close"><i class="fas fa-times"></i> Fechar</button>
+    </h3>
+
+    <div class="transactions-sort holder-detail-sort">
+        <label for="holder-detail-sort-field">Ordenar por:</label>
+        <select id="holder-detail-sort-field">
+            <option value="date">Data</option>
+            <option value="description">Descrição</option>
+            <option value="category">Categoria</option>
+            <option value="amount">Valor</option>
+        </select>
+        <button class="secondary sort-dir-btn" id="holder-detail-sort-dir-btn" title="Inverter ordem">
+            <i class="fas fa-arrow-down" id="holder-detail-sort-dir-icon"></i>
+        </button>
+    </div>
+
+    <div id="holder-detail-list"></div>
+    <p class="holder-detail-total">Total: <span id="holder-detail-total">R$ 0,00</span></p>
+</div>
             </div>
         </div>
     </div>
