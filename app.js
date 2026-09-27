@@ -69,6 +69,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelImportBtn = document.getElementById('cancelImportBtn');
     const confirmImportBtn = document.getElementById('confirmImportBtn');
 
+    const sortFieldSelect = document.getElementById('sort-field');
+    const sortDirBtn = document.getElementById('sort-dir-btn');
+    const sortDirIcon = document.getElementById('sort-dir-icon');
+
     // ========== DADOS ==========
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 
@@ -308,6 +312,10 @@ const CATEGORY_TAGS = {
     let isListening = false;
     let importPreview = null;
     let currentDueDate = null;
+    //let sortField = localStorage.getItem('sortField') || 'date';
+    //let sortDir = localStorage.getItem('sortDir') || 'desc'; // 'asc' | 'desc'
+    let sortField = 'date';
+    let sortDir   = 'desc';
 
     // ========== TEMA ==========
     function applyTheme(theme) {
@@ -1178,6 +1186,14 @@ function generateId() {
         importFile.value = '';
     }
 
+function updateSortDirIcon() {
+    if (!sortDirIcon) return;
+    sortDirIcon.classList.remove('fa-arrow-up', 'fa-arrow-down');
+    sortDirIcon.classList.add(sortDir === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down');
+    sortDirBtn.title = sortDir === 'asc' ? 'Ordem crescente (clique para inverter)' : 'Ordem decrescente (clique para inverter)';
+}
+
+    
     // ========== EVENT LISTENERS ==========
     function setupEventListeners() {
         themeToggle.addEventListener('click', toggleTheme);
@@ -1316,6 +1332,23 @@ transactionsList.addEventListener('keydown', (e) => {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && reviewModal.classList.contains('show')) closeReviewModal();
         });
+
+    // ---- Ordenação ----
+sortFieldSelect.value = sortField;
+updateSortDirIcon();
+
+sortFieldSelect.addEventListener('change', () => {
+    sortField = sortFieldSelect.value;
+    localStorage.setItem('sortField', sortField);
+    renderTransactions();
+});
+
+sortDirBtn.addEventListener('click', () => {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    localStorage.setItem('sortDir', sortDir);
+    updateSortDirIcon();
+    renderTransactions();
+});
     }
 
     function setupTabs() {
@@ -1364,6 +1397,46 @@ transactionsList.addEventListener('keydown', (e) => {
 
     function saveTransactions() { localStorage.setItem('transactions', JSON.stringify(transactions)); }
 
+function compareTransactions(a, b) {
+    let result = 0;
+
+    switch (sortField) {
+        case 'description': {
+            result = (a.description || '').localeCompare(b.description || '', 'pt-BR', { sensitivity: 'base' });
+            break;
+        }
+        case 'category': {
+            const ca = getCategoryName(a.category);
+            const cb = getCategoryName(b.category);
+            result = ca.localeCompare(cb, 'pt-BR', { sensitivity: 'base' });
+            break;
+        }
+        case 'amount': {
+            result = parseFloat(a.amount) - parseFloat(b.amount);
+            break;
+        }
+        case 'holder': {
+            result = (a.holder || '').localeCompare(b.holder || '', 'pt-BR', { sensitivity: 'base' });
+            break;
+        }
+        case 'date':
+        default: {
+            result = a.timestamp - b.timestamp;
+            break;
+        }
+    }
+
+    // Inverte a direção principal
+    if (sortDir === 'desc') result = -result;
+
+    // Desempate SEMPRE por data mais recente primeiro
+    if (result === 0) {
+        result = b.timestamp - a.timestamp;
+    }
+
+    return result;
+}
+
 function renderTransactions() {
     transactionsList.innerHTML = '';
     const period = getPeriodTransactions();
@@ -1377,7 +1450,7 @@ function renderTransactions() {
         return;
     }
 
-    [...period].sort((a, b) => b.timestamp - a.timestamp).forEach(tx => {
+    [...period].sort(compareTransactions).forEach(tx => {
         const li = document.createElement('li');
         const cat = categories.find(c => c.id === tx.category);
         const catColor = cat ? cat.color : '#95a5a6';
