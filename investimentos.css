@@ -1,0 +1,868 @@
+/* ============================================================
+   INVESTIMENTOS.CSS
+   Estilos da aba Investimentos, painel de configurações,
+   tabela de ativos, cards de titular, gráficos e modais novos.
+   ============================================================ */
+
+/* ============ BOTÃO DE ENGRENAGEM (CONFIGURAÇÕES) ============ */
+/* Fica no canto oposto ao botão de tema (que está em top:20 right:20).
+   Ou seja: canto superior ESQUERDO. */
+.settings-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    padding: 0;
+    margin: 0;
+}
+.settings-toggle:hover {
+    transform: scale(1.1) rotate(-15deg);
+    box-shadow: var(--shadow-lg);
+    background: var(--accent-blue);
+    color: white;
+}
+
+/* ============ TOOLBAR DE INVESTIMENTOS ============ */
+.investments-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background: var(--surface-alt);
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--accent-blue);
+    transition: background 0.3s ease;
+}
+.investments-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.investments-filter label {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+.investments-filter select {
+    width: auto;
+    min-width: 180px;
+    margin: 0;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+.investments-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.investments-actions button {
+    width: auto;
+    padding: 10px 18px;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* ============ BADGE DE USO DA API ============ */
+.api-usage-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 15px;
+}
+.api-usage-badge:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    transform: translateY(-1px);
+}
+.api-usage-badge.warn {
+    border-color: var(--warn-border);
+    color: var(--warn-border);
+}
+.api-usage-badge.danger {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+}
+.api-usage-badge i {
+    font-size: 0.85rem;
+}
+
+/* ============ CARDS DE SUBTOTAL POR TITULAR ============ */
+.owner-subtotals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+.owner-subtotal-card {
+    background: var(--surface-alt);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: var(--shadow-md);
+    border-left: 4px solid var(--accent-blue);
+    transition: background 0.3s ease, transform 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+.owner-subtotal-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+.owner-subtotal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light);
+}
+.owner-subtotal-header .owner-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.owner-subtotal-header .owner-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    flex: 1;
+    word-break: break-word;
+}
+.owner-subtotal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 4px 0;
+    font-size: 13px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.owner-subtotal-row .label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+.owner-subtotal-row .value {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.owner-subtotal-row.big .value {
+    font-size: 1.2rem;
+}
+.owner-subtotal-row .value.positive {
+    color: var(--accent-green);
+}
+.owner-subtotal-row .value.negative {
+    color: var(--accent-red);
+}
+
+/* ============ TABELA DE INVESTIMENTOS ============ */
+.investments-table-section {
+    margin-top: 10px;
+}
+.investments-table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    background: var(--surface);
+    -webkit-overflow-scrolling: touch;
+}
+.investments-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    color: var(--text-primary);
+    min-width: 1100px;
+}
+.investments-table thead th {
+    text-align: left;
+    padding: 12px 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-bottom: 2px solid var(--border);
+    font-weight: 700;
+    background: var(--surface-alt);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    cursor: help;
+    white-space: nowrap;
+}
+.investments-table thead th:hover {
+    color: var(--accent-blue);
+}
+.investments-table tbody td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.investments-table tbody tr {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+.investments-table tbody tr:hover {
+    background: var(--surface-hover);
+}
+.investments-table .col-qty,
+.investments-table .col-avg,
+.investments-table .col-invested,
+.investments-table .col-price,
+.investments-table .col-current,
+.investments-table .col-return {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.investments-table .col-owner,
+.investments-table .col-type,
+.investments-table .col-code {
+    text-align: center;
+}
+.investments-table .col-actions {
+    text-align: center;
+    width: 60px;
+}
+
+/* Linha de totais fixa no rodapé */
+.investments-table tfoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+}
+.investments-table tfoot td {
+    padding: 14px 10px;
+    background: var(--surface-alt);
+    border-top: 2px solid var(--accent-blue);
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 14px;
+    box-shadow: 0 -4px 8px rgba(0,0,0,0.05);
+}
+.investments-table tfoot .col-qty,
+.investments-table tfoot .col-avg,
+.investments-table tfoot .col-invested,
+.investments-table tfoot .col-price,
+.investments-table tfoot .col-current,
+.investments-table tfoot .col-return {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.investments-table tfoot .total-label {
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Badges dentro da tabela */
+.investments-table .owner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+}
+.investments-table .owner-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.8);
+}
+.investments-table .type-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--surface-hover);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.investments-table .asset-name-cell strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+.investments-table .asset-name-cell small {
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+.investments-table .return-positive {
+    color: var(--accent-green);
+    font-weight: 700;
+}
+.investments-table .return-negative {
+    color: var(--accent-red);
+    font-weight: 700;
+}
+.investments-table .return-neutral {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+.investments-table .quote-stale {
+    color: var(--warn-border);
+    font-size: 10px;
+    margin-left: 4px;
+    cursor: help;
+}
+.investments-table .quote-missing {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-style: italic;
+}
+.investments-table .btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    margin: 0;
+}
+.investments-table .btn-icon:hover {
+    transform: scale(1.1);
+}
+
+/* ============ PAINEL DE DETALHES DO ATIVO ============ */
+.asset-detail-panel {
+    margin-top: 25px;
+    padding: 20px;
+    background: var(--surface-alt);
+    border-radius: 12px;
+    border-left: 4px solid var(--accent-blue);
+    display: none;
+    color: var(--text-primary);
+    transition: background 0.3s ease;
+}
+.asset-detail-panel.show {
+    display: block;
+}
+.asset-detail-panel h3 {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.asset-detail-panel h4 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.asset-detail-panel .close-detail {
+    margin-left: auto;
+    width: auto;
+    padding: 5px 15px;
+    background: var(--accent-red);
+    font-size: 14px;
+}
+.asset-detail-panel .close-detail:hover {
+    background: var(--accent-red-hover);
+}
+
+.asset-detail-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 15px 0;
+}
+.asset-detail-summary .summary-item {
+    background: var(--surface);
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+.asset-detail-summary .summary-item .label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+.asset-detail-summary .summary-item .value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.asset-detail-summary .summary-item .value.positive {
+    color: var(--accent-green);
+}
+.asset-detail-summary .summary-item .value.negative {
+    color: var(--accent-red);
+}
+
+.asset-detail-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 15px 0;
+}
+.asset-detail-actions button {
+    width: auto;
+    padding: 10px 18px;
+    font-size: 14px;
+    margin: 0;
+}
+
+.asset-detail-history ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.asset-detail-history li {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.asset-detail-history li:last-child {
+    border-bottom: none;
+}
+.asset-detail-history .tx-info {
+    flex: 1;
+    min-width: 0;
+}
+.asset-detail-history .tx-info strong {
+    display: block;
+    word-break: break-word;
+}
+.asset-detail-history .tx-info small {
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 3px;
+}
+.asset-detail-history .tx-value {
+    font-weight: 700;
+    white-space: nowrap;
+}
+.asset-detail-history .tx-value.aporte {
+    color: var(--accent-green);
+}
+.asset-detail-history .tx-value.resgate {
+    color: var(--accent-orange);
+}
+
+/* ============ SEÇÃO DE GRÁFICOS ============ */
+.investments-charts-section {
+    margin-top: 30px;
+}
+.investments-charts-section .chart-wrapper {
+    background: var(--surface);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    transition: background 0.3s ease;
+}
+.investments-charts-section .chart-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: -5px;
+    margin-bottom: 10px;
+}
+
+/* ============ PAINEL DE CONFIGURAÇÕES ============ */
+.settings-panel {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    padding: 15px;
+    overflow-y: auto;
+    backdrop-filter: blur(3px);
+}
+.settings-panel.show {
+    display: block;
+}
+.settings-panel-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+}
+.settings-header {
+    background: var(--surface-alt);
+    padding: 18px 22px;
+    border-bottom: 2px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.settings-header h2 {
+    margin: 0;
+    border: none;
+    padding: 0;
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.settings-body {
+    padding: 20px;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+.settings-section {
+    background: var(--surface-alt);
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    border-left: 4px solid var(--accent-blue);
+}
+.settings-section:last-child {
+    margin-bottom: 0;
+}
+.settings-section h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.settings-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0 0 10px 0;
+    line-height: 1.5;
+}
+.settings-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+.settings-row button {
+    width: auto;
+    padding: 10px 16px;
+    font-size: 14px;
+    margin: 0;
+}
+.settings-status {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: var(--surface);
+    margin-top: 10px;
+    color: var(--text-secondary);
+}
+.settings-status.ok {
+    color: var(--accent-green);
+}
+.settings-status.error {
+    color: var(--accent-red);
+}
+
+/* Barra de uso da API */
+.api-usage-bar-wrapper {
+    width: 100%;
+    height: 12px;
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 0;
+    border: 1px solid var(--border-light);
+}
+.api-usage-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+    transition: width 0.4s ease, background 0.4s ease;
+}
+.api-usage-bar.warn {
+    background: linear-gradient(90deg, var(--accent-blue), var(--warn-border));
+}
+.api-usage-bar.danger {
+    background: linear-gradient(90deg, var(--warn-border), var(--accent-red));
+}
+.api-usage-numbers {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+}
+.api-usage-reset {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 4px;
+}
+
+/* ============ MODAIS NOVOS (reaproveitam .review-modal) ============ */
+/* Os modais assetModal, txModal e backupModal já herdam os estilos
+   da .review-modal e .review-panel do style.css.
+   Abaixo só ajustes específicos. */
+
+#assetModal .review-body,
+#txModal .review-body,
+#backupModal .review-body {
+    max-height: 70vh;
+}
+
+#assetModal .form-row,
+#txModal .form-row {
+    margin-bottom: 12px;
+}
+
+#backupModalContent ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+#backupModalContent ul li {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+#backupModalContent ul li:last-child {
+    border-bottom: none;
+}
+#backupModalContent ul li .label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+#backupModalContent ul li .value {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+#backupModalContent .warning-box {
+    background: var(--warn-bg);
+    border-left: 4px solid var(--warn-border);
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin: 15px 0;
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+/* ============ RESPONSIVO ============ */
+@media (max-width: 768px) {
+    /* Botão de engrenagem */
+    .settings-toggle {
+        top: 12px;
+        left: 12px;
+        width: 42px;
+        height: 42px;
+        font-size: 1rem;
+    }
+
+    /* Toolbar vira coluna */
+    .investments-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .investments-filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .investments-filter select {
+        width: 100%;
+        min-width: 0;
+    }
+    .investments-actions {
+        flex-direction: column;
+    }
+    .investments-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Cards de subtotal em coluna única */
+    .owner-subtotals-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Tabela de investimentos: mesmo padrão da tabela de revisão */
+    .investments-table-wrapper {
+        overflow-x: visible;
+        box-shadow: none;
+        background: transparent;
+    }
+    .investments-table {
+        min-width: 0;
+        display: block;
+    }
+    .investments-table thead {
+        display: none;
+    }
+    .investments-table tbody,
+    .investments-table tfoot {
+        display: block;
+    }
+    .investments-table tbody tr {
+        display: block;
+        background: var(--surface-alt);
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 12px;
+        border: 1px solid var(--border-light);
+        border-left: 4px solid var(--accent-blue);
+        cursor: pointer;
+    }
+    .investments-table tbody tr:hover {
+        background: var(--surface-hover);
+    }
+    .investments-table tbody td {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+        border: none;
+        white-space: normal;
+        text-align: right;
+    }
+    .investments-table tbody td::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        text-align: left;
+    }
+    .investments-table tbody td[data-label=""]::before {
+        display: none;
+    }
+    .investments-table tbody td.col-actions {
+        justify-content: flex-end;
+        padding-top: 8px;
+        grid-template-columns: 1fr;
+    }
+
+    /* Rodapé da tabela também vira bloco no mobile */
+    .investments-table tfoot {
+        display: block;
+        position: static;
+    }
+    .investments-table tfoot tr {
+        display: block;
+        background: var(--surface-alt);
+        border-radius: 10px;
+        padding: 14px;
+        border: 2px solid var(--accent-blue);
+    }
+    .investments-table tfoot td {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+        border: none;
+        box-shadow: none;
+        background: transparent;
+        text-align: right;
+    }
+    .investments-table tfoot td::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        text-align: left;
+    }
+    .investments-table tfoot .total-label {
+        text-align: left;
+    }
+
+    /* Painel de detalhes do ativo */
+    .asset-detail-summary {
+        grid-template-columns: 1fr 1fr;
+    }
+    .asset-detail-actions {
+        flex-direction: column;
+    }
+    .asset-detail-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Painel de configurações */
+    .settings-panel-inner {
+        border-radius: 12px;
+    }
+    .settings-body {
+        padding: 14px;
+    }
+    .settings-section {
+        padding: 14px;
+    }
+    .settings-row {
+        flex-direction: column;
+    }
+    .settings-row button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Gráficos */
+    .investments-charts-section .charts-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .asset-detail-summary {
+        grid-template-columns: 1fr;
+    }
+}
