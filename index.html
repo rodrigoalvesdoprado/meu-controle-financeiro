@@ -314,17 +314,18 @@
                     <table class="investments-table" id="investments-table">
                         <thead>
                             <tr>
-                                <th class="col-asset"    title="Nome do ativo cadastrado (ex: Petrobras PN)">Ativo</th>
-                                <th class="col-code"     title="Ticker ou slug usado na API de cotação (ex: PETR4)">Código</th>
-                                <th class="col-owner"    title="Carteira a que o ativo pertence: Rodrigo, Catarse ou Guitarrista">Titular</th>
-                                <th class="col-type"     title="Classe do ativo: ação, FII, Tesouro, CDB, cofrinho ou ação EUA">Tipo</th>
-                                <th class="col-qty"      title="Quantidade atual = total de aportes − total de resgates">Qtd.</th>
-                                <th class="col-avg"      title="Custo médio ponderado por unidade, considerando aportes e resgates">Preço Médio</th>
-                                <th class="col-invested" title="Qtd × Preço Médio — custo real, sem correção">Valor Investido</th>
-                                <th class="col-price"    title="Última cotação de fechamento buscada na API">Preço Atual</th>
-                                <th class="col-current"  title="Qtd × Preço Atual — valor de mercado (mark-to-market)">Valor Atualizado</th>
-                                <th class="col-return"   title="(Valor Atualizado / Valor Investido) − 1, em % e R$">Rentab.</th>
-                                <th class="col-actions"  title="Adicionar aporte, registrar resgate ou abrir detalhes">Ações</th>
+                                <th class="col-asset sortable" data-sort="asset"       title="Nome do ativo cadastrado (ex: Petrobras PN)">Ativo <i class="sort-icon"></i></th>
+                                <th class="col-code sortable"  data-sort="code"        title="Ticker ou slug usado na API de cotação (ex: PETR4)">Código <i class="sort-icon"></i></th>
+                                <th class="col-owner sortable" data-sort="owner"       title="Carteira a que o ativo pertence: Rodrigo, Catarse ou Guitarrista">Titular <i class="sort-icon"></i></th>
+                                <th class="col-if sortable"    data-sort="institution" title="Instituição Financeira onde o ativo está custodiado (ex: Itaú, XP, Nubank, Inter)">IF <i class="sort-icon"></i></th>
+                                <th class="col-type sortable"  data-sort="type"        title="Classe do ativo: ação, FII, Tesouro, CDB, cofrinho ou ação EUA">Tipo <i class="sort-icon"></i></th>
+                                <th class="col-qty sortable"   data-sort="quantity"    title="Quantidade atual = total de aportes − total de resgates">Qtd. <i class="sort-icon"></i></th>
+                                <th class="col-avg sortable"   data-sort="avgPrice"    title="Custo médio ponderado por unidade, considerando aportes e resgates">Preço Médio <i class="sort-icon"></i></th>
+                                <th class="col-invested sortable" data-sort="invested" title="Qtd × Preço Médio — custo real, sem correção">Valor Investido <i class="sort-icon"></i></th>
+                                <th class="col-price sortable" data-sort="currentPrice" title="Última cotação de fechamento buscada na API">Preço Atual <i class="sort-icon"></i></th>
+                                <th class="col-current sortable" data-sort="currentValue" title="Qtd × Preço Atual — valor de mercado (mark-to-market)">Valor Atualizado <i class="sort-icon"></i></th>
+                                <th class="col-return sortable" data-sort="return"     title="(Valor Atualizado / Valor Investido) − 1, em % e R$">Rentab. <i class="sort-icon"></i></th>
+                                <th class="col-actions"         title="Adicionar aporte, registrar resgate ou abrir detalhes">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="investments-table-body">
@@ -506,6 +507,23 @@
                             <input type="text" id="asset-name" placeholder="Ex: Petrobras PN" required>
                         </div>
                     </div>
+                        <div class="form-group">
+                            <label for="asset-institution">Instituição Financeira (IF)</label>
+                            <input type="text" id="asset-institution" placeholder="Ex: Itaú, XP, Nubank, Inter" list="institutions-datalist">
+                            <datalist id="institutions-datalist">
+                                <option value="Itaú"></option>
+                                <option value="XP Investimentos"></option>
+                                <option value="Nubank"></option>
+                                <option value="Inter"></option>
+                                <option value="BTG Pactual"></option>
+                                <option value="Rico"></option>
+                                <option value="Clear"></option>
+                                <option value="Treasury Direct"></option>
+                                <option value="Tesouro Direto"></option>
+                                <option value="Nomad"></option>
+                                <option value="Avenue"></option>
+                            </datalist>
+                        </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="asset-currency">Moeda</label>
