@@ -3,18 +3,12 @@
    Controle de investimentos: ativos, aportes, resgates,
    cotações, gráficos e evolução patrimonial.
 
-   ESTE ARQUIVO É DIVIDIDO EM 2 PARTES SEQUENCIAIS.
-   A Parte 1 (núcleo) termina com um comentário indicando onde
-   a Parte 2 (integrações e gráficos) começa.
+   Este arquivo é uma versão consolidada das Partes 1 e 2,
+   já com as mudanças da Etapa 2.1 (rateConfig, LCI, etc.).
    ============================================================ */
 
 (function () {
     'use strict';
-
-    // ============================================================
-    // PARTE 1 — NÚCLEO
-    // Modelo de dados, CRUD, renderização, cálculo e ordenação.
-    // ============================================================
 
     // ========== CONSTANTES ==========
 
@@ -28,15 +22,15 @@
         OWNER_FILTER: 'investmentOwnerFilter'
     };
 
-const ASSET_TYPES = {
-    acao:      { label: 'Ação',     currency: 'BRL', api: 'brapi' },
-    fii:       { label: 'FII',      currency: 'BRL', api: 'brapi' },
-    tesouro:   { label: 'Tesouro',  currency: 'BRL', api: 'brapi' },
-    cdb:       { label: 'CDB',      currency: 'BRL', api: 'manual' },
-    lci:       { label: 'LCI',      currency: 'BRL', api: 'manual' },
-    cofrinho:  { label: 'Cofrinho', currency: 'BRL', api: 'manual' },
-    acao_eua:  { label: 'Ação EUA', currency: 'USD', api: 'manual' }
-};
+    const ASSET_TYPES = {
+        acao:      { label: 'Ação',     currency: 'BRL', api: 'brapi' },
+        fii:       { label: 'FII',      currency: 'BRL', api: 'brapi' },
+        tesouro:   { label: 'Tesouro',  currency: 'BRL', api: 'brapi' },
+        cdb:       { label: 'CDB',      currency: 'BRL', api: 'manual' },
+        lci:       { label: 'LCI',      currency: 'BRL', api: 'manual' },
+        cofrinho:  { label: 'Cofrinho', currency: 'BRL', api: 'manual' },
+        acao_eua:  { label: 'Ação EUA', currency: 'USD', api: 'manual' }
+    };
 
     // ========== ESTADO EM MEMÓRIA ==========
 
@@ -44,10 +38,7 @@ const ASSET_TYPES = {
     let sortDir   = localStorage.getItem(STORAGE_KEYS.SORT_DIR)   || 'asc';
     let ownerFilter = localStorage.getItem(STORAGE_KEYS.OWNER_FILTER) || '__all__';
 
-    // Estado do modal de ativo em edição (null = novo)
     let editingAssetId = null;
-
-    // Estado do ativo cujo painel de detalhes está aberto
     let selectedAssetId = null;
 
     // ========== UTILITÁRIOS ==========
@@ -79,10 +70,8 @@ const ASSET_TYPES = {
 
     function fmtQty(v) {
         const n = Number(v) || 0;
-        // Até 8 casas decimais, removendo zeros à direita
         let s = n.toFixed(8).replace(/\.?0+$/, '');
         if (s === '') s = '0';
-        // Se tem parte decimal, usa vírgula
         return s.replace('.', ',');
     }
 
@@ -158,8 +147,20 @@ const ASSET_TYPES = {
         localStorage.setItem(STORAGE_KEYS.QUOTES_CACHE, JSON.stringify(cache));
     }
 
+    function getQuotesHistory() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEYS.QUOTES_HISTORY);
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            return (parsed && typeof parsed === 'object') ? parsed : {};
+        } catch (_) { return {}; }
+    }
+
+    function saveQuotesHistory(history) {
+        localStorage.setItem(STORAGE_KEYS.QUOTES_HISTORY, JSON.stringify(history));
+    }
+
     function getOwners() {
-        // Delega para Configurações (que já cuida dos defaults)
         if (window.Configuracoes && typeof window.Configuracoes.getOwners === 'function') {
             return window.Configuracoes.getOwners();
         }
@@ -168,16 +169,6 @@ const ASSET_TYPES = {
 
     // ========== CÁLCULOS POR ATIVO ==========
 
-    /**
-     * Calcula, para um ativo, os agregados a partir das movimentações.
-     * Retorna:
-     *   quantity      — quantidade atual (aportes − resgates)
-     *   invested      — valor investido (custo)
-     *   avgPrice      — preço médio ponderado
-     *   totalAportado — soma dos aportes (bruto)
-     *   totalResgatado— soma dos resgates (bruto)
-     *   count         — número de movimentações
-     */
     function computeAssetAggregates(assetId) {
         const txs = getInvestmentTxs().filter(t => t.assetId === assetId);
         let qty = 0;
@@ -196,7 +187,6 @@ const ASSET_TYPES = {
             }
         });
 
-        // Invested = aportes − resgates (em valor)
         const invested = totalAportado - totalResgatado;
         const avgPrice = qty > 0 ? (invested / qty) : 0;
 
@@ -210,11 +200,6 @@ const ASSET_TYPES = {
         };
     }
 
-    /**
-     * Retorna o preço atual de um ativo.
-     * Parte 1: sempre null (a busca real virá na Parte 2).
-     * Se houver cotação em cache, usa.
-     */
     function getCurrentPrice(asset) {
         const cache = getQuotesCache();
         const entry = cache[asset.code];
@@ -224,10 +209,6 @@ const ASSET_TYPES = {
         return null;
     }
 
-    /**
-     * Calcula os totais "de mercado" para um ativo.
-     * Na Parte 1, sem cotação, currentValue = invested e return = 0.
-     */
     function computeAssetValuation(asset) {
         const agg = computeAssetAggregates(asset.id);
         const currentPrice = getCurrentPrice(asset);
@@ -251,10 +232,6 @@ const ASSET_TYPES = {
         };
     }
 
-    /**
-     * Retorna a lista de ativos já enriquecidos com totais e filtrados
-     * pelo titular selecionado.
-     */
     function getEnrichedAssets() {
         const all = getAssets();
         const filtered = (ownerFilter === '__all__')
@@ -267,7 +244,7 @@ const ASSET_TYPES = {
         }));
     }
 
-    // ========== COMPARADORES (ORDENAÇÃO) ==========
+    // ========== COMPARADORES ==========
 
     function getOwnerName(ownerId) {
         const owners = getOwners();
@@ -286,7 +263,6 @@ const ASSET_TYPES = {
     }
 
     function compareInvestmentAssets(a, b) {
-        // a e b são objetos { asset, valuation }
         const A = a.asset, B = b.asset;
         const VA = a.valuation, VB = b.valuation;
 
@@ -332,8 +308,6 @@ const ASSET_TYPES = {
         }
 
         if (sortDir === 'desc') result = -result;
-
-        // Desempate por nome (sempre crescente)
         if (result === 0) {
             result = (A.name || '').localeCompare(B.name || '', 'pt-BR', { sensitivity: 'base' });
         }
@@ -356,14 +330,13 @@ const ASSET_TYPES = {
             sel.appendChild(opt);
         });
 
-        // Restaura seleção se ainda existir
         const stillExists = (current === '__all__') || owners.some(o => o.id === current);
         sel.value = stillExists ? current : '__all__';
         ownerFilter = sel.value;
         localStorage.setItem(STORAGE_KEYS.OWNER_FILTER, ownerFilter);
     }
 
-    // ========== UI — CARDS DE SUBTOTAL POR TITULAR ==========
+    // ========== UI — CARDS DE SUBTOTAL ==========
 
     function renderOwnerSubtotals() {
         const container = document.getElementById('owner-subtotals-container');
@@ -373,7 +346,6 @@ const ASSET_TYPES = {
         const owners = getOwners();
         const allAssets = getAssets();
 
-        // Se o filtro for um titular específico, mostra só ele
         const ownersToShow = (ownerFilter === '__all__')
             ? owners
             : owners.filter(o => o.id === ownerFilter);
@@ -425,7 +397,7 @@ const ASSET_TYPES = {
         });
     }
 
-    // ========== UI — TABELA DE ATIVOS ==========
+    // ========== UI — TABELA ==========
 
     function renderInvestmentsTable() {
         const tbody = document.getElementById('investments-table-body');
@@ -436,14 +408,12 @@ const ASSET_TYPES = {
 
         const enriched = getEnrichedAssets().sort(compareInvestmentAssets);
 
-        // Contador
         if (countEl) {
             countEl.textContent = enriched.length === 1
                 ? '1 ativo'
                 : `${enriched.length} ativos`;
         }
 
-        // Estado vazio
         if (enriched.length === 0) {
             tbody.innerHTML = '';
             tfoot.innerHTML = '';
@@ -452,7 +422,6 @@ const ASSET_TYPES = {
         }
         if (emptyEl) emptyEl.style.display = 'none';
 
-        // Linhas
         tbody.innerHTML = '';
         enriched.forEach(({ asset, valuation }) => {
             const tr = document.createElement('tr');
@@ -462,7 +431,6 @@ const ASSET_TYPES = {
             const ownerColor = getOwnerColor(asset.ownerId);
             const typeLabel = getTypeLabel(asset.type);
 
-            // Preço atual
             let priceCell;
             if (valuation.currentPrice !== null) {
                 priceCell = (asset.currency === 'USD')
@@ -472,10 +440,8 @@ const ASSET_TYPES = {
                 priceCell = `<span class="quote-missing">—</span>`;
             }
 
-            // Valor atualizado
             const currentValueCell = fmtBRL(valuation.currentValue);
 
-            // Rentabilidade
             let returnCell;
             if (valuation.invested <= 0) {
                 returnCell = `<span class="return-neutral">—</span>`;
@@ -485,7 +451,6 @@ const ASSET_TYPES = {
                 returnCell = `<span class="${cls}">${fmtPct(valuation.returnPct)}</span>`;
             }
 
-            // Instituição
             const ifText = asset.institution ? escapeHtmlText(asset.institution) : '<span class="quote-missing">—</span>';
 
             tr.innerHTML = `
@@ -518,7 +483,6 @@ const ASSET_TYPES = {
             tbody.appendChild(tr);
         });
 
-        // Rodapé com totais
         let sumInvested = 0;
         let sumCurrent = 0;
         enriched.forEach(({ valuation }) => {
@@ -542,7 +506,6 @@ const ASSET_TYPES = {
             </tr>
         `;
 
-        // Atualiza ícones de ordenação
         updateSortIcons();
     }
 
@@ -556,7 +519,7 @@ const ASSET_TYPES = {
         });
     }
 
-    // ========== UI — PAINEL DE DETALHES DO ATIVO ==========
+    // ========== UI — PAINEL DE DETALHES ==========
 
     function openAssetDetail(assetId) {
         const asset = getAssets().find(a => a.id === assetId);
@@ -603,7 +566,6 @@ const ASSET_TYPES = {
             </div>
         `;
 
-        // Histórico
         const txs = getInvestmentTxs()
             .filter(t => t.assetId === assetId)
             .sort((a, b) => b.timestamp - a.timestamp);
@@ -638,7 +600,6 @@ const ASSET_TYPES = {
             history.innerHTML = '';
             history.appendChild(ul);
 
-            // Listeners dos botões de excluir
             history.querySelectorAll('button[data-delete-tx-id]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -666,7 +627,6 @@ const ASSET_TYPES = {
         const titleEl = document.getElementById('assetModalTitle');
         if (!modal) return;
 
-        // Preenche dropdown de titulares
         const ownerSel = document.getElementById('asset-owner');
         if (ownerSel) {
             ownerSel.innerHTML = '';
@@ -699,177 +659,168 @@ const ASSET_TYPES = {
         editingAssetId = null;
     }
 
-function clearAssetForm() {
-    const ids = ['asset-code', 'asset-name', 'asset-institution', 'asset-notes',
-                 'asset-rate-percent', 'asset-rate-fixed', 'asset-rate-ipca'];
-    ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-    const ownerSel = document.getElementById('asset-owner');
-    if (ownerSel && ownerSel.options.length > 0) ownerSel.selectedIndex = 0;
-    const typeSel = document.getElementById('asset-type');
-    if (typeSel) typeSel.value = 'acao';
-    const currSel = document.getElementById('asset-currency');
-    if (currSel) currSel.value = 'BRL';
-    const kindSel = document.getElementById('asset-rate-kind');
-    if (kindSel) kindSel.value = 'cdi';
-
-    updateManualRateVisibility();
-}
-
-function setAssetFormValues(asset) {
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
-    set('asset-code', asset.code);
-    set('asset-name', asset.name);
-    set('asset-institution', asset.institution);
-    set('asset-notes', asset.notes);
-
-    const ownerSel = document.getElementById('asset-owner');
-    if (ownerSel) ownerSel.value = asset.ownerId || '';
-
-    const typeSel = document.getElementById('asset-type');
-    if (typeSel) typeSel.value = asset.type || 'acao';
-
-    const currSel = document.getElementById('asset-currency');
-    if (currSel) currSel.value = asset.currency || 'BRL';
-
-    // Preenche o rateConfig novo
-    const rc = asset.rateConfig || {};
-    const kindSel = document.getElementById('asset-rate-kind');
-    if (kindSel) kindSel.value = rc.kind || 'cdi';
-
-    set('asset-rate-percent', rc.percent);
-    set('asset-rate-fixed', rc.fixedRate);
-    set('asset-rate-ipca', rc.ipcaSpread);
-
-    updateManualRateVisibility();
-    updateRateKindFields();
-}
-
-function updateManualRateVisibility() {
-    const typeSel = document.getElementById('asset-type');
-    const group = document.getElementById('asset-rate-group');
-    if (!typeSel || !group) return;
-
-    const type = typeSel.value;
-    const isFixedIncome = (type === 'cdb' || type === 'lci' || type === 'cofrinho' || type === 'tesouro');
-
-    group.style.display = isFixedIncome ? '' : 'none';
-
-    // Tesouro costuma ser Selic, IPCA+ ou Prefixado
-    // CDB/LCI/Cofrinho costumam ser CDI
-    // Mas deixamos o usuário escolher livremente
-    if (isFixedIncome) {
+    function clearAssetForm() {
+        const ids = ['asset-code', 'asset-name', 'asset-institution', 'asset-notes',
+                     'asset-rate-percent', 'asset-rate-fixed', 'asset-rate-ipca'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const ownerSel = document.getElementById('asset-owner');
+        if (ownerSel && ownerSel.options.length > 0) ownerSel.selectedIndex = 0;
+        const typeSel = document.getElementById('asset-type');
+        if (typeSel) typeSel.value = 'acao';
+        const currSel = document.getElementById('asset-currency');
+        if (currSel) currSel.value = 'BRL';
         const kindSel = document.getElementById('asset-rate-kind');
-        if (kindSel) {
-            // Defaults inteligentes (só sugere, não força)
-            if (type === 'tesouro' && kindSel.value === 'cdi') {
-                kindSel.value = 'selic';
-            }
-        }
+        if (kindSel) kindSel.value = 'cdi';
+
+        updateManualRateVisibility();
+    }
+
+    function setAssetFormValues(asset) {
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+        set('asset-code', asset.code);
+        set('asset-name', asset.name);
+        set('asset-institution', asset.institution);
+        set('asset-notes', asset.notes);
+
+        const ownerSel = document.getElementById('asset-owner');
+        if (ownerSel) ownerSel.value = asset.ownerId || '';
+
+        const typeSel = document.getElementById('asset-type');
+        if (typeSel) typeSel.value = asset.type || 'acao';
+
+        const currSel = document.getElementById('asset-currency');
+        if (currSel) currSel.value = asset.currency || 'BRL';
+
+        const rc = asset.rateConfig || {};
+        const kindSel = document.getElementById('asset-rate-kind');
+        if (kindSel) kindSel.value = rc.kind || 'cdi';
+
+        set('asset-rate-percent', rc.percent);
+        set('asset-rate-fixed', rc.fixedRate);
+        set('asset-rate-ipca', rc.ipcaSpread);
+
+        updateManualRateVisibility();
         updateRateKindFields();
     }
-}
 
-function updateRateKindFields() {
-    const kindSel = document.getElementById('asset-rate-kind');
-    const percentGroup = document.getElementById('asset-rate-percent-group');
-    const fixedGroup = document.getElementById('asset-rate-fixed-group');
-    const ipcaGroup = document.getElementById('asset-rate-ipca-group');
+    function updateManualRateVisibility() {
+        const typeSel = document.getElementById('asset-type');
+        const group = document.getElementById('asset-rate-group');
+        if (!typeSel || !group) return;
 
-    if (!kindSel) return;
-    const kind = kindSel.value;
+        const type = typeSel.value;
+        const isFixedIncome = (type === 'cdb' || type === 'lci' || type === 'cofrinho' || type === 'tesouro');
 
-    if (percentGroup) percentGroup.style.display = (kind === 'cdi' || kind === 'selic') ? '' : 'none';
-    if (fixedGroup)   fixedGroup.style.display   = (kind === 'prefixado') ? '' : 'none';
-    if (ipcaGroup)    ipcaGroup.style.display    = (kind === 'ipca') ? '' : 'none';
-}
+        group.style.display = isFixedIncome ? '' : 'none';
 
-function saveAssetFromForm() {
-    const codeEl = document.getElementById('asset-code');
-    const nameEl = document.getElementById('asset-name');
-    const ownerEl = document.getElementById('asset-owner');
-    const typeEl = document.getElementById('asset-type');
-    const institutionEl = document.getElementById('asset-institution');
-    const currencyEl = document.getElementById('asset-currency');
-    const notesEl = document.getElementById('asset-notes');
-    const rateKindEl = document.getElementById('asset-rate-kind');
-    const ratePercentEl = document.getElementById('asset-rate-percent');
-    const rateFixedEl = document.getElementById('asset-rate-fixed');
-    const rateIpcaEl = document.getElementById('asset-rate-ipca');
-
-    if (!codeEl || !nameEl || !ownerEl || !typeEl) return;
-
-    const code = codeEl.value.trim().toUpperCase();
-    const name = nameEl.value.trim();
-    const ownerId = ownerEl.value;
-    const type = typeEl.value;
-    const institution = institutionEl ? institutionEl.value.trim() : '';
-    const currency = currencyEl ? currencyEl.value : (ASSET_TYPES[type] ? ASSET_TYPES[type].currency : 'BRL');
-    const notes = notesEl ? notesEl.value.trim() : '';
-
-    if (!code || !name || !ownerId) {
-        notify('Preencha os campos obrigatórios.', 'error');
-        return;
-    }
-
-    // Monta o rateConfig para renda fixa
-    let rateConfig = null;
-    const isFixedIncome = (type === 'cdb' || type === 'lci' || type === 'cofrinho' || type === 'tesouro');
-    if (isFixedIncome && rateKindEl) {
-        const kind = rateKindEl.value;
-        rateConfig = { kind, percent: null, fixedRate: null, ipcaSpread: null };
-
-        if (kind === 'cdi' || kind === 'selic') {
-            const v = parseFloat(ratePercentEl && ratePercentEl.value);
-            if (!isNaN(v) && v > 0) rateConfig.percent = v;
-        } else if (kind === 'prefixado') {
-            const v = parseFloat(rateFixedEl && rateFixedEl.value);
-            if (!isNaN(v) && v > 0) rateConfig.fixedRate = v;
-        } else if (kind === 'ipca') {
-            const v = parseFloat(rateIpcaEl && rateIpcaEl.value);
-            if (!isNaN(v) && v >= 0) rateConfig.ipcaSpread = v;
+        if (isFixedIncome) {
+            const kindSel = document.getElementById('asset-rate-kind');
+            if (kindSel && type === 'tesouro' && kindSel.value === 'cdi') {
+                kindSel.value = 'selic';
+            }
+            updateRateKindFields();
         }
     }
 
-    const assets = getAssets();
+    function updateRateKindFields() {
+        const kindSel = document.getElementById('asset-rate-kind');
+        const percentGroup = document.getElementById('asset-rate-percent-group');
+        const fixedGroup = document.getElementById('asset-rate-fixed-group');
+        const ipcaGroup = document.getElementById('asset-rate-ipca-group');
 
-    // Verifica duplicidade de código + titular
-    const duplicate = assets.find(a =>
-        a.code === code && a.ownerId === ownerId &&
-        (!editingAssetId || a.id !== editingAssetId)
-    );
-    if (duplicate) {
-        notify('Já existe um ativo com este código para este titular.', 'error');
-        return;
+        if (!kindSel) return;
+        const kind = kindSel.value;
+
+        if (percentGroup) percentGroup.style.display = (kind === 'cdi' || kind === 'selic') ? '' : 'none';
+        if (fixedGroup)   fixedGroup.style.display   = (kind === 'prefixado') ? '' : 'none';
+        if (ipcaGroup)    ipcaGroup.style.display    = (kind === 'ipca') ? '' : 'none';
     }
 
-    if (editingAssetId) {
-        const idx = assets.findIndex(a => a.id === editingAssetId);
-        if (idx >= 0) {
-            assets[idx] = {
-                ...assets[idx],
+    function saveAssetFromForm() {
+        const codeEl = document.getElementById('asset-code');
+        const nameEl = document.getElementById('asset-name');
+        const ownerEl = document.getElementById('asset-owner');
+        const typeEl = document.getElementById('asset-type');
+        const institutionEl = document.getElementById('asset-institution');
+        const currencyEl = document.getElementById('asset-currency');
+        const notesEl = document.getElementById('asset-notes');
+        const rateKindEl = document.getElementById('asset-rate-kind');
+        const ratePercentEl = document.getElementById('asset-rate-percent');
+        const rateFixedEl = document.getElementById('asset-rate-fixed');
+        const rateIpcaEl = document.getElementById('asset-rate-ipca');
+
+        if (!codeEl || !nameEl || !ownerEl || !typeEl) return;
+
+        const code = codeEl.value.trim().toUpperCase();
+        const name = nameEl.value.trim();
+        const ownerId = ownerEl.value;
+        const type = typeEl.value;
+        const institution = institutionEl ? institutionEl.value.trim() : '';
+        const currency = currencyEl ? currencyEl.value : (ASSET_TYPES[type] ? ASSET_TYPES[type].currency : 'BRL');
+        const notes = notesEl ? notesEl.value.trim() : '';
+
+        if (!code || !name || !ownerId) {
+            notify('Preencha os campos obrigatórios.', 'error');
+            return;
+        }
+
+        let rateConfig = null;
+        const isFixedIncome = (type === 'cdb' || type === 'lci' || type === 'cofrinho' || type === 'tesouro');
+        if (isFixedIncome && rateKindEl) {
+            const kind = rateKindEl.value;
+            rateConfig = { kind, percent: null, fixedRate: null, ipcaSpread: null };
+
+            if (kind === 'cdi' || kind === 'selic') {
+                const v = parseFloat(ratePercentEl && ratePercentEl.value);
+                if (!isNaN(v) && v > 0) rateConfig.percent = v;
+            } else if (kind === 'prefixado') {
+                const v = parseFloat(rateFixedEl && rateFixedEl.value);
+                if (!isNaN(v) && v > 0) rateConfig.fixedRate = v;
+            } else if (kind === 'ipca') {
+                const v = parseFloat(rateIpcaEl && rateIpcaEl.value);
+                if (!isNaN(v) && v >= 0) rateConfig.ipcaSpread = v;
+            }
+        }
+
+        const assets = getAssets();
+
+        const duplicate = assets.find(a =>
+            a.code === code && a.ownerId === ownerId &&
+            (!editingAssetId || a.id !== editingAssetId)
+        );
+        if (duplicate) {
+            notify('Já existe um ativo com este código para este titular.', 'error');
+            return;
+        }
+
+        if (editingAssetId) {
+            const idx = assets.findIndex(a => a.id === editingAssetId);
+            if (idx >= 0) {
+                assets[idx] = {
+                    ...assets[idx],
+                    code, name, ownerId, type,
+                    institution, currency, notes,
+                    rateConfig
+                };
+            }
+        } else {
+            assets.push({
+                id: generateId(),
                 code, name, ownerId, type,
                 institution, currency, notes,
-                rateConfig
-            };
+                rateConfig,
+                createdAt: Date.now()
+            });
         }
-    } else {
-        assets.push({
-            id: generateId(),
-            code, name, ownerId, type,
-            institution, currency, notes,
-            rateConfig,
-            createdAt: Date.now()
-        });
-    }
 
-    saveAssets(assets);
-    closeAssetModal();
-    renderAll();
-    notify(editingAssetId ? 'Ativo atualizado.' : 'Ativo cadastrado.', 'success');
-}
+        saveAssets(assets);
+        closeAssetModal();
+        renderAll();
+        notify(editingAssetId ? 'Ativo atualizado.' : 'Ativo cadastrado.', 'success');
+    }
 
     function deleteAsset(assetId) {
         const asset = getAssets().find(a => a.id === assetId);
@@ -891,10 +842,10 @@ function saveAssetFromForm() {
         notify('Ativo excluído.', 'success');
     }
 
-    // ========== MODAL DE MOVIMENTAÇÃO (APORTE / RESGATE) ==========
+    // ========== MODAL DE MOVIMENTAÇÃO ==========
 
     let txModalAssetId = null;
-    let txModalType = 'aporte'; // 'aporte' | 'resgate'
+    let txModalType = 'aporte';
 
     function openTxModal(assetId, type) {
         const asset = getAssets().find(a => a.id === assetId);
@@ -915,15 +866,12 @@ function saveAssetFromForm() {
             subtitleEl.innerHTML = `<strong>${escapeHtmlText(asset.name)}</strong> (${escapeHtmlText(asset.code)})`;
         }
 
-        // Preenche o tipo no select
         const typeSel = document.getElementById('tx-type');
         if (typeSel) typeSel.value = txModalType;
 
-        // Data de hoje
         const dateEl = document.getElementById('tx-date');
         if (dateEl) dateEl.value = formatDateToString(new Date());
 
-        // Limpa campos
         const qtyEl = document.getElementById('tx-quantity');
         const priceEl = document.getElementById('tx-unit-price');
         const totalEl = document.getElementById('tx-total');
@@ -933,7 +881,6 @@ function saveAssetFromForm() {
         if (totalEl) totalEl.value = '';
         if (notesEl) notesEl.value = '';
 
-        // Pré-preenche com o preço atual, se disponível
         const price = getCurrentPrice(asset);
         if (price !== null && priceEl) priceEl.value = price.toFixed(4);
 
@@ -995,7 +942,6 @@ function saveAssetFromForm() {
             return;
         }
 
-        // Validação especial para resgate: não pode resgatar mais que o saldo
         if (type === 'resgate') {
             const agg = computeAssetAggregates(asset.id);
             if (qty > agg.quantity + 1e-9) {
@@ -1024,7 +970,7 @@ function saveAssetFromForm() {
         closeTxModal();
         renderAll();
         if (selectedAssetId === asset.id) {
-            openAssetDetail(asset.id); // atualiza o painel aberto
+            openAssetDetail(asset.id);
         }
         notify(type === 'aporte' ? 'Aporte registrado.' : 'Resgate registrado.', 'success');
     }
@@ -1052,7 +998,6 @@ function saveAssetFromForm() {
         renderOwnerSubtotals();
         renderInvestmentsTable();
         if (selectedAssetId) {
-            // Reabre para refletir dados atualizados
             openAssetDetail(selectedAssetId);
         }
     }
@@ -1060,7 +1005,6 @@ function saveAssetFromForm() {
     // ========== LISTENERS DO NÚCLEO ==========
 
     function setupCoreListeners() {
-        // Filtro de titular
         const filterSel = document.getElementById('investments-owner-filter');
         if (filterSel) {
             filterSel.addEventListener('change', () => {
@@ -1070,13 +1014,11 @@ function saveAssetFromForm() {
             });
         }
 
-        // Botão "Novo Ativo"
         const newAssetBtn = document.getElementById('investments-new-asset');
         if (newAssetBtn) {
             newAssetBtn.addEventListener('click', () => openAssetModal(null));
         }
 
-        // Ordenação por clique nos cabeçalhos
         document.querySelectorAll('.investments-table thead th.sortable').forEach(th => {
             th.addEventListener('click', () => {
                 const field = th.getAttribute('data-sort');
@@ -1093,11 +1035,9 @@ function saveAssetFromForm() {
             });
         });
 
-        // Clique em linha da tabela → abre detalhes
         const tbody = document.getElementById('investments-table-body');
         if (tbody) {
             tbody.addEventListener('click', (e) => {
-                // Ignora se clicou num botão de ação
                 if (e.target.closest('button')) {
                     const btn = e.target.closest('button');
                     const action = btn.getAttribute('data-action');
@@ -1114,19 +1054,12 @@ function saveAssetFromForm() {
             });
         }
 
-        // Modal de ativo: mudança de tipo atualiza visibilidade do % do CDI
         const typeSel = document.getElementById('asset-type');
         if (typeSel) typeSel.addEventListener('change', updateManualRateVisibility);
 
-       // Modal de ativo: mudança de tipo atualiza visibilidade do grupo de taxa
-const typeSel = document.getElementById('asset-type');
-if (typeSel) typeSel.addEventListener('change', updateManualRateVisibility);
+        const rateKindSel = document.getElementById('asset-rate-kind');
+        if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
 
-// Modal de ativo: mudança do tipo de taxa atualiza os campos visíveis
-const rateKindSel = document.getElementById('asset-rate-kind');
-if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
-
-        // Modal de ativo: cancelar / submit
         const assetCancel = document.getElementById('asset-form-cancel');
         if (assetCancel) assetCancel.addEventListener('click', closeAssetModal);
 
@@ -1138,7 +1071,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
             });
         }
 
-        // Modal de movimentação
         const txCancel = document.getElementById('tx-form-cancel');
         if (txCancel) txCancel.addEventListener('click', closeTxModal);
 
@@ -1155,7 +1087,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         if (qtyEl) qtyEl.addEventListener('input', recalcTxTotal);
         if (priceEl) priceEl.addEventListener('input', recalcTxTotal);
 
-        // Painel de detalhes do ativo
         const detailClose = document.getElementById('asset-detail-close');
         if (detailClose) detailClose.addEventListener('click', closeAssetDetail);
 
@@ -1187,7 +1118,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
             });
         }
 
-        // ESC fecha modais abertos
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const assetModal = document.getElementById('assetModal');
@@ -1198,60 +1128,28 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         });
     }
 
-    // ========== API PÚBLICA (NÚCLEO) ==========
-    // A Parte 2 vai adicionar mais itens a este objeto.
+    // ========== API PÚBLICA ==========
 
     window.Investimentos = {
-        // Dados
         getAssets,
         getInvestmentTxs,
         getQuotesCache,
         saveQuotesCache,
-
-        // Cálculos
         computeAssetAggregates,
         computeAssetValuation,
-
-        // UI
         renderAll,
         refreshOwnerFilter,
-
-        // Debug
         _openAssetModal: openAssetModal,
         _openTxModal: openTxModal
     };
 
     // ============================================================
-    // FIM DA PARTE 1
+    // COTAÇÕES (brapi, BCB, USD)
     // ============================================================
-    // A PARTE 2 CONTINUA A PARTIR DAQUI (integrações: cotações,
-    // snapshots e gráficos). NÃO FECHE O IIFE AINDA.
-
-    // ============================================================
-    // PARTE 2 — INTEGRAÇÕES
-    // Cotações (brapi, Yahoo, CDI, USD/BRL), snapshots diários,
-    // gráficos (pizza por titular, composição por tipo, evolução).
-    // ============================================================
-
-    // ========== CONSTANTES DE API ==========
 
     const BRAPI_BASE = 'https://brapi.dev/api';
-    const YAHOO_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart';
+    let usdBrlRate = null;
 
-    // Mapeamento de slug de Tesouro para o formato aceito pela brapi.
-    // O usuário pode digitar o código livremente, então deixamos como está
-    // e usamos o próprio código como slug.
-    // Ex.: 'tesouro-selic-2029' -> GET /api/v2/treasury/bond/tesouro-selic-2029
-
-    // Cache de moedas (evita chamar toda hora)
-    let usdBrlRate = null;   // { rate: number, at: timestamp }
-
-    // ========== API — CHAMADAS ==========
-
-    /**
-     * Chama a brapi.dev e incrementa o contador.
-     * Retorna o JSON de resposta ou lança erro.
-     */
     async function callBrapi(path) {
         const key = (window.Configuracoes && window.Configuracoes.getBrapiKey)
             ? window.Configuracoes.getBrapiKey()
@@ -1261,7 +1159,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
             ? `${BRAPI_BASE}${path}${path.includes('?') ? '&' : '?'}token=${encodeURIComponent(key)}`
             : `${BRAPI_BASE}${path}`;
 
-        // Conta a requisição ANTES de disparar
         if (window.Configuracoes && typeof window.Configuracoes.incrementApiUsage === 'function') {
             window.Configuracoes.incrementApiUsage(1);
         }
@@ -1275,21 +1172,14 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         return resp.json();
     }
 
-    /**
-     * Busca a cotação atual de um ativo do tipo acao, fii, tesouro ou acao_eua
-     * (esse último retorna null no plano gratuito, tratado como manual).
-     */
     async function fetchQuoteForAsset(asset) {
         if (!asset || !asset.code) return null;
 
         const type = asset.type;
-
-        // Tipos manuais: sem cotação automática
-        if (type === 'cdb' || type === 'cofrinho' || type === 'acao_eua') {
+        if (type === 'cdb' || type === 'cofrinho' || type === 'acao_eua' || type === 'lci') {
             return null;
         }
 
-        // Ações, FIIs: usa /quote/{ticker}
         if (type === 'acao' || type === 'fii') {
             const data = await callBrapi(`/quote/${encodeURIComponent(asset.code)}`);
             if (data && Array.isArray(data.results) && data.results.length > 0) {
@@ -1302,12 +1192,9 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
             return null;
         }
 
-        // Tesouro Direto: usa /v2/treasury/bond/{slug}
         if (type === 'tesouro') {
             try {
                 const data = await callBrapi(`/v2/treasury/bond/${encodeURIComponent(asset.code)}`);
-                // A brapi retorna { bond: { ... , price: ... } } ou estrutura semelhante.
-                // Tentamos extrair o preço de vários lugares possíveis.
                 const bond = (data && data.bond) ? data.bond : (data && data.result ? data.result : data);
                 const candidates = [
                     bond && bond.price,
@@ -1324,61 +1211,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         return null;
     }
 
-    /**
-     * Busca a cotação USD → BRL.
-     * Usa a API pública do Banco Central (PTAX) via AwesomeAPI.
-     * AwesomeAPI: https://economia.awesomeapi.com.br/last/USD-BRL
-     */
-    async function fetchUsdBrlRate() {
-        const now = Date.now();
-        if (usdBrlRate && (now - usdBrlRate.at) < (30 * 60 * 1000)) {
-            return usdBrlRate.rate;
-        }
-
-        // Conta a requisição mesmo não sendo brapi, pois é uma chamada externa
-        // (mas o contador é apenas para brapi; deixamos de fora para não confundir)
-
-        try {
-            const resp = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL');
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json();
-            const rate = Number(data && data.USDBRL && data.USDBRL.bid);
-            if (Number.isFinite(rate) && rate > 0) {
-                usdBrlRate = { rate, at: now };
-                return rate;
-            }
-        } catch (err) {
-            console.warn('[investimentos.js] Falha ao buscar USD/BRL:', err);
-        }
-        return usdBrlRate ? usdBrlRate.rate : null;
-    }
-
-    /**
-     * Busca a taxa CDI diária (para cálculo de CDB e cofrinho).
-     * Fonte: API pública do Banco Central (SGS 11 = CDI diário).
-     * Se falhar, retorna null e o app mantém o último valor conhecido.
-     */
-    async function fetchCdiDaily() {
-        try {
-            const resp = await fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados/ultimos/1?formato=json');
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json();
-            if (Array.isArray(data) && data.length > 0) {
-                const v = Number(String(data[0].valor).replace(',', '.'));
-                if (Number.isFinite(v)) return v / 100; // 0.0523 → 0.000523 (formato decimal)
-            }
-        } catch (err) {
-            console.warn('[investimentos.js] Falha ao buscar CDI:', err);
-        }
-        return null;
-    }
-
-    // ========== ATUALIZAÇÃO DE COTAÇÕES ==========
-
-    /**
-     * Atualiza o cache de cotações para todos os ativos visíveis.
-     * Retorna um resumo { updated, failed, skipped }.
-     */
     async function refreshAllQuotes() {
         const assets = getAssets();
         if (assets.length === 0) {
@@ -1412,7 +1244,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
                 }
             } catch (err) {
                 console.warn(`[investimentos.js] Falha ao atualizar ${asset.code}:`, err);
-                // Marca como falha sem apagar o valor anterior
                 if (cache[asset.code]) {
                     cache[asset.code].ok = false;
                     cache[asset.code].error = err.message || 'erro';
@@ -1431,7 +1262,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
             btn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar cotações';
         }
 
-        // Feedback
         const parts = [];
         if (updated > 0) parts.push(`${updated} atualizado(s)`);
         if (failed > 0) parts.push(`${failed} com erro`);
@@ -1441,12 +1271,8 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         return { updated, failed, skipped };
     }
 
-    // ========== SNAPSHOTS DIÁRIOS ==========
+    // ========== SNAPSHOTS ==========
 
-    /**
-     * Salva um snapshot diário do valor total por titular e por classe.
-     * O snapshot é indexado pela data (YYYY-MM-DD) e sobrescreve o do dia.
-     */
     function saveDailySnapshot() {
         try {
             const history = getQuotesHistory();
@@ -1468,19 +1294,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         }
     }
 
-    function getQuotesHistory() {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEYS.QUOTES_HISTORY);
-            if (!raw) return {};
-            const parsed = JSON.parse(raw);
-            return (parsed && typeof parsed === 'object') ? parsed : {};
-        } catch (_) { return {}; }
-    }
-
-    function saveQuotesHistory(history) {
-        localStorage.setItem(STORAGE_KEYS.QUOTES_HISTORY, JSON.stringify(history));
-    }
-
     // ========== GRÁFICOS ==========
 
     let chartOwnerPie = null;
@@ -1497,7 +1310,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         renderPatrimonyEvolutionChart();
     }
 
-    // ---- Pizza por titular ----
     function renderOwnerPieChart() {
         const canvas = document.getElementById('owner-pie-chart');
         if (!canvas || typeof Chart === 'undefined') return;
@@ -1565,7 +1377,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         });
     }
 
-    // ---- Composição por tipo (respeita filtro de titular) ----
     function renderTypeCompositionChart() {
         const canvas = document.getElementById('type-composition-chart');
         if (!canvas || typeof Chart === 'undefined') return;
@@ -1588,6 +1399,7 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
             fii: '#9b59b6',
             tesouro: '#27ae60',
             cdb: '#e67e22',
+            lci: '#16a085',
             cofrinho: '#f1c40f',
             acao_eua: '#e74c3c'
         };
@@ -1644,13 +1456,7 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         });
     }
 
-    // ---- Evolução patrimonial ----
-    // Reconstrói a série temporal a partir de:
-    //   (a) snapshots diários locais (quotesHistory) — se existirem
-    //   (b) movimentações + cotação atual — como fallback para dias sem snapshot
-    // Modo: por titular (linhas por titular).
-    // Ao clicar numa linha, alterna para modo "por classe" daquele titular.
-    let evolutionMode = 'owner';    // 'owner' | 'class'
+    let evolutionMode = 'owner';
     let evolutionClassOwnerId = null;
 
     function renderPatrimonyEvolutionChart() {
@@ -1662,9 +1468,8 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         const gridColor = dark ? '#3a3f47' : '#eeeeee';
 
         const history = getQuotesHistory();
-        const dates = Object.keys(history).sort(); // YYYY-MM-DD
+        const dates = Object.keys(history).sort();
 
-        // Se não há histórico, mostra aviso
         if (dates.length === 0) {
             if (chartPatrimony) chartPatrimony.destroy();
             chartPatrimony = null;
@@ -1676,7 +1481,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
             return;
         }
 
-        // Monta labels (formato DD/MM)
         const labels = dates.map(d => {
             const [y, m, dd] = d.split('-');
             return `${dd}/${m}`;
@@ -1685,7 +1489,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         const datasets = [];
 
         if (evolutionMode === 'owner' || !evolutionClassOwnerId) {
-            // Uma linha por titular
             const owners = getOwners();
             const ownerColors = {};
             owners.forEach(o => ownerColors[o.id] = o.color || '#3498db');
@@ -1710,12 +1513,12 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
                 }
             });
         } else {
-            // Uma linha por classe, dentro do titular selecionado
             const palette = {
                 acao: '#3498db',
                 fii: '#9b59b6',
                 tesouro: '#27ae60',
                 cdb: '#e67e22',
+                lci: '#16a085',
                 cofrinho: '#f1c40f',
                 acao_eua: '#e74c3c'
             };
@@ -1767,9 +1570,6 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
                         position: 'bottom',
                         labels: { color: textColor },
                         onClick: (e, legendItem, legend) => {
-                            // Comportamento padrão: alterna visibilidade.
-                            // Comportamento extra: se clicar num titular (modo 'owner'),
-                            // expande para modo 'class' daquele titular.
                             const chart = legend.chart;
                             const idx = legendItem.datasetIndex;
                             const label = chart.data.datasets[idx].label;
@@ -1784,14 +1584,12 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
                                     return;
                                 }
                             } else {
-                                // Já em modo class: clicar em qualquer legenda volta para modo owner
                                 evolutionMode = 'owner';
                                 evolutionClassOwnerId = null;
                                 renderPatrimonyEvolutionChart();
                                 return;
                             }
 
-                            // Fallback: comportamento padrão do Chart.js
                             const meta = chart.getDatasetMeta(idx);
                             meta.hidden = meta.hidden === null ? !chart.data.datasets[idx].hidden : null;
                             chart.update();
@@ -1807,7 +1605,7 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         });
     }
 
-    // ========== LISTENERS DA PARTE 2 ==========
+    // ========== LISTENERS DE INTEGRAÇÃO ==========
 
     function setupIntegrationListeners() {
         const refreshBtn = document.getElementById('investments-refresh-quotes');
@@ -1818,18 +1616,15 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
         }
     }
 
-    // ========== INICIALIZAÇÃO GERAL ==========
+    // ========== INICIALIZAÇÃO ==========
 
     function initInvestimentos() {
         setupCoreListeners();
         setupIntegrationListeners();
         renderAll();
-        // Salva um snapshot inicial do dia
         saveDailySnapshot();
     }
 
-    // ========== RE-RENDER QUANDO O TEMA MUDA ==========
-    // Observa mudanças na classe do body para redesenhar gráficos
     const observer = new MutationObserver(() => {
         const investmentsTab = document.getElementById('investments-tab');
         if (investmentsTab && investmentsTab.classList.contains('active')) {
@@ -1838,19 +1633,14 @@ if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
     });
     observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-    // ========== RE-RENDER QUANDO A ABA INVESTIMENTOS É ABERTA ==========
-    // O app.js controla as abas; escutamos cliques na tab "Investimentos".
     document.addEventListener('click', (e) => {
         const tab = e.target.closest('.tab[data-tab="investments"]');
         if (!tab) return;
-        // Pequeno delay para o display:block entrar em vigor
         setTimeout(() => {
             renderAll();
             renderInvestmentCharts();
         }, 60);
     });
-
-    // ========== AUTO-INICIALIZAÇÃO ==========
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initInvestimentos);
