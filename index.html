@@ -269,7 +269,7 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- ============ ABA INVESTIMENTOS (NOVA) ====================== -->
+        <!-- ============ ABA INVESTIMENTOS ============================= -->
         <!-- ============================================================ -->
         <div class="tab-content" id="investments-tab">
 
@@ -279,7 +279,6 @@
                     <label for="investments-owner-filter">Titular:</label>
                     <select id="investments-owner-filter">
                         <option value="__all__">Todos</option>
-                        <!-- preenchido dinamicamente -->
                     </select>
                 </div>
                 <div class="investments-actions">
@@ -299,9 +298,7 @@
             </div>
 
             <!-- Cards de subtotais por titular -->
-            <div class="owner-subtotals-grid" id="owner-subtotals-container">
-                <!-- preenchido dinamicamente -->
-            </div>
+            <div class="owner-subtotals-grid" id="owner-subtotals-container"></div>
 
             <!-- Tabela principal de ativos -->
             <div class="investments-table-section">
@@ -318,7 +315,7 @@
                                 <th class="col-code sortable"  data-sort="code"            title="Ticker ou slug usado na API de cotação (ex: PETR4)">Cód. <i class="sort-icon"></i></th>
                                 <th class="col-owner sortable" data-sort="owner"           title="Carteira a que o ativo pertence: Rodrigo, Catarse ou Guitarrista">Titular <i class="sort-icon"></i></th>
                                 <th class="col-if sortable"    data-sort="institution"     title="Instituição Financeira onde o ativo está custodiado (ex: Itaú, XP, Nubank, Inter)">IF <i class="sort-icon"></i></th>
-                                <th class="col-type sortable"  data-sort="type"            title="Classe do ativo: ação, FII, Tesouro, CDB, cofrinho ou ação EUA">Tipo <i class="sort-icon"></i></th>
+                                <th class="col-type sortable"  data-sort="type"            title="Classe do ativo: ação, FII, Tesouro, CDB, LCI, cofrinho ou ação EUA">Tipo <i class="sort-icon"></i></th>
                                 <th class="col-qty sortable"   data-sort="quantity"        title="Quantidade atual = total de aportes − total de resgates">Qtd. <i class="sort-icon"></i></th>
                                 <th class="col-avg sortable"   data-sort="avgPrice"        title="Custo médio ponderado por unidade, considerando aportes e resgates">Pr. Méd <i class="sort-icon"></i></th>
                                 <th class="col-invested sortable" data-sort="invested"     title="Qtd × Preço Médio — custo real, sem correção">Vlr. Inv <i class="sort-icon"></i></th>
@@ -328,12 +325,8 @@
                                 <th class="col-actions"         title="Adicionar aporte, registrar resgate ou abrir detalhes">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="investments-table-body">
-                            <!-- preenchido dinamicamente -->
-                        </tbody>
-                        <tfoot id="investments-table-foot">
-                            <!-- preenchido dinamicamente: linha de totais -->
-                        </tfoot>
+                        <tbody id="investments-table-body"></tbody>
+                        <tfoot id="investments-table-foot"></tfoot>
                     </table>
                 </div>
 
@@ -350,9 +343,7 @@
                     <button class="close-detail" id="asset-detail-close"><i class="fas fa-times"></i> Fechar</button>
                 </h3>
 
-                <div class="asset-detail-summary" id="asset-detail-summary">
-                    <!-- preenchido dinamicamente -->
-                </div>
+                <div class="asset-detail-summary" id="asset-detail-summary"></div>
 
                 <div class="asset-detail-actions">
                     <button id="asset-add-aporte"><i class="fas fa-arrow-down"></i> Aporte</button>
@@ -362,9 +353,7 @@
                 </div>
 
                 <h4>Histórico de Movimentações</h4>
-                <div id="asset-detail-history">
-                    <!-- preenchido dinamicamente -->
-                </div>
+                <div id="asset-detail-history"></div>
             </div>
 
             <!-- ============ GRÁFICOS ============ -->
@@ -394,7 +383,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ============ PAINEL DE CONFIGURAÇÕES (NOVO) ================ -->
+    <!-- ============ PAINEL DE CONFIGURAÇÕES ======================= -->
     <!-- ============================================================ -->
     <div class="settings-panel" id="settingsPanel">
         <div class="settings-panel-inner">
@@ -471,7 +460,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ============ MODAL: NOVO/EDITAR ATIVO (NOVO) =============== -->
+    <!-- ============ MODAL: NOVO/EDITAR ATIVO ====================== -->
     <!-- ============================================================ -->
     <div class="review-modal" id="assetModal">
         <div class="review-panel" style="max-width: 700px;">
@@ -492,6 +481,7 @@
                                 <option value="fii">Fundo Imobiliário</option>
                                 <option value="tesouro">Tesouro Direto</option>
                                 <option value="cdb">CDB</option>
+                                <option value="lci">LCI</option>
                                 <option value="cofrinho">Cofrinho</option>
                                 <option value="acao_eua">Ação EUA</option>
                             </select>
@@ -507,6 +497,7 @@
                             <input type="text" id="asset-name" placeholder="Ex: Petrobras PN" required>
                         </div>
                     </div>
+                    <div class="form-row">
                         <div class="form-group">
                             <label for="asset-institution">Instituição Financeira (IF)</label>
                             <input type="text" id="asset-institution" placeholder="Ex: Itaú, XP, Nubank, Inter" list="institutions-datalist">
@@ -518,12 +509,12 @@
                                 <option value="BTG Pactual"></option>
                                 <option value="Rico"></option>
                                 <option value="Clear"></option>
-                                <option value="Treasury Direct"></option>
                                 <option value="Tesouro Direto"></option>
                                 <option value="Nomad"></option>
                                 <option value="Avenue"></option>
                             </datalist>
                         </div>
+                    </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="asset-currency">Moeda</label>
@@ -532,11 +523,36 @@
                                 <option value="USD">USD ($)</option>
                             </select>
                         </div>
-                        <div class="form-group" id="asset-manual-rate-group" style="display: none;">
-                            <label for="asset-manual-rate">% do CDI</label>
-                            <input type="number" id="asset-manual-rate" placeholder="Ex: 102" step="0.01" min="0">
+                    </div>
+
+                    <!-- Grupo de taxa (renda fixa): só aparece para tesouro, cdb, lci e cofrinho -->
+                    <div class="form-row" id="asset-rate-group" style="display: none;">
+                        <div class="form-group">
+                            <label for="asset-rate-kind">Tipo de taxa</label>
+                            <select id="asset-rate-kind">
+                                <option value="cdi">% do CDI</option>
+                                <option value="selic">% da Selic</option>
+                                <option value="ipca">IPCA +</option>
+                                <option value="prefixado">Prefixado (a.a.)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="asset-rate-percent-group">
+                            <label for="asset-rate-percent">Percentual (%)</label>
+                            <input type="number" id="asset-rate-percent" placeholder="Ex: 102" step="0.01" min="0">
+                        </div>
+
+                        <div class="form-group" id="asset-rate-fixed-group" style="display: none;">
+                            <label for="asset-rate-fixed">Taxa prefixada (% a.a.)</label>
+                            <input type="number" id="asset-rate-fixed" placeholder="Ex: 12.5" step="0.01" min="0">
+                        </div>
+
+                        <div class="form-group" id="asset-rate-ipca-group" style="display: none;">
+                            <label for="asset-rate-ipca">Spread sobre IPCA (% a.a.)</label>
+                            <input type="number" id="asset-rate-ipca" placeholder="Ex: 6.5" step="0.01" min="0">
                         </div>
                     </div>
+
                     <div class="form-group">
                         <label for="asset-notes">Observações (opcional)</label>
                         <input type="text" id="asset-notes" placeholder="Notas livres">
@@ -551,7 +567,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ============ MODAL: APORTE / RESGATE (NOVO) =============== -->
+    <!-- ============ MODAL: APORTE / RESGATE ======================= -->
     <!-- ============================================================ -->
     <div class="review-modal" id="txModal">
         <div class="review-panel" style="max-width: 600px;">
@@ -604,7 +620,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ============ MODAL: CONFIRMAÇÃO DE BACKUP (NOVO) ========== -->
+    <!-- ============ MODAL: CONFIRMAÇÃO DE BACKUP ================== -->
     <!-- ============================================================ -->
     <div class="review-modal" id="backupModal">
         <div class="review-panel" style="max-width: 600px;">
@@ -612,9 +628,7 @@
                 <h2><i class="fas fa-database"></i> Confirmar Importação</h2>
             </div>
             <div class="review-body">
-                <div id="backupModalContent">
-                    <!-- preenchido dinamicamente -->
-                </div>
+                <div id="backupModalContent"></div>
             </div>
             <div class="review-footer">
                 <div class="review-total" id="backupModalSummary"></div>
@@ -627,7 +641,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ============ MODAL: REVISÃO DE FATURA (JÁ EXISTIA) ========= -->
+    <!-- ============ MODAL: REVISÃO DE FATURA ====================== -->
     <!-- ============================================================ -->
     <div class="review-modal" id="reviewModal">
         <div class="review-panel">
