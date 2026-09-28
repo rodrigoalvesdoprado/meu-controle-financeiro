@@ -28,14 +28,15 @@
         OWNER_FILTER: 'investmentOwnerFilter'
     };
 
-    const ASSET_TYPES = {
-        acao:      { label: 'Ação',     currency: 'BRL', api: 'brapi' },
-        fii:       { label: 'FII',      currency: 'BRL', api: 'brapi' },
-        tesouro:   { label: 'Tesouro',  currency: 'BRL', api: 'brapi' },
-        cdb:       { label: 'CDB',      currency: 'BRL', api: 'manual' },
-        cofrinho:  { label: 'Cofrinho', currency: 'BRL', api: 'manual' },
-        acao_eua:  { label: 'Ação EUA', currency: 'USD', api: 'manual' }
-    };
+const ASSET_TYPES = {
+    acao:      { label: 'Ação',     currency: 'BRL', api: 'brapi' },
+    fii:       { label: 'FII',      currency: 'BRL', api: 'brapi' },
+    tesouro:   { label: 'Tesouro',  currency: 'BRL', api: 'brapi' },
+    cdb:       { label: 'CDB',      currency: 'BRL', api: 'manual' },
+    lci:       { label: 'LCI',      currency: 'BRL', api: 'manual' },
+    cofrinho:  { label: 'Cofrinho', currency: 'BRL', api: 'manual' },
+    acao_eua:  { label: 'Ação EUA', currency: 'USD', api: 'manual' }
+};
 
     // ========== ESTADO EM MEMÓRIA ==========
 
@@ -698,119 +699,177 @@
         editingAssetId = null;
     }
 
-    function clearAssetForm() {
-        const ids = ['asset-code', 'asset-name', 'asset-institution', 'asset-notes', 'asset-manual-rate'];
-        ids.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        const ownerSel = document.getElementById('asset-owner');
-        if (ownerSel && ownerSel.options.length > 0) ownerSel.selectedIndex = 0;
-        const typeSel = document.getElementById('asset-type');
-        if (typeSel) typeSel.value = 'acao';
-        const currSel = document.getElementById('asset-currency');
-        if (currSel) currSel.value = 'BRL';
-        updateManualRateVisibility();
-    }
+function clearAssetForm() {
+    const ids = ['asset-code', 'asset-name', 'asset-institution', 'asset-notes',
+                 'asset-rate-percent', 'asset-rate-fixed', 'asset-rate-ipca'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const ownerSel = document.getElementById('asset-owner');
+    if (ownerSel && ownerSel.options.length > 0) ownerSel.selectedIndex = 0;
+    const typeSel = document.getElementById('asset-type');
+    if (typeSel) typeSel.value = 'acao';
+    const currSel = document.getElementById('asset-currency');
+    if (currSel) currSel.value = 'BRL';
+    const kindSel = document.getElementById('asset-rate-kind');
+    if (kindSel) kindSel.value = 'cdi';
 
-    function setAssetFormValues(asset) {
-        const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
-        set('asset-code', asset.code);
-        set('asset-name', asset.name);
-        set('asset-institution', asset.institution);
-        set('asset-notes', asset.notes);
+    updateManualRateVisibility();
+}
 
-        const ownerSel = document.getElementById('asset-owner');
-        if (ownerSel) ownerSel.value = asset.ownerId || '';
+function setAssetFormValues(asset) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+    set('asset-code', asset.code);
+    set('asset-name', asset.name);
+    set('asset-institution', asset.institution);
+    set('asset-notes', asset.notes);
 
-        const typeSel = document.getElementById('asset-type');
-        if (typeSel) typeSel.value = asset.type || 'acao';
+    const ownerSel = document.getElementById('asset-owner');
+    if (ownerSel) ownerSel.value = asset.ownerId || '';
 
-        const currSel = document.getElementById('asset-currency');
-        if (currSel) currSel.value = asset.currency || 'BRL';
+    const typeSel = document.getElementById('asset-type');
+    if (typeSel) typeSel.value = asset.type || 'acao';
 
-        const mr = document.getElementById('asset-manual-rate');
-        if (mr) mr.value = (asset.manualRate && asset.manualRate.percent) || '';
+    const currSel = document.getElementById('asset-currency');
+    if (currSel) currSel.value = asset.currency || 'BRL';
 
-        updateManualRateVisibility();
-    }
+    // Preenche o rateConfig novo
+    const rc = asset.rateConfig || {};
+    const kindSel = document.getElementById('asset-rate-kind');
+    if (kindSel) kindSel.value = rc.kind || 'cdi';
 
-    function updateManualRateVisibility() {
-        const typeSel = document.getElementById('asset-type');
-        const group = document.getElementById('asset-manual-rate-group');
-        if (!typeSel || !group) return;
-        const type = typeSel.value;
-        const showManual = (type === 'cdb' || type === 'cofrinho');
-        group.style.display = showManual ? '' : 'none';
-    }
+    set('asset-rate-percent', rc.percent);
+    set('asset-rate-fixed', rc.fixedRate);
+    set('asset-rate-ipca', rc.ipcaSpread);
 
-    function saveAssetFromForm() {
-        const codeEl = document.getElementById('asset-code');
-        const nameEl = document.getElementById('asset-name');
-        const ownerEl = document.getElementById('asset-owner');
-        const typeEl = document.getElementById('asset-type');
-        const institutionEl = document.getElementById('asset-institution');
-        const currencyEl = document.getElementById('asset-currency');
-        const notesEl = document.getElementById('asset-notes');
-        const manualRateEl = document.getElementById('asset-manual-rate');
+    updateManualRateVisibility();
+    updateRateKindFields();
+}
 
-        if (!codeEl || !nameEl || !ownerEl || !typeEl) return;
+function updateManualRateVisibility() {
+    const typeSel = document.getElementById('asset-type');
+    const group = document.getElementById('asset-rate-group');
+    if (!typeSel || !group) return;
 
-        const code = codeEl.value.trim().toUpperCase();
-        const name = nameEl.value.trim();
-        const ownerId = ownerEl.value;
-        const type = typeEl.value;
-        const institution = institutionEl ? institutionEl.value.trim() : '';
-        const currency = currencyEl ? currencyEl.value : (ASSET_TYPES[type] ? ASSET_TYPES[type].currency : 'BRL');
-        const notes = notesEl ? notesEl.value.trim() : '';
-        const manualRatePct = manualRateEl ? parseFloat(manualRateEl.value) : NaN;
+    const type = typeSel.value;
+    const isFixedIncome = (type === 'cdb' || type === 'lci' || type === 'cofrinho' || type === 'tesouro');
 
-        if (!code || !name || !ownerId) {
-            notify('Preencha os campos obrigatórios.', 'error');
-            return;
-        }
+    group.style.display = isFixedIncome ? '' : 'none';
 
-        const assets = getAssets();
-
-        // Verifica duplicidade de código + titular
-        const duplicate = assets.find(a =>
-            a.code === code && a.ownerId === ownerId &&
-            (!editingAssetId || a.id !== editingAssetId)
-        );
-        if (duplicate) {
-            notify('Já existe um ativo com este código para este titular.', 'error');
-            return;
-        }
-
-        const manualRate = (type === 'cdb' || type === 'cofrinho') && !isNaN(manualRatePct)
-            ? { indexer: 'CDI', percent: manualRatePct }
-            : null;
-
-        if (editingAssetId) {
-            const idx = assets.findIndex(a => a.id === editingAssetId);
-            if (idx >= 0) {
-                assets[idx] = {
-                    ...assets[idx],
-                    code, name, ownerId, type,
-                    institution, currency, notes,
-                    manualRate
-                };
+    // Tesouro costuma ser Selic, IPCA+ ou Prefixado
+    // CDB/LCI/Cofrinho costumam ser CDI
+    // Mas deixamos o usuário escolher livremente
+    if (isFixedIncome) {
+        const kindSel = document.getElementById('asset-rate-kind');
+        if (kindSel) {
+            // Defaults inteligentes (só sugere, não força)
+            if (type === 'tesouro' && kindSel.value === 'cdi') {
+                kindSel.value = 'selic';
             }
-        } else {
-            assets.push({
-                id: generateId(),
+        }
+        updateRateKindFields();
+    }
+}
+
+function updateRateKindFields() {
+    const kindSel = document.getElementById('asset-rate-kind');
+    const percentGroup = document.getElementById('asset-rate-percent-group');
+    const fixedGroup = document.getElementById('asset-rate-fixed-group');
+    const ipcaGroup = document.getElementById('asset-rate-ipca-group');
+
+    if (!kindSel) return;
+    const kind = kindSel.value;
+
+    if (percentGroup) percentGroup.style.display = (kind === 'cdi' || kind === 'selic') ? '' : 'none';
+    if (fixedGroup)   fixedGroup.style.display   = (kind === 'prefixado') ? '' : 'none';
+    if (ipcaGroup)    ipcaGroup.style.display    = (kind === 'ipca') ? '' : 'none';
+}
+
+function saveAssetFromForm() {
+    const codeEl = document.getElementById('asset-code');
+    const nameEl = document.getElementById('asset-name');
+    const ownerEl = document.getElementById('asset-owner');
+    const typeEl = document.getElementById('asset-type');
+    const institutionEl = document.getElementById('asset-institution');
+    const currencyEl = document.getElementById('asset-currency');
+    const notesEl = document.getElementById('asset-notes');
+    const rateKindEl = document.getElementById('asset-rate-kind');
+    const ratePercentEl = document.getElementById('asset-rate-percent');
+    const rateFixedEl = document.getElementById('asset-rate-fixed');
+    const rateIpcaEl = document.getElementById('asset-rate-ipca');
+
+    if (!codeEl || !nameEl || !ownerEl || !typeEl) return;
+
+    const code = codeEl.value.trim().toUpperCase();
+    const name = nameEl.value.trim();
+    const ownerId = ownerEl.value;
+    const type = typeEl.value;
+    const institution = institutionEl ? institutionEl.value.trim() : '';
+    const currency = currencyEl ? currencyEl.value : (ASSET_TYPES[type] ? ASSET_TYPES[type].currency : 'BRL');
+    const notes = notesEl ? notesEl.value.trim() : '';
+
+    if (!code || !name || !ownerId) {
+        notify('Preencha os campos obrigatórios.', 'error');
+        return;
+    }
+
+    // Monta o rateConfig para renda fixa
+    let rateConfig = null;
+    const isFixedIncome = (type === 'cdb' || type === 'lci' || type === 'cofrinho' || type === 'tesouro');
+    if (isFixedIncome && rateKindEl) {
+        const kind = rateKindEl.value;
+        rateConfig = { kind, percent: null, fixedRate: null, ipcaSpread: null };
+
+        if (kind === 'cdi' || kind === 'selic') {
+            const v = parseFloat(ratePercentEl && ratePercentEl.value);
+            if (!isNaN(v) && v > 0) rateConfig.percent = v;
+        } else if (kind === 'prefixado') {
+            const v = parseFloat(rateFixedEl && rateFixedEl.value);
+            if (!isNaN(v) && v > 0) rateConfig.fixedRate = v;
+        } else if (kind === 'ipca') {
+            const v = parseFloat(rateIpcaEl && rateIpcaEl.value);
+            if (!isNaN(v) && v >= 0) rateConfig.ipcaSpread = v;
+        }
+    }
+
+    const assets = getAssets();
+
+    // Verifica duplicidade de código + titular
+    const duplicate = assets.find(a =>
+        a.code === code && a.ownerId === ownerId &&
+        (!editingAssetId || a.id !== editingAssetId)
+    );
+    if (duplicate) {
+        notify('Já existe um ativo com este código para este titular.', 'error');
+        return;
+    }
+
+    if (editingAssetId) {
+        const idx = assets.findIndex(a => a.id === editingAssetId);
+        if (idx >= 0) {
+            assets[idx] = {
+                ...assets[idx],
                 code, name, ownerId, type,
                 institution, currency, notes,
-                manualRate,
-                createdAt: Date.now()
-            });
+                rateConfig
+            };
         }
-
-        saveAssets(assets);
-        closeAssetModal();
-        renderAll();
-        notify(editingAssetId ? 'Ativo atualizado.' : 'Ativo cadastrado.', 'success');
+    } else {
+        assets.push({
+            id: generateId(),
+            code, name, ownerId, type,
+            institution, currency, notes,
+            rateConfig,
+            createdAt: Date.now()
+        });
     }
+
+    saveAssets(assets);
+    closeAssetModal();
+    renderAll();
+    notify(editingAssetId ? 'Ativo atualizado.' : 'Ativo cadastrado.', 'success');
+}
 
     function deleteAsset(assetId) {
         const asset = getAssets().find(a => a.id === assetId);
@@ -1058,6 +1117,14 @@
         // Modal de ativo: mudança de tipo atualiza visibilidade do % do CDI
         const typeSel = document.getElementById('asset-type');
         if (typeSel) typeSel.addEventListener('change', updateManualRateVisibility);
+
+       // Modal de ativo: mudança de tipo atualiza visibilidade do grupo de taxa
+const typeSel = document.getElementById('asset-type');
+if (typeSel) typeSel.addEventListener('change', updateManualRateVisibility);
+
+// Modal de ativo: mudança do tipo de taxa atualiza os campos visíveis
+const rateKindSel = document.getElementById('asset-rate-kind');
+if (rateKindSel) rateKindSel.addEventListener('change', updateRateKindFields);
 
         // Modal de ativo: cancelar / submit
         const assetCancel = document.getElementById('asset-form-cancel');
