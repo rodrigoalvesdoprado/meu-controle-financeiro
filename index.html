@@ -13,9 +13,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="investimentos.css">
 </head>
 <body>
     <button class="theme-toggle" id="themeToggle" title="Alternar tema"><i class="fas fa-moon" id="themeIcon"></i></button>
+    <button class="settings-toggle" id="settingsToggle" title="Configurações"><i class="fas fa-cog"></i></button>
 
     <div class="install-banner" id="installBanner">
         <div><strong>📱 Instalar App</strong><p>Use em tela cheia como app nativo!</p></div>
@@ -53,6 +55,7 @@
             <div class="tab" data-tab="holders">Portadores</div>
             <div class="tab" data-tab="categories">Categorias</div>
             <div class="tab" data-tab="reports">Relatórios</div>
+            <div class="tab" data-tab="investments">Investimentos</div>
         </div>
 
         <div class="tab-content active" id="transactions-tab">
@@ -264,8 +267,350 @@
 </div>
             </div>
         </div>
+
+        <!-- ============================================================ -->
+        <!-- ============ ABA INVESTIMENTOS (NOVA) ====================== -->
+        <!-- ============================================================ -->
+        <div class="tab-content" id="investments-tab">
+
+            <!-- Filtro de titular + ações globais -->
+            <div class="investments-toolbar">
+                <div class="investments-filter">
+                    <label for="investments-owner-filter">Titular:</label>
+                    <select id="investments-owner-filter">
+                        <option value="__all__">Todos</option>
+                        <!-- preenchido dinamicamente -->
+                    </select>
+                </div>
+                <div class="investments-actions">
+                    <button class="secondary" id="investments-refresh-quotes" title="Buscar cotações atualizadas">
+                        <i class="fas fa-sync-alt"></i> Atualizar cotações
+                    </button>
+                    <button id="investments-new-asset" title="Cadastrar um novo ativo">
+                        <i class="fas fa-plus"></i> Novo Ativo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status da API (badge discreto) -->
+            <div class="api-usage-badge" id="apiUsageBadge" title="Clique para abrir Configurações">
+                <i class="fas fa-satellite-dish"></i>
+                <span id="apiUsageText">— / — (—%)</span>
+            </div>
+
+            <!-- Cards de subtotais por titular -->
+            <div class="owner-subtotals-grid" id="owner-subtotals-container">
+                <!-- preenchido dinamicamente -->
+            </div>
+
+            <!-- Tabela principal de ativos -->
+            <div class="investments-table-section">
+                <div class="transactions-header">
+                    <h2>Meus Ativos</h2>
+                    <span class="count-badge" id="investments-count">0 ativos</span>
+                </div>
+
+                <div class="investments-table-wrapper">
+                    <table class="investments-table" id="investments-table">
+                        <thead>
+                            <tr>
+                                <th class="col-asset"    title="Nome do ativo cadastrado (ex: Petrobras PN)">Ativo</th>
+                                <th class="col-code"     title="Ticker ou slug usado na API de cotação (ex: PETR4)">Código</th>
+                                <th class="col-owner"    title="Carteira a que o ativo pertence: Rodrigo, Catarse ou Guitarrista">Titular</th>
+                                <th class="col-type"     title="Classe do ativo: ação, FII, Tesouro, CDB, cofrinho ou ação EUA">Tipo</th>
+                                <th class="col-qty"      title="Quantidade atual = total de aportes − total de resgates">Qtd.</th>
+                                <th class="col-avg"      title="Custo médio ponderado por unidade, considerando aportes e resgates">Preço Médio</th>
+                                <th class="col-invested" title="Qtd × Preço Médio — custo real, sem correção">Valor Investido</th>
+                                <th class="col-price"    title="Última cotação de fechamento buscada na API">Preço Atual</th>
+                                <th class="col-current"  title="Qtd × Preço Atual — valor de mercado (mark-to-market)">Valor Atualizado</th>
+                                <th class="col-return"   title="(Valor Atualizado / Valor Investido) − 1, em % e R$">Rentab.</th>
+                                <th class="col-actions"  title="Adicionar aporte, registrar resgate ou abrir detalhes">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="investments-table-body">
+                            <!-- preenchido dinamicamente -->
+                        </tbody>
+                        <tfoot id="investments-table-foot">
+                            <!-- preenchido dinamicamente: linha de totais -->
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="empty-state" id="investments-empty" style="display: none;">
+                    <i class="fas fa-chart-line"></i>
+                    <p>Nenhum ativo cadastrado ainda. Clique em <strong>Novo Ativo</strong> para começar.</p>
+                </div>
+            </div>
+
+            <!-- Painel de detalhes de um ativo -->
+            <div class="asset-detail-panel" id="asset-detail">
+                <h3>
+                    <span id="asset-detail-title">Detalhes do Ativo</span>
+                    <button class="close-detail" id="asset-detail-close"><i class="fas fa-times"></i> Fechar</button>
+                </h3>
+
+                <div class="asset-detail-summary" id="asset-detail-summary">
+                    <!-- preenchido dinamicamente -->
+                </div>
+
+                <div class="asset-detail-actions">
+                    <button id="asset-add-aporte"><i class="fas fa-arrow-down"></i> Aporte</button>
+                    <button class="secondary" id="asset-add-resgate"><i class="fas fa-arrow-up"></i> Resgate</button>
+                    <button class="secondary" id="asset-edit"><i class="fas fa-edit"></i> Editar</button>
+                    <button class="danger" id="asset-delete"><i class="fas fa-trash"></i> Excluir</button>
+                </div>
+
+                <h4>Histórico de Movimentações</h4>
+                <div id="asset-detail-history">
+                    <!-- preenchido dinamicamente -->
+                </div>
+            </div>
+
+            <!-- ============ GRÁFICOS ============ -->
+            <div class="investments-charts-section">
+                <h2 style="margin-top: 30px;">Relatórios de Investimentos</h2>
+
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <h3>Distribuição por Titular</h3>
+                        <canvas id="owner-pie-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>Composição por Tipo</h3>
+                        <canvas id="type-composition-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper" style="margin-top: 20px;">
+                    <h3>Evolução Patrimonial</h3>
+                    <p class="chart-hint">Clique em um titular na legenda para expandir a evolução por classe.</p>
+                    <canvas id="patrimony-evolution-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- ============ FIM DA ABA INVESTIMENTOS ====================== -->
+
     </div>
 
+    <!-- ============================================================ -->
+    <!-- ============ PAINEL DE CONFIGURAÇÕES (NOVO) ================ -->
+    <!-- ============================================================ -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-panel-inner">
+            <div class="settings-header">
+                <h2><i class="fas fa-cog"></i> Configurações</h2>
+                <button class="close-detail" id="settingsClose"><i class="fas fa-times"></i> Fechar</button>
+            </div>
+
+            <div class="settings-body">
+                <!-- Chave da API -->
+                <section class="settings-section">
+                    <h3><i class="fas fa-key"></i> Chave da API brapi.dev</h3>
+                    <p class="settings-hint">A chave é salva apenas no seu navegador e nunca é enviada para outro servidor além da própria brapi.</p>
+                    <div class="form-group">
+                        <input type="password" id="brapiKeyInput" placeholder="Cole aqui sua chave da API">
+                    </div>
+                    <div class="settings-row">
+                        <button class="secondary" id="brapiKeyTestBtn"><i class="fas fa-vial"></i> Testar chave</button>
+                        <button id="brapiKeySaveBtn"><i class="fas fa-save"></i> Salvar</button>
+                        <button class="danger" id="brapiKeyClearBtn"><i class="fas fa-trash"></i> Limpar</button>
+                    </div>
+                    <div class="settings-status" id="brapiKeyStatus">⚪ Não configurada</div>
+                </section>
+
+                <!-- Uso da API -->
+                <section class="settings-section">
+                    <h3><i class="fas fa-satellite-dish"></i> Uso da API</h3>
+                    <div class="api-usage-bar-wrapper">
+                        <div class="api-usage-bar" id="apiUsageBar"></div>
+                    </div>
+                    <div class="api-usage-numbers" id="apiUsageNumbers">0 / 15.000 (0%)</div>
+                    <div class="api-usage-reset" id="apiUsageReset">Reinicia em —</div>
+                    <p class="settings-hint">⚠️ O contador só registra chamadas feitas por este app. Consultas externas não são contabilizadas aqui.</p>
+                    <div class="settings-row">
+                        <button class="danger" id="apiUsageResetBtn"><i class="fas fa-undo"></i> Zerar contador</button>
+                    </div>
+                </section>
+
+                <!-- Titulares -->
+                <section class="settings-section">
+                    <h3><i class="fas fa-users"></i> Titulares</h3>
+                    <p class="settings-hint">Carteiras separadas: sua pessoa física, o Catarse Home Studio e os serviços de guitarrista.</p>
+                    <form id="owner-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="new-owner-name">Nome</label>
+                                <input type="text" id="new-owner-name" placeholder="Ex: Rodrigo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-owner-color">Cor</label>
+                                <input type="color" id="new-owner-color" value="#3498db">
+                            </div>
+                        </div>
+                        <button type="submit" class="secondary"><i class="fas fa-plus"></i> Adicionar Titular</button>
+                    </form>
+                    <div class="categories-grid" id="owners-list" style="margin-top: 15px;"></div>
+                </section>
+
+                <!-- Backup -->
+                <section class="settings-section">
+                    <h3><i class="fas fa-database"></i> Backup</h3>
+                    <p class="settings-hint">Exporte todos os dados do app em um arquivo .txt. Ideal antes de limpar cookies do navegador.</p>
+                    <div class="settings-row">
+                        <button class="secondary" id="backupExportBtn"><i class="fas fa-download"></i> Exportar backup</button>
+                        <button id="backupImportBtn"><i class="fas fa-upload"></i> Importar backup</button>
+                        <input type="file" id="backupImportFile" accept=".txt" style="display: none;">
+                    </div>
+                    <p class="settings-hint" style="margin-top: 10px;">
+                        ⚠️ O arquivo <strong>não é criptografado</strong>. A chave da API <strong>não é incluída</strong> por segurança.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ============ MODAL: NOVO/EDITAR ATIVO (NOVO) =============== -->
+    <!-- ============================================================ -->
+    <div class="review-modal" id="assetModal">
+        <div class="review-panel" style="max-width: 700px;">
+            <div class="review-header">
+                <h2><i class="fas fa-chart-line"></i> <span id="assetModalTitle">Novo Ativo</span></h2>
+            </div>
+            <div class="review-body">
+                <form id="asset-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="asset-owner">Titular</label>
+                            <select id="asset-owner" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="asset-type">Tipo</label>
+                            <select id="asset-type" required>
+                                <option value="acao">Ação (B3)</option>
+                                <option value="fii">Fundo Imobiliário</option>
+                                <option value="tesouro">Tesouro Direto</option>
+                                <option value="cdb">CDB</option>
+                                <option value="cofrinho">Cofrinho</option>
+                                <option value="acao_eua">Ação EUA</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="asset-code">Código / Ticker</label>
+                            <input type="text" id="asset-code" placeholder="Ex: PETR4, HGLG11, AAPL" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="asset-name">Nome</label>
+                            <input type="text" id="asset-name" placeholder="Ex: Petrobras PN" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="asset-currency">Moeda</label>
+                            <select id="asset-currency">
+                                <option value="BRL">BRL (R$)</option>
+                                <option value="USD">USD ($)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="asset-manual-rate-group" style="display: none;">
+                            <label for="asset-manual-rate">% do CDI</label>
+                            <input type="number" id="asset-manual-rate" placeholder="Ex: 102" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="asset-notes">Observações (opcional)</label>
+                        <input type="text" id="asset-notes" placeholder="Notas livres">
+                    </div>
+                    <div class="btn-group" style="margin-top: 15px;">
+                        <button type="button" class="danger" id="asset-form-cancel"><i class="fas fa-times"></i> Cancelar</button>
+                        <button type="submit" id="asset-form-submit"><i class="fas fa-check"></i> Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ============ MODAL: APORTE / RESGATE (NOVO) =============== -->
+    <!-- ============================================================ -->
+    <div class="review-modal" id="txModal">
+        <div class="review-panel" style="max-width: 600px;">
+            <div class="review-header">
+                <h2><i class="fas fa-exchange-alt"></i> <span id="txModalTitle">Movimentação</span></h2>
+                <div class="review-summary" id="txModalSubtitle"></div>
+            </div>
+            <div class="review-body">
+                <form id="tx-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tx-date">Data</label>
+                            <input type="date" id="tx-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tx-type">Tipo</label>
+                            <select id="tx-type" required>
+                                <option value="aporte">Aporte</option>
+                                <option value="resgate">Resgate</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tx-quantity">Quantidade</label>
+                            <input type="number" id="tx-quantity" step="0.00000001" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tx-unit-price">Preço Unitário</label>
+                            <input type="number" id="tx-unit-price" step="0.0001" min="0" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tx-total">Total</label>
+                            <input type="number" id="tx-total" step="0.01" min="0" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="tx-notes">Observações (opcional)</label>
+                        <input type="text" id="tx-notes" placeholder="Notas livres">
+                    </div>
+                    <div class="btn-group" style="margin-top: 15px;">
+                        <button type="button" class="danger" id="tx-form-cancel"><i class="fas fa-times"></i> Cancelar</button>
+                        <button type="submit" id="tx-form-submit"><i class="fas fa-check"></i> Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ============ MODAL: CONFIRMAÇÃO DE BACKUP (NOVO) ========== -->
+    <!-- ============================================================ -->
+    <div class="review-modal" id="backupModal">
+        <div class="review-panel" style="max-width: 600px;">
+            <div class="review-header">
+                <h2><i class="fas fa-database"></i> Confirmar Importação</h2>
+            </div>
+            <div class="review-body">
+                <div id="backupModalContent">
+                    <!-- preenchido dinamicamente -->
+                </div>
+            </div>
+            <div class="review-footer">
+                <div class="review-total" id="backupModalSummary"></div>
+                <div class="btn-group">
+                    <button class="danger" id="backupCancelBtn"><i class="fas fa-times"></i> Cancelar</button>
+                    <button id="backupConfirmBtn"><i class="fas fa-check"></i> Substituir tudo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ============ MODAL: REVISÃO DE FATURA (JÁ EXISTIA) ========= -->
+    <!-- ============================================================ -->
     <div class="review-modal" id="reviewModal">
         <div class="review-panel">
             <div class="review-header">
@@ -287,5 +632,8 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="backup.js"></script>
+    <script src="configuracoes.js"></script>
+    <script src="investimentos.js"></script>
 </body>
 </html>
