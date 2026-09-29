@@ -23,9 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentPeriodElement = document.getElementById('current-period');
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
-    const applyPeriodBtn = document.getElementById('apply-period');
-    const periodStandardBtn = document.getElementById('period-standard');
-    const periodCustomBtn = document.getElementById('period-custom');
+    //const applyPeriodBtn = document.getElementById('apply-period');
+    //const periodStandardBtn = document.getElementById('period-standard');
+    //const periodCustomBtn = document.getElementById('period-custom');
     const periodNav = document.getElementById('period-nav');
 
     const categoryDetail = document.getElementById('category-detail');
@@ -531,6 +531,8 @@ function generateId() {
         startDateInput.value = formatDateToString(s);
         endDateInput.value = formatDateToString(e);
         updatePeriodDisplay();
+        
+        periodNav.style.display = 'flex';
     }
 
     function updatePeriodDisplay() {
@@ -1397,7 +1399,12 @@ function updateSortDirIcon() {
         });
 
         prevPeriodBtn.addEventListener('click', function() {
-            if (periodMode === 'standard') {
+            // Se estava em modo customizado, volta para padrão e recua um mês
+            if (periodMode === 'custom') {
+                periodMode = 'standard';
+                setupStandardPeriod();
+                periodNav.style.display = 'flex';
+            } else {
                 const s = new Date(customStartDate), e2 = new Date(customEndDate);
                 s.setMonth(s.getMonth() - 1); e2.setMonth(e2.getMonth() - 1);
                 customStartDate = s; customEndDate = e2;
@@ -1406,8 +1413,13 @@ function updateSortDirIcon() {
                 updatePeriodDisplay();
             }
         });
+
         nextPeriodBtn.addEventListener('click', function() {
-            if (periodMode === 'standard') {
+            if (periodMode === 'custom') {
+                periodMode = 'standard';
+                setupStandardPeriod();
+                periodNav.style.display = 'flex';
+            } else {
                 const s = new Date(customStartDate), e2 = new Date(customEndDate);
                 s.setMonth(s.getMonth() + 1); e2.setMonth(e2.getMonth() + 1);
                 customStartDate = s; customEndDate = e2;
@@ -1416,6 +1428,33 @@ function updateSortDirIcon() {
                 updatePeriodDisplay();
             }
         });
+
+                // Mudança manual nas datas ativa automaticamente o modo personalizado
+        startDateInput.addEventListener('change', function() {
+            const s = createDateFromString(startDateInput.value);
+            const e2 = createDateFromString(endDateInput.value);
+            if (s && e2 && s <= e2) {
+                periodMode = 'custom';
+                customStartDate = s;
+                customEndDate = e2;
+                periodNav.style.display = 'none';
+                updatePeriodDisplay();
+            }
+        });
+
+        endDateInput.addEventListener('change', function() {
+            const s = createDateFromString(startDateInput.value);
+            const e2 = createDateFromString(endDateInput.value);
+            if (s && e2 && s <= e2) {
+                periodMode = 'custom';
+                customStartDate = s;
+                customEndDate = e2;
+                periodNav.style.display = 'none';
+                updatePeriodDisplay();
+            }
+        });
+
+        /*
         periodStandardBtn.addEventListener('click', function() {
             periodMode = 'standard';
             periodStandardBtn.classList.add('active-mode');
@@ -1442,6 +1481,7 @@ function updateSortDirIcon() {
                 } else { alert('Período inválido.'); }
             }
         });
+        */
 
         closeDetailBtn.addEventListener('click', () => categoryDetail.classList.remove('show'));
         if (holderDetailClose) {
