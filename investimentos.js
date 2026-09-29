@@ -38,6 +38,9 @@
     let sortDir   = localStorage.getItem(STORAGE_KEYS.SORT_DIR)   || 'asc';
     let ownerFilter = localStorage.getItem(STORAGE_KEYS.OWNER_FILTER) || '__all__';
 
+       // Estado do filtro de período do gráfico de evolução
+    let evolutionPeriodFilter = localStorage.getItem('evolutionPeriodFilter') || '12m';
+
     let editingAssetId = null;
     let selectedAssetId = null;
 
@@ -1571,6 +1574,163 @@
         return { updated, failed, skipped };
     }
 
+       /**
+     * Reconstrói snapshots mensais retroativos a partir do primeiro aporte.
+     * Estima o patrimônio de cada mês usando:
+     *   - Quantidade acumulada até aquela data
+     *   - Cotação estimada (PU do aporte, preço do aporte, ou fórmula retroativa)
+     * Marca os pontos como "estimativa" (reconstructed: true).
+     */
+    async function reconstructHistoricalSnapshots() {
+        try {
+            const txs = getInvestmentTxs();
+            if (txs.length === 0) return;
+
+            // Encontra o primeiro aporte
+            const aportes = txs.filter(t => t.type === 'aporte');
+            if (aportes.length === 0) return;
+            const primeiroTimestamp = Math.min(...aportes.map(t => t.timestamp));
+            const primeiroDate = new Date(primeiroTimestamp);
+
+            // Gera lista de meses do primeiro aporte até hoje
+            const hoje = new Date();
+            const meses = [];
+            let cursor = new Date(primeiroDate.getFullYear(), primeiroDate.getMonth(), 1);
+            const ultimoMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+
+            while (cursor <= ultimoMes) {
+                meses.push({
+                    year: cursor.getFullYear(),
+                    month: cursor.getMonth(),
+                    key: `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-01`
+                });
+                cursor.setMonth(cursor.getMonth() + 1);
+            }
+
+            const history = getQuotesHistory();
+            const assets = getAssets();
+
+            // Aviso visual
+            const avisoEl = document.getElementById('evolutionReconstructing');
+            const avisoTextEl = document.getElementById('evolutionReconstructingText');
+            if (avisoEl) avisoEl.style.display = 'flex';
+
+            let contador = 0;
+
+            for (const mes of meses) {
+                // Fim do mês (último dia) OU hoje, se for o mês atual
+                const fimDoMes = new Date(mes.year, mes.month + 1, 0, 23, 59, 59);
+                const dataRef = (fimDoMes > hoje) ? hoje : fimDoMes;
+                const timestampRef = dataRef.getTime();
+
+                const mesKey = formatDateToString(dataRef);
+
+                // Se já existe snapshot real deste dia (não reconstruído), pula
+                if (history[mesKey] && !history[mesKey].reconstructed) continue;
+
+                // Calcula patrimônio no final desse mês
+                const byOwner = {};
+                const byClass = {};
+
+                for (const asset of assets) {
+                    const aggNoMes = computeAggregatesUpToDate(asset.id, timestampRef);
+                    if (aggNoMes.quantity <= 0) continue;
+
+                    // Cotação estimada para aquela data
+                    const precoEstimado = estimateAssetPriceAtDate(asset, timestampRef);
+                    if (precoEstimado === null) continue;
+
+                    const valor = aggNoMes.quantity * precoEstimado;
+
+                    byOwner[asset.ownerId] = (byOwner[asset.ownerId] || 0) + valor;
+                    byClass[asset.type] = (byClass[asset.type] || 0) + valor;
+                }
+
+                history[mesKey] = {
+                    byOwner,
+                    byClass,
+                    at: timestampRef,
+                    reconstructed: true
+                };
+                contador++;
+
+                if (avisoTextEl) {
+                    avisoTextEl.textContent = `Reconstruindo histórico... (${contador} meses)`;
+                }
+
+                // Deixa o navegador respirar entre iterações
+                if (contador % 5 === 0) {
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            saveQuotesHistory(history);
+
+            if (avisoEl) avisoEl.style.display = 'none';
+
+            console.log(`[investimentos.js] Reconstrução concluída: ${contador} meses processados.`);
+        } catch (err) {
+            console.warn('[investimentos.js] Falha na reconstrução histórica:', err);
+            const avisoEl = document.getElementById('evolutionReconstructing');
+            if (avisoEl) avisoEl.style.display = 'none';
+        }
+    }
+
+    /**
+     * Calcula quantidade acumulada de um ativo até uma data (timestamp).
+     */
+    function computeAggregatesUpToDate(assetId, timestampRef) {
+        const txs = getInvestmentTxs().filter(t => t.assetId === assetId);
+        let qty = 0;
+        for (const tx of txs) {
+            if (tx.timestamp > timestampRef) continue;
+            const q = Number(tx.quantity) || 0;
+            if (tx.type === 'aporte') qty += q;
+            else if (tx.type === 'resgate') qty -= q;
+        }
+        return { quantity: Math.max(0, qty) };
+    }
+
+    /**
+     * Estima o preço unitário de um ativo numa data passada.
+     * Estratégia por tipo:
+     *   - Tesouro: usa o PU do aporte mais recente até aquela data (ou o cache atual)
+     *   - CDB/LCI/Cofrinho: usa o valor do aporte original como proxy de 1 unidade
+     *   - Ação/FII/Ação EUA: usa o preço unitário do aporte mais recente
+     * Retorna null se não houver base para estimar.
+     */
+    function estimateAssetPriceAtDate(asset, timestampRef) {
+        const txs = getInvestmentTxs()
+            .filter(t => t.assetId === asset.id && t.type === 'aporte' && t.timestamp <= timestampRef)
+            .sort((a, b) => b.timestamp - a.timestamp);
+
+        if (txs.length === 0) return null;
+
+        const ultimoAporte = txs[0];
+
+        // Tesouro: tenta cache atual primeiro (PU mais preciso), senão usa o do aporte
+        if (asset.type === 'tesouro') {
+            const cache = getQuotesCache();
+            const entry = cache[asset.code];
+            if (entry && entry.price > 0 && asset.apiSymbol) {
+                // Como não temos PU histórico, usamos o PU atual do cache
+                // (é uma aproximação; será marcado como estimativa)
+                return entry.price;
+            }
+            return Number(ultimoAporte.unitPrice) || null;
+        }
+
+        // CDB/LCI/Cofrinho: usa o preço unitário do aporte mais recente
+        // (aproximação; o valor real cresce com o tempo)
+        if (asset.type === 'cdb' || asset.type === 'lci' || asset.type === 'cofrinho') {
+            return Number(ultimoAporte.unitPrice) || null;
+        }
+
+        // Ação, FII, Ação EUA: usa o preço unitário do aporte mais recente
+        return Number(ultimoAporte.unitPrice) || null;
+    }
+
+   
     // ========== SNAPSHOTS ==========
 
     function saveDailySnapshot() {
@@ -1768,7 +1928,21 @@
         const gridColor = dark ? '#3a3f47' : '#eeeeee';
 
         const history = getQuotesHistory();
-        const dates = Object.keys(history).sort();
+        let dates = Object.keys(history).sort();
+
+        // Aplica filtro de período
+        if (evolutionPeriodFilter !== 'all') {
+            const hoje = new Date();
+            let meses = 12;
+            if (evolutionPeriodFilter === '5y') meses = 60;
+            if (evolutionPeriodFilter === '10y') meses = 120;
+            const corte = new Date(hoje.getFullYear(), hoje.getMonth() - meses, hoje.getDate());
+            const corteTs = corte.getTime();
+            dates = dates.filter(d => {
+                const snap = history[d];
+                return snap && snap.at >= corteTs;
+            });
+        }
 
         if (dates.length === 0) {
             if (chartPatrimony) chartPatrimony.destroy();
@@ -1777,13 +1951,13 @@
             ctx.font = '14px Arial';
             ctx.fillStyle = dark ? '#a0a4ab' : '#7f8c8d';
             ctx.textAlign = 'center';
-            ctx.fillText('Sem histórico ainda. Atualize as cotações para começar a registrar.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            ctx.fillText('Sem histórico ainda. Aguarde a reconstrução.', ctx.canvas.width / 2, ctx.canvas.height / 2);
             return;
         }
 
         const labels = dates.map(d => {
             const [y, m, dd] = d.split('-');
-            return `${dd}/${m}`;
+            return `${dd}/${m}/${y.substring(2)}`;
         });
 
         const datasets = [];
@@ -1806,8 +1980,8 @@
                         backgroundColor: ownerColors[owner.id] + '33',
                         tension: 0.25,
                         fill: false,
-                        pointRadius: 2,
-                        pointHoverRadius: 5,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
                         borderWidth: 2
                     });
                 }
@@ -1835,8 +2009,8 @@
                         backgroundColor: (palette[type] || '#95a5a6') + '33',
                         tension: 0.25,
                         fill: false,
-                        pointRadius: 2,
-                        pointHoverRadius: 5,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
                         borderWidth: 2
                     });
                 }
@@ -1897,7 +2071,30 @@
                     },
                     tooltip: {
                         callbacks: {
-                            label: (item) => `${item.dataset.label}: ${fmtBRL(item.parsed.y)}`
+                            label: (item) => {
+                                const valor = item.parsed.y;
+                                const dateKey = dates[item.dataIndex];
+                                const snap = history[dateKey];
+                                const tipo = (snap && snap.reconstructed) ? 'estimativa' : 'real';
+                                return `${item.dataset.label}: R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${tipo})`;
+                            },
+                            title: (items) => {
+                                const idx = items[0].dataIndex;
+                                const dateKey = dates[idx];
+                                const [y, m, dd] = dateKey.split('-');
+                                return `Data: ${dd}/${m}/${y}`;
+                            }
+                        }
+                    },
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x'
+                        },
+                        zoom: {
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
+                            mode: 'x'
                         }
                     }
                 }
@@ -2350,6 +2547,25 @@
                 await refreshAllQuotes();
             });
         }
+               // Botões de período do gráfico de evolução
+        document.querySelectorAll('.period-btn-evolution').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.period-btn-evolution').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                evolutionPeriodFilter = btn.getAttribute('data-period');
+                localStorage.setItem('evolutionPeriodFilter', evolutionPeriodFilter);
+                renderPatrimonyEvolutionChart();
+            });
+        });
+
+        // Marca o botão ativo conforme estado persistido
+        document.querySelectorAll('.period-btn-evolution').forEach(btn => {
+            if (btn.getAttribute('data-period') === evolutionPeriodFilter) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
     }
 
     // ========== INICIALIZAÇÃO ==========
@@ -2364,6 +2580,10 @@
             // Quando as séries estiverem prontas, re-renderiza para refletir
             // os valores corrigidos de CDB/LCI/Cofrinho/Tesouro
             renderAll();
+        });
+            // Reconstrói snapshots históricos em background
+        reconstructHistoricalSnapshots().then(() => {
+            renderInvestmentCharts();
         });
     }
 
