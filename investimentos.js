@@ -2717,6 +2717,134 @@
         evolutionFilterBy = sel.value;
     }
 
+       /**
+     * Constrói os datasets do gráfico de evolução conforme o agrupamento escolhido.
+     */
+    function buildEvolutionDatasets(dates, history, dark) {
+        const owners = getOwners();
+        const ownerColors = {};
+        owners.forEach(o => ownerColors[o.id] = o.color || '#3498db');
+
+        const typePalette = {
+            acao: '#3498db',
+            fii: '#9b59b6',
+            tesouro: '#27ae60',
+            cdb: '#e67e22',
+            lci: '#16a085',
+            cofrinho: '#f1c40f',
+            acao_eua: '#e74c3c'
+        };
+
+        const allAssets = getAssets();
+
+        // Cor dinâmica estável para um rótulo arbitrário
+        function dynamicColor(label) {
+            let hash = 0;
+            for (let i = 0; i < label.length; i++) {
+                hash = ((hash << 5) - hash) + label.charCodeAt(i);
+                hash = hash | 0;
+            }
+            const hue = Math.abs(hash) % 360;
+            return `hsl(${hue}, 65%, 55%)`;
+        }
+
+        // Filtro: dado um ativo, decide se ele entra no gráfico
+        // (filtro é aplicado conforme o agrupamento atual)
+        function assetPassesFilter(asset) {
+            if (evolutionFilterBy === '__all__') return true;
+            if (evolutionGroupBy === 'owner') {
+                return asset.ownerId === evolutionFilterBy;
+            }
+            if (evolutionGroupBy === 'institution') {
+                return (asset.institution || '').trim().toLowerCase() === evolutionFilterBy.toLowerCase();
+            }
+            if (evolutionGroupBy === 'type') {
+                return asset.type === evolutionFilterBy;
+            }
+            return true;
+        }
+
+        // Mapa: chave do grupo → { label, cor, valores por data }
+        const groups = new Map();
+
+        // Para cada data do histórico, calcula o valor de cada grupo
+        dates.forEach(dateKey => {
+            const snap = history[dateKey];
+            if (!snap) return;
+            const timestampRef = snap.at;
+
+            // Percorre APENAS os ativos que passam no filtro
+            allAssets.forEach(asset => {
+                if (!assetPassesFilter(asset)) return;
+
+                const agg = computeAggregatesUpToDate(asset.id, timestampRef);
+                if (agg.quantity <= 0) return;
+
+                const preco = estimateAssetPriceAtDate(asset, timestampRef);
+                if (preco === null) return;
+
+                const valor = agg.quantity * preco;
+                if (valor <= 0) return;
+
+                // Define chave e rótulo do grupo
+                let key, label;
+                if (evolutionGroupBy === 'owner') {
+                    key = asset.ownerId;
+                    label = getOwnerName(asset.ownerId) || 'Sem titular';
+                } else if (evolutionGroupBy === 'institution') {
+                    key = (asset.institution || '__sem_if__').toLowerCase();
+                    label = asset.institution || 'Sem IF';
+                } else {
+                    // type → agrupa por ativo específico
+                    key = asset.id;
+                    label = asset.name + ' (' + asset.code + ')';
+                }
+
+                // Cor do grupo
+                let color;
+                if (evolutionGroupBy === 'owner') {
+                    color = ownerColors[key] || '#3498db';
+                } else if (evolutionGroupBy === 'type') {
+                    color = typePalette[asset.type] || dynamicColor(label);
+                } else {
+                    color = dynamicColor(label);
+                }
+
+                if (!groups.has(key)) {
+                    groups.set(key, {
+                        key,
+                        label,
+                        color,
+                        valores: {}
+                    });
+                }
+                const grupo = groups.get(key);
+                grupo.valores[dateKey] = (grupo.valores[dateKey] || 0) + valor;
+            });
+        });
+
+        // Monta os datasets finais
+        const datasets = [];
+        groups.forEach(grupo => {
+            const data = dates.map(d => grupo.valores[d] || 0);
+            if (!data.some(v => v > 0)) return;
+
+            datasets.push({
+                label: grupo.label,
+                data,
+                borderColor: grupo.color,
+                backgroundColor: grupo.color + '33',
+                tension: 0.25,
+                fill: false,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                borderWidth: 2
+            });
+        });
+
+        return datasets;
+    }
+
     // ========== INICIALIZAÇÃO ==========
 
     function initInvestimentos() {
