@@ -212,7 +212,6 @@
     function computeAssetValuation(asset) {
         const agg = computeAssetAggregates(asset.id);
 
-        // Se for renda fixa, delega para o cálculo especializado
         const isFixedIncome = (
             asset.type === 'cdb' ||
             asset.type === 'lci' ||
@@ -220,6 +219,74 @@
             asset.type === 'tesouro'
         );
 
+        // ========== TESOURO: usa PU oficial (via quotesCache) ==========
+        if (asset.type === 'tesouro') {
+            const currentPrice = getCurrentPrice(asset); // PU em cache
+            if (currentPrice !== null && agg.quantity > 0) {
+                const valorBrutoTotal = currentPrice * agg.quantity;
+
+                // Custo remanescente = proporcional às unidades vivas
+                const custoTotalAportes = agg.totalAportado;
+                const unidadesVivas = agg.quantity;
+                // Para o Tesouro, assume que o preço médio é o custo médio por unidade
+                const custoRemanescente = agg.invested;
+
+                // Rendimento = bruto − custo
+                const rendimento = Math.max(0, valorBrutoTotal - custoRemanescente);
+
+                // IR regressivo (usa dias corridos desde o primeiro aporte)
+                const txs = getInvestmentTxs().filter(t => t.assetId === asset.id && t.type === 'aporte');
+                let diasParaIr = 0;
+                if (txs.length > 0) {
+                    const primeiro = txs.reduce((a, b) => a.timestamp < b.timestamp ? a : b);
+                    const hoje = new Date();
+                    const start = new Date(primeiro.timestamp);
+                    diasParaIr = Math.max(0, Math.round((hoje - start) / (24 * 60 * 60 * 1000)));
+                }
+                const isento = (asset.type === 'lci');
+                const aliquota = isento ? 0 : getIrAliquota(diasParaIr);
+                const irTotal = rendimento * aliquota;
+                const valorLiquidoTotal = valorBrutoTotal - irTotal;
+
+                const returnAbs = valorBrutoTotal - custoRemanescente;
+                const returnPct = custoRemanescente > 0 ? (returnAbs / custoRemanescente) * 100 : 0;
+
+                // Monta txsDetalhadas básicas (só para compatibilidade com o painel)
+                const txsDetalhadas = getInvestmentTxs()
+                    .filter(t => t.assetId === asset.id)
+                    .map(tx => ({
+                        tx,
+                        isAporte: tx.type === 'aporte',
+                        valorOriginal: tx.total,
+                        valorCorrigido: tx.total, // não recalculamos; o PU já embute
+                        diasCorridos: diasParaIr,
+                        diasUteis: 0,
+                        fator: 1,
+                        aliquota: isento ? 0 : aliquota,
+                        ir: 0,
+                        valorLiquidoTx: tx.total
+                    }));
+
+                return {
+                    ...agg,
+                    isFixedIncome: true,
+                    usesOfficialPU: true,
+                    valorBrutoTotal,
+                    valorLiquidoTotal,
+                    irTotal,
+                    aliquotaGlobal: aliquota,
+                    txsDetalhadas,
+                    currentPrice: currentPrice,
+                    currentValue: valorBrutoTotal,
+                    currentValueLiquido: valorLiquidoTotal,
+                    returnAbs: returnAbs,
+                    returnPct: returnPct
+                };
+            }
+            // Se não tiver PU em cache, cai para a fórmula antiga
+        }
+
+        // ========== CDB / LCI / COFRINHO: fórmula de juros compostos ==========
         if (isFixedIncome && asset.rateConfig && asset.rateConfig.kind) {
             const fixValuation = computeFixedIncomeValuation(asset);
             if (fixValuation) {
@@ -229,13 +296,13 @@
                     : 0;
                 return {
                     ...agg,
-                    // Campos específicos de renda fixa
                     isFixedIncome: true,
+                    usesOfficialPU: false,
                     valorBrutoTotal: fixValuation.valorBrutoTotal,
                     valorLiquidoTotal: fixValuation.valorLiquidoTotal,
                     irTotal: fixValuation.irTotal,
+                    aliquotaGlobal: fixValuation.aliquotaGlobal,
                     txsDetalhadas: fixValuation.txsDetalhadas,
-                    // Campos genéricos (usados pela tabela e detalhes)
                     currentPrice: null,
                     currentValue: fixValuation.valorBrutoTotal,
                     currentValueLiquido: fixValuation.valorLiquidoTotal,
@@ -245,25 +312,24 @@
             }
         }
 
-        // Caminho normal (renda variável ou renda fixa sem rateConfig)
+        // ========== Caminho normal (renda variável) ==========
         const currentPrice = getCurrentPrice(asset);
-
         let currentValue;
         if (currentPrice !== null && agg.quantity > 0) {
             currentValue = currentPrice * agg.quantity;
         } else {
             currentValue = agg.invested;
         }
-
         const returnAbs = currentValue - agg.invested;
         const returnPct = agg.invested > 0 ? (returnAbs / agg.invested) * 100 : 0;
 
         return {
             ...agg,
             isFixedIncome: false,
+            usesOfficialPU: false,
             currentPrice: currentPrice,
             currentValue: currentValue,
-            currentValueLiquido: currentValue, // em renda variável, bruto = líquido
+            currentValueLiquido: currentValue,
             returnAbs: returnAbs,
             returnPct: returnPct
         };
@@ -838,7 +904,8 @@
 
     function clearAssetForm() {
         const ids = ['asset-code', 'asset-name', 'asset-institution', 'asset-notes',
-                     'asset-rate-percent', 'asset-rate-fixed', 'asset-rate-ipca'];
+                     'asset-rate-percent', 'asset-rate-fixed', 'asset-rate-ipca',
+                     'asset-api-symbol'];
         ids.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
@@ -861,6 +928,7 @@
         set('asset-name', asset.name);
         set('asset-institution', asset.institution);
         set('asset-notes', asset.notes);
+        set('asset-api-symbol', asset.apiSymbol);
 
         const ownerSel = document.getElementById('asset-owner');
         if (ownerSel) ownerSel.value = asset.ownerId || '';
@@ -885,17 +953,20 @@
 
     function updateManualRateVisibility() {
         const typeSel = document.getElementById('asset-type');
-        const group = document.getElementById('asset-rate-group');
-        if (!typeSel || !group) return;
+        const rateGroup = document.getElementById('asset-rate-group');
+        const apiSymbolRow = document.getElementById('asset-api-symbol-row');
+        if (!typeSel) return;
 
         const type = typeSel.value;
         const isFixedIncome = (type === 'cdb' || type === 'lci' || type === 'cofrinho' || type === 'tesouro');
+        const isTesouro = (type === 'tesouro');
 
-        group.style.display = isFixedIncome ? '' : 'none';
+        if (rateGroup) rateGroup.style.display = isFixedIncome ? '' : 'none';
+        if (apiSymbolRow) apiSymbolRow.style.display = isTesouro ? '' : 'none';
 
         if (isFixedIncome) {
             const kindSel = document.getElementById('asset-rate-kind');
-            if (kindSel && type === 'tesouro' && kindSel.value === 'cdi') {
+            if (kindSel && isTesouro && kindSel.value === 'cdi') {
                 kindSel.value = 'selic';
             }
             updateRateKindFields();
@@ -928,6 +999,7 @@
         const ratePercentEl = document.getElementById('asset-rate-percent');
         const rateFixedEl = document.getElementById('asset-rate-fixed');
         const rateIpcaEl = document.getElementById('asset-rate-ipca');
+        const apiSymbolEl = document.getElementById('asset-api-symbol');
 
         if (!codeEl || !nameEl || !ownerEl || !typeEl) return;
 
@@ -938,6 +1010,7 @@
         const institution = institutionEl ? institutionEl.value.trim() : '';
         const currency = currencyEl ? currencyEl.value : (ASSET_TYPES[type] ? ASSET_TYPES[type].currency : 'BRL');
         const notes = notesEl ? notesEl.value.trim() : '';
+        const apiSymbol = (type === 'tesouro' && apiSymbolEl) ? apiSymbolEl.value.trim().toLowerCase() : null;
 
         if (!code || !name || !ownerId) {
             notify('Preencha os campos obrigatórios.', 'error');
@@ -980,7 +1053,7 @@
                     ...assets[idx],
                     code, name, ownerId, type,
                     institution, currency, notes,
-                    rateConfig
+                    rateConfig, apiSymbol
                 };
             }
         } else {
@@ -988,7 +1061,7 @@
                 id: generateId(),
                 code, name, ownerId, type,
                 institution, currency, notes,
-                rateConfig,
+                rateConfig, apiSymbol,
                 createdAt: Date.now()
             });
         }
@@ -1353,10 +1426,59 @@
         if (!asset || !asset.code) return null;
 
         const type = asset.type;
+
+        // Tesouro: usa API do Aposente aos 40 (PU oficial)
+        if (type === 'tesouro') {
+            if (!asset.apiSymbol) {
+                console.warn(`[investimentos.js] ${asset.code} sem apiSymbol configurado.`);
+                return null;
+            }
+            const parts = asset.apiSymbol.split('|');
+            if (parts.length !== 2) {
+                console.warn(`[investimentos.js] apiSymbol inválido: ${asset.apiSymbol}`);
+                return null;
+            }
+            const tipo = parts[0].trim();
+            const ano = parts[1].trim();
+
+            const tituloMap = {
+                'selic':            'Tesouro Selic',
+                'ipca':             'Tesouro IPCA+',
+                'prefixado':        'Tesouro Prefixado',
+                'ipca-juros':       'Tesouro IPCA+ com Juros Semestrais',
+                'prefixado-juros':  'Tesouro Prefixado com Juros Semestrais'
+            };
+            const titulo = tituloMap[tipo];
+            if (!titulo) {
+                console.warn(`[investimentos.js] tipo de Tesouro desconhecido: ${tipo}`);
+                return null;
+            }
+
+            // Tenta primeiro o formato curto (titulo + ano)
+            const url = `https://www.aposenteaos40.org/fire-dash/includes/api_tesouro.php?titulo=${encodeURIComponent(titulo)}&ano=${encodeURIComponent(ano)}&campo=pu`;
+
+            try {
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const text = (await resp.text()).trim();
+
+                // Resposta esperada: "19956.46,0.04" (compra,venda)
+                const first = parseFloat(text.split(',')[0]);
+                if (Number.isFinite(first) && first > 0) {
+                    return { price: first, currency: 'BRL', source: 'tesouro-api' };
+                }
+            } catch (err) {
+                console.warn(`[investimentos.js] Falha ao buscar PU do Tesouro (${asset.apiSymbol}):`, err);
+            }
+            return null;
+        }
+
+        // Tipos manuais: sem cotação automática
         if (type === 'cdb' || type === 'cofrinho' || type === 'acao_eua' || type === 'lci') {
             return null;
         }
 
+        // Ações e FIIs: usa brapi
         if (type === 'acao' || type === 'fii') {
             const data = await callBrapi(`/quote/${encodeURIComponent(asset.code)}`);
             if (data && Array.isArray(data.results) && data.results.length > 0) {
@@ -1366,22 +1488,6 @@
                     return { price, currency: r.currency || 'BRL', source: 'brapi' };
                 }
             }
-            return null;
-        }
-
-        if (type === 'tesouro') {
-            try {
-                const data = await callBrapi(`/v2/treasury/bond/${encodeURIComponent(asset.code)}`);
-                const bond = (data && data.bond) ? data.bond : (data && data.result ? data.result : data);
-                const candidates = [
-                    bond && bond.price,
-                    bond && bond.unitPrice,
-                    bond && bond.lastPrice,
-                    bond && bond.value
-                ];
-                const price = candidates.map(Number).find(n => Number.isFinite(n) && n > 0);
-                if (price) return { price, currency: 'BRL', source: 'brapi' };
-            } catch (_) { /* ignore */ }
             return null;
         }
 
