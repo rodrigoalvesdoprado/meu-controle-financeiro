@@ -2015,6 +2015,12 @@
         setupIntegrationListeners();
         renderAll();
         saveDailySnapshot();
+        // Pré-carrega séries do BCB em background (não bloqueia a UI)
+        preloadBcbSeries().then(() => {
+            // Quando as séries estiverem prontas, re-renderiza para refletir
+            // os valores corrigidos de CDB/LCI/Cofrinho/Tesouro
+            renderAll();
+        });
     }
 
     const observer = new MutationObserver(() => {
