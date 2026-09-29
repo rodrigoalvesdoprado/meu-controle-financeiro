@@ -525,6 +525,27 @@
                         </div>
                     </div>
 
+                    <!-- Campo Símbolo da API (só para Tesouro Direto) -->
+                    <div class="form-row" id="asset-api-symbol-row" style="display: none;">
+                        <div class="form-group">
+                            <label for="asset-api-symbol">Símbolo da API (Tesouro)</label>
+                            <input type="text" id="asset-api-symbol" placeholder="Ex: selic|2028, ipca|2035, prefixado|2029" list="api-symbol-datalist">
+                            <datalist id="api-symbol-datalist">
+                                <option value="selic|2027"></option>
+                                <option value="selic|2028"></option>
+                                <option value="selic|2029"></option>
+                                <option value="ipca|2029"></option>
+                                <option value="ipca|2035"></option>
+                                <option value="ipca|2045"></option>
+                                <option value="prefixado|2027"></option>
+                                <option value="prefixado|2029"></option>
+                            </datalist>
+                            <small style="color:var(--text-secondary);font-size:11px;display:block;margin-top:4px;">
+                                Formato: <strong>tipo|ano</strong>. Tipos: selic, ipca, prefixado, ipca-juros, prefixado-juros.
+                            </small>
+                        </div>
+                    </div>
+                    
                     <!-- Grupo de taxa (renda fixa): só aparece para tesouro, cdb, lci e cofrinho -->
                     <div class="form-row" id="asset-rate-group" style="display: none;">
                         <div class="form-group">
