@@ -916,3 +916,58 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ============================================================ */
+/* ETAPA 2.2.b — Exibição bruto/líquido para renda fixa          */
+/* ============================================================ */
+
+/* Coluna "Vlr. Atual" da tabela: bruto em cima, líquido embaixo */
+.investments-table .value-bruto {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.investments-table .value-liquido {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+/* Cards de subtotais: ajuste quando há bruto e líquido separados */
+.owner-subtotal-card .owner-subtotal-row .value {
+    text-align: right;
+}
+
+/* Painel de detalhes: bloco de informações de renda fixa já usa
+   o grid existente de .asset-detail-summary (auto-fit) */
+
+/* Histórico: linha extra com rendimento, IR, bruto e líquido */
+.asset-detail-history .tx-detalhe-renda-fixa {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+.asset-detail-history .tx-detalhe-renda-fixa .det-item {
+    background: var(--surface);
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border-light);
+    white-space: nowrap;
+    cursor: help;
+}
+
+/* Mobile: o "value-liquido" fica embaixo do bruto no card */
+@media (max-width: 768px) {
+    .investments-table .col-current {
+        align-items: flex-end;
+    }
+    .investments-table .value-liquido {
+        font-size: 12px;
+    }
+    .asset-detail-history .tx-detalhe-renda-fixa {
+        gap: 6px;
+    }
+}
