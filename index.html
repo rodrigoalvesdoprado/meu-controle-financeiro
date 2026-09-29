@@ -28,28 +28,27 @@
     <div class="container">
         <h1><i class="fas fa-wallet"></i> Meu Controle Financeiro</h1>
 
-        <div class="period-control">
-            <div class="period-mode">
-                <button class="secondary active-mode" id="period-standard">Padrão (14/14)</button>
-                <button class="secondary" id="period-custom">Personalizado</button>
-            </div>
-            <div class="period-date-inputs" id="date-inputs">
-                <div class="form-group">
-                    <label for="start-date">Data Início</label>
-                    <input type="date" id="start-date">
-                </div>
-                <div class="form-group">
-                    <label for="end-date">Data Fim</label>
-                    <input type="date" id="end-date">
-                </div>
-                <button class="secondary" id="apply-period" style="width: auto; margin-top: 22px;"><i class="fas fa-check"></i> Aplicar</button>
-            </div>
-            <div class="period-navigation" id="period-nav">
-                <button class="period-btn secondary" id="prev-period"><i class="fas fa-chevron-left"></i></button>
-                <div class="period-display" id="current-period">Junho 2024</div>
-                <button class="period-btn secondary" id="next-period"><i class="fas fa-chevron-right"></i></button>
-            </div>
+<div class="period-control">
+    <div class="period-navigation" id="period-nav">
+        <button class="period-btn secondary" id="prev-period" title="Período anterior">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="period-display" id="current-period">14 Agosto - 14 Setembro 2026</div>
+        <button class="period-btn secondary" id="next-period" title="Próximo período">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    <div class="period-date-inputs" id="date-inputs">
+        <div class="form-group">
+            <label for="start-date">Data Início</label>
+            <input type="date" id="start-date">
         </div>
+        <div class="form-group">
+            <label for="end-date">Data Fim</label>
+            <input type="date" id="end-date">
+        </div>
+    </div>
+</div>
 
         <div class="tabs">
             <div class="tab active" data-tab="transactions">Lançamentos</div>
