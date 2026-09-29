@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="Controle Financeiro">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="investimentos.css">
@@ -373,7 +374,20 @@
 
                 <div class="chart-wrapper" style="margin-top: 20px;">
                     <h3>Evolução Patrimonial</h3>
-                    <p class="chart-hint">Clique em um titular na legenda para expandir a evolução por classe.</p>
+                    <p class="chart-hint">Clique em um titular na legenda para expandir a evolução por classe. Role o mouse para dar zoom e arraste para navegar.</p>
+                
+                    <div class="evolution-period-selector">
+                        <button class="period-btn-evolution active" data-period="12m">Últimos 12 meses</button>
+                        <button class="period-btn-evolution" data-period="5y">Últimos 5 anos</button>
+                        <button class="period-btn-evolution" data-period="10y">Últimos 10 anos</button>
+                        <button class="period-btn-evolution" data-period="all">Tudo</button>
+                    </div>
+                
+                    <div class="evolution-reconstructing" id="evolutionReconstructing" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span id="evolutionReconstructingText">Reconstruindo histórico...</span>
+                    </div>
+                
                     <canvas id="patrimony-evolution-chart"></canvas>
                 </div>
             </div>
