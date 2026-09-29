@@ -1037,13 +1037,30 @@
 
         const assets = getAssets();
 
+        // Verifica duplicidade considerando código + titular + instituição
         const duplicate = assets.find(a =>
-            a.code === code && a.ownerId === ownerId &&
+            a.code === code &&
+            a.ownerId === ownerId &&
+            (a.institution || '').trim().toLowerCase() === institution.trim().toLowerCase() &&
             (!editingAssetId || a.id !== editingAssetId)
         );
         if (duplicate) {
-            notify('Já existe um ativo com este código para este titular.', 'error');
+            notify(`Já existe um ativo ${code} deste titular nesta mesma instituição.`, 'error');
             return;
+        }
+
+        // Aviso extra: dois ativos com mesmo código, mesmo titular e ambos sem IF
+        if (!institution.trim()) {
+            const sameCodeNoIF = assets.find(a =>
+                a.code === code &&
+                a.ownerId === ownerId &&
+                !(a.institution || '').trim() &&
+                (!editingAssetId || a.id !== editingAssetId)
+            );
+            if (sameCodeNoIF) {
+                notify('Já existe um ativo com este código sem instituição definida. Preencha a IF para diferenciar.', 'error');
+                return;
+            }
         }
 
         if (editingAssetId) {
