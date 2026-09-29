@@ -40,6 +40,8 @@
 
        // Estado do filtro de período do gráfico de evolução
     let evolutionPeriodFilter = localStorage.getItem('evolutionPeriodFilter') || '12m';
+    let evolutionGroupBy  = localStorage.getItem('evolutionGroupBy')  || 'owner';
+    let evolutionFilterBy = localStorage.getItem('evolutionFilterBy') || '__all__';
 
     let editingAssetId = null;
     let selectedAssetId = null;
@@ -1960,62 +1962,8 @@
             return `${dd}/${m}/${y.substring(2)}`;
         });
 
-        const datasets = [];
-
-        if (evolutionMode === 'owner' || !evolutionClassOwnerId) {
-            const owners = getOwners();
-            const ownerColors = {};
-            owners.forEach(o => ownerColors[o.id] = o.color || '#3498db');
-
-            owners.forEach(owner => {
-                const data = dates.map(d => {
-                    const snap = history[d];
-                    return (snap && snap.byOwner && snap.byOwner[owner.id]) || 0;
-                });
-                if (data.some(v => v > 0)) {
-                    datasets.push({
-                        label: owner.name,
-                        data,
-                        borderColor: ownerColors[owner.id],
-                        backgroundColor: ownerColors[owner.id] + '33',
-                        tension: 0.25,
-                        fill: false,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
-                        borderWidth: 2
-                    });
-                }
-            });
-        } else {
-            const palette = {
-                acao: '#3498db',
-                fii: '#9b59b6',
-                tesouro: '#27ae60',
-                cdb: '#e67e22',
-                lci: '#16a085',
-                cofrinho: '#f1c40f',
-                acao_eua: '#e74c3c'
-            };
-            Object.keys(ASSET_TYPES).forEach(type => {
-                const data = dates.map(d => {
-                    const snap = history[d];
-                    return (snap && snap.byClass && snap.byClass[type]) || 0;
-                });
-                if (data.some(v => v > 0)) {
-                    datasets.push({
-                        label: getTypeLabel(type),
-                        data,
-                        borderColor: palette[type] || '#95a5a6',
-                        backgroundColor: (palette[type] || '#95a5a6') + '33',
-                        tension: 0.25,
-                        fill: false,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
-                        borderWidth: 2
-                    });
-                }
-            });
-        }
+        // Constrói as linhas conforme o agrupamento escolhido
+        const datasets = buildEvolutionDatasets(dates, history, dark);
 
         if (chartPatrimony) chartPatrimony.destroy();
 
@@ -2042,32 +1990,7 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: textColor },
-                        onClick: (e, legendItem, legend) => {
-                            const chart = legend.chart;
-                            const idx = legendItem.datasetIndex;
-                            const label = chart.data.datasets[idx].label;
-
-                            if (evolutionMode === 'owner') {
-                                const owners = getOwners();
-                                const owner = owners.find(o => o.name === label);
-                                if (owner) {
-                                    evolutionMode = 'class';
-                                    evolutionClassOwnerId = owner.id;
-                                    renderPatrimonyEvolutionChart();
-                                    return;
-                                }
-                            } else {
-                                evolutionMode = 'owner';
-                                evolutionClassOwnerId = null;
-                                renderPatrimonyEvolutionChart();
-                                return;
-                            }
-
-                            const meta = chart.getDatasetMeta(idx);
-                            meta.hidden = meta.hidden === null ? !chart.data.datasets[idx].hidden : null;
-                            chart.update();
-                        }
+                        labels: { color: textColor }
                     },
                     tooltip: {
                         callbacks: {
@@ -2087,10 +2010,7 @@
                         }
                     },
                     zoom: {
-                        pan: {
-                            enabled: true,
-                            mode: 'x'
-                        },
+                        pan: { enabled: true, mode: 'x' },
                         zoom: {
                             wheel: { enabled: true },
                             pinch: { enabled: true },
@@ -2100,6 +2020,149 @@
                 }
             }
         });
+    }
+
+    /**
+     * Constrói os datasets do gráfico de evolução conforme o agrupamento escolhido.
+     */
+    function buildEvolutionDatasets(dates, history, dark) {
+        // Cores padrão
+        const owners = getOwners();
+        const ownerColors = {};
+        owners.forEach(o => ownerColors[o.id] = o.color || '#3498db');
+
+        const typePalette = {
+            acao: '#3498db',
+            fii: '#9b59b6',
+            tesouro: '#27ae60',
+            cdb: '#e67e22',
+            lci: '#16a085',
+            cofrinho: '#f1c40f',
+            acao_eua: '#e74c3c'
+        };
+
+        const allAssets = getAssets();
+
+        // Cor dinâmica estável para um rótulo arbitrário
+        function dynamicColor(label) {
+            let hash = 0;
+            for (let i = 0; i < label.length; i++) {
+                hash = ((hash << 5) - hash) + label.charCodeAt(i);
+                hash = hash | 0;
+            }
+            const hue = Math.abs(hash) % 360;
+            return `hsl(${hue}, 65%, 55%)`;
+        }
+
+        // Retorna a cor de uma linha conforme o agrupamento
+        function colorFor(groupBy, key, label) {
+            if (groupBy === 'owner') {
+                return ownerColors[key] || '#3498db';
+            }
+            if (groupBy === 'type') {
+                const asset = allAssets.find(a => a.id === key);
+                if (asset) return typePalette[asset.type] || dynamicColor(label);
+                return dynamicColor(label);
+            }
+            // institution
+            return dynamicColor(label);
+        }
+
+        // Filtro — retorna true se o ativo deve entrar
+        function assetPassesFilter(asset) {
+            if (evolutionFilterBy === '__all__') return true;
+            if (evolutionGroupBy === 'owner') {
+                return asset.ownerId === evolutionFilterBy;
+            }
+            if (evolutionGroupBy === 'institution') {
+                return (asset.institution || '').trim().toLowerCase() === evolutionFilterBy.toLowerCase();
+            }
+            if (evolutionGroupBy === 'type') {
+                return asset.type === evolutionFilterBy;
+            }
+            return true;
+        }
+
+        // Mapa: chave do grupo → { label, cor, valores por data }
+        const groups = new Map();
+
+        dates.forEach(dateKey => {
+            const snap = history[dateKey];
+            if (!snap) return;
+
+            allAssets.forEach(asset => {
+                if (!assetPassesFilter(asset)) return;
+
+                // Descobre quanto esse ativo contribuiu no snapshot
+                const valorTotal = valorDoAtivoNoSnapshot(snap, asset);
+                if (valorTotal <= 0) return;
+
+                // Chave e rótulo do grupo
+                let key, label;
+                if (evolutionGroupBy === 'owner') {
+                    key = asset.ownerId;
+                    label = getOwnerName(asset.ownerId) || 'Sem titular';
+                } else if (evolutionGroupBy === 'institution') {
+                    key = (asset.institution || '__sem_if__').toLowerCase();
+                    label = asset.institution || 'Sem IF';
+                } else {
+                    // type → por ativo específico
+                    key = asset.id;
+                    label = asset.name + ' (' + asset.code + ')';
+                }
+
+                if (!groups.has(key)) {
+                    groups.set(key, {
+                        key,
+                        label,
+                        color: colorFor(evolutionGroupBy, key, label),
+                        valores: {}
+                    });
+                }
+                const grupo = groups.get(key);
+                grupo.valores[dateKey] = (grupo.valores[dateKey] || 0) + valorTotal;
+            });
+        });
+
+        // Monta os datasets
+        const datasets = [];
+        groups.forEach(grupo => {
+            const data = dates.map(d => grupo.valores[d] || 0);
+            if (!data.some(v => v > 0)) return;
+
+            datasets.push({
+                label: grupo.label,
+                data,
+                borderColor: grupo.color,
+                backgroundColor: grupo.color + '33',
+                tension: 0.25,
+                fill: false,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                borderWidth: 2
+            });
+        });
+
+        return datasets;
+    }
+
+    /**
+     * Retorna o valor de mercado de um ativo específico dentro de um snapshot.
+     * Como o snapshot grava por classe (byClass), precisamos estimar a fração do ativo.
+     * Estratégia: usar a quantidade acumulada do ativo NAQUELA DATA
+     * e multiplicar pelo preço estimado para aquela data.
+     */
+    function valorDoAtivoNoSnapshot(snap, asset) {
+        if (!snap || !snap.at) return 0;
+        const timestampRef = snap.at;
+
+        const agg = computeAggregatesUpToDate(asset.id, timestampRef);
+        if (agg.quantity <= 0) return 0;
+
+        const preco = estimateAssetPriceAtDate(asset, timestampRef);
+        if (preco === null) return 0;
+
+        return agg.quantity * preco;
     }
 
     // ============================================================
@@ -2566,6 +2629,105 @@
                 btn.classList.remove('active');
             }
         });
+
+                 // Botões de período do gráfico de evolução
+        document.querySelectorAll('.period-btn-evolution').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.period-btn-evolution').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                evolutionPeriodFilter = btn.getAttribute('data-period');
+                localStorage.setItem('evolutionPeriodFilter', evolutionPeriodFilter);
+                renderPatrimonyEvolutionChart();
+            });
+        });
+
+        // Marca o botão ativo conforme estado persistido
+        document.querySelectorAll('.period-btn-evolution').forEach(btn => {
+            if (btn.getAttribute('data-period') === evolutionPeriodFilter) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Select: agrupar por
+        const groupBySel = document.getElementById('evolution-group-by');
+        if (groupBySel) {
+            groupBySel.value = evolutionGroupBy;
+            groupBySel.addEventListener('change', () => {
+                evolutionGroupBy = groupBySel.value;
+                localStorage.setItem('evolutionGroupBy', evolutionGroupBy);
+                // Ao trocar o agrupamento, o filtro antigo não faz mais sentido
+                evolutionFilterBy = '__all__';
+                localStorage.setItem('evolutionFilterBy', evolutionFilterBy);
+                refreshEvolutionFilterDropdown();
+                renderPatrimonyEvolutionChart();
+            });
+        }
+
+        // Select: filtrar
+        const filterBySel = document.getElementById('evolution-filter-by');
+        if (filterBySel) {
+            filterBySel.addEventListener('change', () => {
+                evolutionFilterBy = filterBySel.value;
+                localStorage.setItem('evolutionFilterBy', evolutionFilterBy);
+                renderPatrimonyEvolutionChart();
+            });
+        }
+
+        // Popula o dropdown de filtro na inicialização
+        refreshEvolutionFilterDropdown();
+       
+    }
+
+       /**
+     * Popula o dropdown "Filtrar" com base no agrupamento atual.
+     * - groupBy=owner       → lista os titulares
+     * - groupBy=institution → lista as IFs distintas
+     * - groupBy=type        → lista os tipos genéricos de ativo
+     */
+    function refreshEvolutionFilterDropdown() {
+        const sel = document.getElementById('evolution-filter-by');
+        if (!sel) return;
+
+        const current = evolutionFilterBy;
+
+        sel.innerHTML = '<option value="__all__">Todos</option>';
+
+        if (evolutionGroupBy === 'owner') {
+            getOwners().forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.id;
+                opt.textContent = o.name;
+                sel.appendChild(opt);
+            });
+        } else if (evolutionGroupBy === 'institution') {
+            const ifs = new Set();
+            getAssets().forEach(a => {
+                const ifName = (a.institution || '').trim();
+                if (ifName) ifs.add(ifName);
+            });
+            [...ifs].sort((a, b) => a.localeCompare(b, 'pt-BR')).forEach(ifName => {
+                const opt = document.createElement('option');
+                opt.value = ifName;
+                opt.textContent = ifName;
+                sel.appendChild(opt);
+            });
+        } else if (evolutionGroupBy === 'type') {
+            const tipos = new Set();
+            getAssets().forEach(a => tipos.add(a.type));
+            [...tipos].sort().forEach(tp => {
+                const opt = document.createElement('option');
+                opt.value = tp;
+                opt.textContent = getTypeLabel(tp);
+                sel.appendChild(opt);
+            });
+        }
+
+        // Restaura seleção se ainda existe
+        const exists = [...sel.options].some(o => o.value === current);
+        sel.value = exists ? current : '__all__';
+        evolutionFilterBy = sel.value;
     }
 
     // ========== INICIALIZAÇÃO ==========
