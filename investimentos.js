@@ -1991,14 +1991,30 @@
      * Chamada no init para garantir que o cálculo funcione.
      */
     async function preloadBcbSeries() {
-        try {
-            await Promise.all([
-                ensureBcbSerie('cdi'),
-                ensureBcbSerie('selic'),
-                ensureBcbSerie('ipca')
-            ]);
-        } catch (err) {
-            console.warn('[investimentos.js] Falha ao pré-carregar séries do BCB:', err);
+        // Executa sequencialmente com pausa entre chamadas para evitar rate limit do proxy
+        const kinds = ['cdi', 'selic', 'ipca'];
+        for (let i = 0; i < kinds.length; i++) {
+            const kind = kinds[i];
+            try {
+                const cache = getBcbCache();
+                const entry = cache[kind];
+                const now = Date.now();
+                const oneDayMs = 24 * 60 * 60 * 1000;
+
+                // Se já está no cache e é recente, pula a busca
+                if (entry && Array.isArray(entry.values) && (now - entry.at) < oneDayMs) {
+                    continue;
+                }
+
+                await ensureBcbSerie(kind);
+            } catch (err) {
+                console.warn(`[investimentos.js] Falha ao pré-carregar ${kind}:`, err);
+            }
+
+            // Pausa de 1,5s entre buscas (evita rate limit)
+            if (i < kinds.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
         }
     }
 
