@@ -1,63 +1,63 @@
 :root {
     --bg-gradient-1: #f5f7fa;
-    --bg-gradient-2: #c3cfe2;
+    --bg-gradient-2: #dbe4f0;
     --surface: #ffffff;
-    --surface-alt: #f8f9fa;
-    --surface-hover: #f9f9f9;
-    --text-primary: #2c3e50;
-    --text-secondary: #7f8c8d;
-    --text-muted: #bdc3c7;
-    --border: #ddd;
-    --border-light: #eee;
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
-    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
-    --shadow-xl: 0 6px 12px rgba(0,0,0,0.15);
-    --accent-blue: #3498db;
-    --accent-blue-hover: #2980b9;
-    --accent-green: #27ae60;
-    --accent-green-hover: #219653;
-    --accent-red: #e74c3c;
-    --accent-red-hover: #c0392b;
-    --accent-purple: #9b59b6;
-    --accent-purple-hover: #8e44ad;
-    --accent-orange: #e67e22;
-    --voice-bg: #f3e5f5;
-    --voice-feedback-bg: #f0f9ff;
-    --voice-highlight: #e3f2fd;
-    --warn-bg: #fff8e1;
-    --warn-border: #f1c40f;
+    --surface-alt: #f0f4f9;
+    --surface-hover: #e8eef6;
+    --text-primary: #0b2545;
+    --text-secondary: #4a5a72;
+    --text-muted: #8a99ad;
+    --border: #d1dae6;
+    --border-light: #e6ecf3;
+    --shadow-sm: 0 2px 4px rgba(0, 45, 90, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 45, 90, 0.08);
+    --shadow-lg: 0 8px 30px rgba(0, 45, 90, 0.12);
+    --shadow-xl: 0 6px 12px rgba(0, 45, 90, 0.15);
+    --accent-blue: #0057a3;
+    --accent-blue-hover: #004080;
+    --accent-green: #00a86b;
+    --accent-green-hover: #008a58;
+    --accent-red: #d62828;
+    --accent-red-hover: #b22020;
+    --accent-purple: #5f4b8b;
+    --accent-purple-hover: #4a3a6e;
+    --accent-orange: #e07b00;
+    --voice-bg: #e6eef9;
+    --voice-feedback-bg: #eaf3fb;
+    --voice-highlight: #cfe3f7;
+    --warn-bg: #fff6e0;
+    --warn-border: #e0a800;
 }
 
 body.dark-mode {
-    --bg-gradient-1: #1a1d23;
-    --bg-gradient-2: #2c313a;
-    --surface: #242830;
-    --surface-alt: #2c313a;
-    --surface-hover: #31363f;
-    --text-primary: #e8eaed;
-    --text-secondary: #a0a4ab;
-    --text-muted: #6b7078;
-    --border: #3a3f47;
-    --border-light: #31363f;
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
-    --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
-    --shadow-xl: 0 6px 12px rgba(0,0,0,0.4);
-    --accent-blue: #4aa3e0;
-    --accent-blue-hover: #5cb0ec;
-    --accent-green: #2ecc71;
-    --accent-green-hover: #3ddb82;
-    --accent-red: #e74c3c;
-    --accent-red-hover: #f05b4a;
-    --accent-purple: #b07cc6;
-    --accent-purple-hover: #c18fd6;
-    --accent-orange: #e8a55d;
-    --voice-bg: #3a2c45;
-    --voice-feedback-bg: #1e2a36;
-    --voice-highlight: #2c3e50;
-    --warn-bg: #3d3520;
-    --warn-border: #d4a017;
+    --bg-gradient-1: #0a1628;
+    --bg-gradient-2: #001a3a;
+    --surface: #0f2340;
+    --surface-alt: #16294a;
+    --surface-hover: #1c3255;
+    --text-primary: #e8eef7;
+    --text-secondary: #9fb0c9;
+    --text-muted: #61748e;
+    --border: #234168;
+    --border-light: #1a3255;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 6px 12px rgba(0, 0, 0, 0.5);
+    --accent-blue: #2196f3;
+    --accent-blue-hover: #42a5f5;
+    --accent-green: #00c97e;
+    --accent-green-hover: #00e090;
+    --accent-red: #ef5350;
+    --accent-red-hover: #f0625f;
+    --accent-purple: #9575cd;
+    --accent-purple-hover: #b39ddb;
+    --accent-orange: #ffa726;
+    --voice-bg: #1a2c4a;
+    --voice-feedback-bg: #16294a;
+    --voice-highlight: #1e3a5f;
+    --warn-bg: #3d2e10;
+    --warn-border: #ffb300;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -182,18 +182,85 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
 .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
 .empty-state i { font-size: 3rem; margin-bottom: 15px; color: var(--text-muted); }
 
-.period-control { background: var(--surface-alt); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; transition: background 0.3s ease; }
-.period-mode { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.period-mode button { width: auto; padding: 8px 16px; font-size: 14px; }
-.period-mode button.active-mode { background: var(--accent-blue); transform: scale(1.05); }
-.period-mode button.active-mode:hover { background: var(--accent-blue-hover); }
-.period-date-inputs { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; flex: 1; }
-.period-date-inputs .form-group { min-width: 150px; flex: 0 1 auto; }
-.period-date-inputs input { width: auto; min-width: 150px; }
-.period-navigation { display: flex; align-items: center; gap: 10px; }
-.period-display { font-size: 1.2rem; font-weight: bold; color: var(--text-primary); min-width: 180px; text-align: center; }
-.period-btn { width: auto; padding: 10px 15px; background: var(--accent-blue); }
-.period-btn:hover { background: var(--accent-blue-hover); }
+.period-control {
+    background: var(--surface-alt);
+    padding: 12px 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.3s ease;
+    border-left: 4px solid var(--accent-blue);
+}
+
+.period-navigation {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.period-display {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 220px;
+    text-align: center;
+    padding: 0 10px;
+}
+
+.period-btn {
+    width: auto;
+    padding: 8px 12px;
+    background: var(--accent-blue);
+    color: white;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.period-btn:hover {
+    background: var(--accent-blue-hover);
+    transform: scale(1.08);
+}
+
+.period-date-inputs {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.period-date-inputs .form-group {
+    min-width: 140px;
+    flex: 0 1 auto;
+    margin: 0;
+}
+
+.period-date-inputs .form-group label {
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--text-secondary);
+}
+
+.period-date-inputs input {
+    width: auto;
+    min-width: 140px;
+    margin: 0;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+/* Regras antigas que ficam sem uso — não removemos para não quebrar nada */
+.period-mode { display: none; }
 
 .category-detail { margin-top: 20px; padding: 15px; background: var(--surface-alt); border-radius: 12px; border-left: 4px solid var(--accent-blue); display: none; color: var(--text-primary); }
 .category-detail.show { display: block; }
@@ -515,10 +582,11 @@ button.voice-btn.listening { background: var(--accent-red); animation: pulse 1s 
     .transaction-actions { margin-top: 10px; align-self: flex-end; }
     .tabs { flex-direction: column; }
     .period-control { flex-direction: column; align-items: stretch; }
-    .period-navigation { justify-content: center; }
-    .period-date-inputs { flex-direction: column; align-items: stretch; }
+    .period-navigation { justify-content: center; order: 1; }
+    .period-date-inputs { order: 2; flex-direction: column; align-items: stretch; margin-left: 0; }
     .period-date-inputs .form-group { min-width: auto; }
     .period-date-inputs input { width: 100%; min-width: auto; }
+    .period-display { min-width: auto; font-size: 0.95rem; }
     .install-banner { flex-direction: column; text-align: center; }
     .btn-group { flex-direction: column; }
     .btn-group button { min-width: auto; }
