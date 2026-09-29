@@ -971,3 +971,68 @@
         gap: 6px;
     }
 }
+/* ============================================================ */
+/* SELETOR DE PERÍODO DO GRÁFICO DE EVOLUÇÃO                     */
+/* ============================================================ */
+
+.evolution-period-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 12px 0 15px 0;
+}
+
+.evolution-period-selector .period-btn-evolution {
+    width: auto;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0;
+    background: var(--surface-alt);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.evolution-period-selector .period-btn-evolution:hover {
+    background: var(--surface-hover);
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    transform: none;
+}
+
+.evolution-period-selector .period-btn-evolution.active {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+/* Aviso de reconstrução em andamento */
+.evolution-reconstructing {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--voice-feedback-bg);
+    border-left: 4px solid var(--accent-blue);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.evolution-reconstructing i {
+    color: var(--accent-blue);
+}
+
+@media (max-width: 768px) {
+    .evolution-period-selector {
+        flex-direction: column;
+    }
+    .evolution-period-selector .period-btn-evolution {
+        width: 100%;
+        justify-content: center;
+    }
+}
