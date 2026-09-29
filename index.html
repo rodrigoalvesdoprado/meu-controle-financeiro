@@ -374,13 +374,30 @@
 
                 <div class="chart-wrapper" style="margin-top: 20px;">
                     <h3>Evolução Patrimonial</h3>
-                    <p class="chart-hint">Clique em um titular na legenda para expandir a evolução por classe. Role o mouse para dar zoom e arraste para navegar.</p>
+                    <p class="chart-hint">Role o mouse para dar zoom e arraste para navegar.</p>
                 
                     <div class="evolution-period-selector">
                         <button class="period-btn-evolution active" data-period="12m">Últimos 12 meses</button>
                         <button class="period-btn-evolution" data-period="5y">Últimos 5 anos</button>
                         <button class="period-btn-evolution" data-period="10y">Últimos 10 anos</button>
                         <button class="period-btn-evolution" data-period="all">Tudo</button>
+                    </div>
+                
+                    <div class="evolution-group-filter">
+                        <div class="evolution-filter-item">
+                            <label for="evolution-group-by">Agrupar por:</label>
+                            <select id="evolution-group-by">
+                                <option value="owner">Titular</option>
+                                <option value="institution">Instituição Financeira</option>
+                                <option value="type">Ativo</option>
+                            </select>
+                        </div>
+                        <div class="evolution-filter-item">
+                            <label for="evolution-filter-by">Filtrar:</label>
+                            <select id="evolution-filter-by">
+                                <option value="__all__">Todos</option>
+                            </select>
+                        </div>
                     </div>
                 
                     <div class="evolution-reconstructing" id="evolutionReconstructing" style="display: none;">
