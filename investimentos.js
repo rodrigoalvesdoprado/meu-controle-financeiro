@@ -2082,45 +2082,99 @@
             return null;
         }
 
-        // LCI é isenta de IR
         const isentoIr = (asset.type === 'lci');
 
+        // Primeiro passo: calcular valor bruto e custo dos aportes (sem IR)
         let valorBrutoTotal = 0;
-        let valorLiquidoTotal = 0;
-        let invested = 0;
-        let irTotal = 0;
+        let totalUnidadesCompradas = 0;   // soma das quantidades dos aportes
+        let totalUnidadesResgatadas = 0;  // soma das quantidades dos resgates
+        let custoTotalAportes = 0;        // soma dos valores originais dos aportes
         const txsDetalhadas = [];
 
         for (const tx of txs) {
             const calc = computeFixedIncomeReturnForTx(tx, rateConfig, today);
             if (!calc) continue;
 
-            const sinal = (tx.type === 'aporte') ? 1 : -1;
+            const isAporte = (tx.type === 'aporte');
+            const qtd = Number(tx.quantity) || 0;
 
-            const rendimento = calc.valorCorrigido - calc.valorOriginal;
-            const aliquota = isentoIr ? 0 : getIrAliquota(calc.diasCorridos);
-            const ir = rendimento * aliquota;
-            const valorLiquidoTx = calc.valorCorrigido - ir;
+            if (isAporte) {
+                valorBrutoTotal += calc.valorCorrigido;
+                totalUnidadesCompradas += qtd;
+                custoTotalAportes += calc.valorOriginal;
 
-            valorBrutoTotal += sinal * calc.valorCorrigido;
-            valorLiquidoTotal += sinal * valorLiquidoTx;
-            invested += sinal * calc.valorOriginal;
-            irTotal += sinal * ir;
+                txsDetalhadas.push({
+                    tx,
+                    ...calc,
+                    isAporte: true,
+                    aliquota: 0,   // preenchido depois
+                    ir: 0,
+                    valorLiquidoTx: calc.valorCorrigido
+                });
+            } else {
+                // Resgate: subtrai o valor original (o que saiu de fato)
+                valorBrutoTotal -= calc.valorOriginal;
+                totalUnidadesResgatadas += qtd;
 
-            txsDetalhadas.push({
-                tx,
-                ...calc,
-                aliquota,
-                ir,
-                valorLiquidoTx
-            });
+                txsDetalhadas.push({
+                    tx,
+                    valorOriginal: calc.valorOriginal,
+                    valorCorrigido: calc.valorOriginal,
+                    diasCorridos: 0,
+                    diasUteis: 0,
+                    fator: 1,
+                    aliquota: 0,
+                    ir: 0,
+                    valorLiquidoTx: calc.valorOriginal,
+                    isAporte: false
+                });
+            }
         }
+
+        // Segundo passo: calcular IR sobre o rendimento do saldo remanescente
+        const unidadesRemanescentes = Math.max(0, totalUnidadesCompradas - totalUnidadesResgatadas);
+        const proporcaoRemanescente = (totalUnidadesCompradas > 0)
+            ? (unidadesRemanescentes / totalUnidadesCompradas)
+            : 0;
+
+        // Custo remanescente = custo total dos aportes × proporção de unidades vivas
+        const custoRemanescente = custoTotalAportes * proporcaoRemanescente;
+
+        // Rendimento do saldo atual
+        const rendimentoRemanescente = Math.max(0, valorBrutoTotal - custoRemanescente);
+
+        // Determinar alíquota: usa a do aporte mais antigo ainda vivo (mais conservador = menor alíquota)
+        // Simplificação: pega os dias corridos desde o primeiro aporte
+        let diasParaIr = 0;
+        if (txsDetalhadas.length > 0) {
+            const primeiroAporte = txsDetalhadas
+                .filter(t => t.isAporte)
+                .sort((a, b) => a.tx.timestamp - b.tx.timestamp)[0];
+            if (primeiroAporte) diasParaIr = primeiroAporte.diasCorridos;
+        }
+
+        const aliquotaGlobal = isentoIr ? 0 : getIrAliquota(diasParaIr);
+        const irTotal = rendimentoRemanescente * aliquotaGlobal;
+        const valorLiquidoTotal = valorBrutoTotal - irTotal;
+
+        // Distribuir a alíquota nas txsDetalhadas (só para exibição)
+        txsDetalhadas.forEach(d => {
+            if (d.isAporte) {
+                const rendimentoTx = d.valorCorrigido - d.valorOriginal;
+                d.aliquota = aliquotaGlobal;
+                // IR por movimentação fica zerado; o IR global é calculado acima
+                d.ir = 0;
+                d.valorLiquidoTx = d.valorCorrigido;
+                d.rendimentoTx = rendimentoTx;
+            }
+        });
 
         return {
             valorBrutoTotal,
             valorLiquidoTotal,
-            invested,
+            invested: custoRemanescente,
             irTotal,
+            aliquotaGlobal,
             txsDetalhadas
         };
     }
