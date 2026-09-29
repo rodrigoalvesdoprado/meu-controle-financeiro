@@ -2025,8 +2025,10 @@
     /**
      * Constrói os datasets do gráfico de evolução conforme o agrupamento escolhido.
      */
+    /**
+     * Constrói os datasets do gráfico de evolução conforme o agrupamento escolhido.
+     */
     function buildEvolutionDatasets(dates, history, dark) {
-        // Cores padrão
         const owners = getOwners();
         const ownerColors = {};
         owners.forEach(o => ownerColors[o.id] = o.color || '#3498db');
@@ -2054,21 +2056,8 @@
             return `hsl(${hue}, 65%, 55%)`;
         }
 
-        // Retorna a cor de uma linha conforme o agrupamento
-        function colorFor(groupBy, key, label) {
-            if (groupBy === 'owner') {
-                return ownerColors[key] || '#3498db';
-            }
-            if (groupBy === 'type') {
-                const asset = allAssets.find(a => a.id === key);
-                if (asset) return typePalette[asset.type] || dynamicColor(label);
-                return dynamicColor(label);
-            }
-            // institution
-            return dynamicColor(label);
-        }
-
-        // Filtro — retorna true se o ativo deve entrar
+        // Filtro: dado um ativo, decide se ele entra no gráfico
+        // (filtro é aplicado conforme o agrupamento atual)
         function assetPassesFilter(asset) {
             if (evolutionFilterBy === '__all__') return true;
             if (evolutionGroupBy === 'owner') {
@@ -2086,18 +2075,26 @@
         // Mapa: chave do grupo → { label, cor, valores por data }
         const groups = new Map();
 
+        // Para cada data do histórico, calcula o valor de cada grupo
         dates.forEach(dateKey => {
             const snap = history[dateKey];
             if (!snap) return;
+            const timestampRef = snap.at;
 
+            // Percorre APENAS os ativos que passam no filtro
             allAssets.forEach(asset => {
                 if (!assetPassesFilter(asset)) return;
 
-                // Descobre quanto esse ativo contribuiu no snapshot
-                const valorTotal = valorDoAtivoNoSnapshot(snap, asset);
-                if (valorTotal <= 0) return;
+                const agg = computeAggregatesUpToDate(asset.id, timestampRef);
+                if (agg.quantity <= 0) return;
 
-                // Chave e rótulo do grupo
+                const preco = estimateAssetPriceAtDate(asset, timestampRef);
+                if (preco === null) return;
+
+                const valor = agg.quantity * preco;
+                if (valor <= 0) return;
+
+                // Define chave e rótulo do grupo
                 let key, label;
                 if (evolutionGroupBy === 'owner') {
                     key = asset.ownerId;
@@ -2106,25 +2103,35 @@
                     key = (asset.institution || '__sem_if__').toLowerCase();
                     label = asset.institution || 'Sem IF';
                 } else {
-                    // type → por ativo específico
+                    // type → agrupa por ativo específico
                     key = asset.id;
                     label = asset.name + ' (' + asset.code + ')';
+                }
+
+                // Cor do grupo
+                let color;
+                if (evolutionGroupBy === 'owner') {
+                    color = ownerColors[key] || '#3498db';
+                } else if (evolutionGroupBy === 'type') {
+                    color = typePalette[asset.type] || dynamicColor(label);
+                } else {
+                    color = dynamicColor(label);
                 }
 
                 if (!groups.has(key)) {
                     groups.set(key, {
                         key,
                         label,
-                        color: colorFor(evolutionGroupBy, key, label),
+                        color,
                         valores: {}
                     });
                 }
                 const grupo = groups.get(key);
-                grupo.valores[dateKey] = (grupo.valores[dateKey] || 0) + valorTotal;
+                grupo.valores[dateKey] = (grupo.valores[dateKey] || 0) + valor;
             });
         });
 
-        // Monta os datasets
+        // Monta os datasets finais
         const datasets = [];
         groups.forEach(grupo => {
             const data = dates.map(d => grupo.valores[d] || 0);
@@ -2603,34 +2610,15 @@
    
     // ========== LISTENERS DE INTEGRAÇÃO ==========
 
-    function setupIntegrationListeners() {
+     function setupIntegrationListeners() {
         const refreshBtn = document.getElementById('investments-refresh-quotes');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', async () => {
                 await refreshAllQuotes();
             });
         }
-               // Botões de período do gráfico de evolução
-        document.querySelectorAll('.period-btn-evolution').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.period-btn-evolution').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                evolutionPeriodFilter = btn.getAttribute('data-period');
-                localStorage.setItem('evolutionPeriodFilter', evolutionPeriodFilter);
-                renderPatrimonyEvolutionChart();
-            });
-        });
 
-        // Marca o botão ativo conforme estado persistido
-        document.querySelectorAll('.period-btn-evolution').forEach(btn => {
-            if (btn.getAttribute('data-period') === evolutionPeriodFilter) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-
-                 // Botões de período do gráfico de evolução
+        // Botões de período do gráfico de evolução
         document.querySelectorAll('.period-btn-evolution').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.period-btn-evolution').forEach(b => b.classList.remove('active'));
@@ -2677,7 +2665,6 @@
 
         // Popula o dropdown de filtro na inicialização
         refreshEvolutionFilterDropdown();
-       
     }
 
        /**
