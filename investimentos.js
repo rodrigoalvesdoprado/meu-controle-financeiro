@@ -211,6 +211,41 @@
 
     function computeAssetValuation(asset) {
         const agg = computeAssetAggregates(asset.id);
+
+        // Se for renda fixa, delega para o cálculo especializado
+        const isFixedIncome = (
+            asset.type === 'cdb' ||
+            asset.type === 'lci' ||
+            asset.type === 'cofrinho' ||
+            asset.type === 'tesouro'
+        );
+
+        if (isFixedIncome && asset.rateConfig && asset.rateConfig.kind) {
+            const fixValuation = computeFixedIncomeValuation(asset);
+            if (fixValuation) {
+                const returnAbs = fixValuation.valorBrutoTotal - fixValuation.invested;
+                const returnPct = fixValuation.invested > 0
+                    ? (returnAbs / fixValuation.invested) * 100
+                    : 0;
+                return {
+                    ...agg,
+                    // Campos específicos de renda fixa
+                    isFixedIncome: true,
+                    valorBrutoTotal: fixValuation.valorBrutoTotal,
+                    valorLiquidoTotal: fixValuation.valorLiquidoTotal,
+                    irTotal: fixValuation.irTotal,
+                    txsDetalhadas: fixValuation.txsDetalhadas,
+                    // Campos genéricos (usados pela tabela e detalhes)
+                    currentPrice: null,
+                    currentValue: fixValuation.valorBrutoTotal,
+                    currentValueLiquido: fixValuation.valorLiquidoTotal,
+                    returnAbs: returnAbs,
+                    returnPct: returnPct
+                };
+            }
+        }
+
+        // Caminho normal (renda variável ou renda fixa sem rateConfig)
         const currentPrice = getCurrentPrice(asset);
 
         let currentValue;
@@ -225,8 +260,10 @@
 
         return {
             ...agg,
+            isFixedIncome: false,
             currentPrice: currentPrice,
             currentValue: currentValue,
+            currentValueLiquido: currentValue, // em renda variável, bruto = líquido
             returnAbs: returnAbs,
             returnPct: returnPct
         };
@@ -1605,6 +1642,361 @@
         });
     }
 
+    // ============================================================
+    // ETAPA 2.2.a — ÍNDICES DO BANCO CENTRAL (CDI, Selic, IPCA)
+    // Fetch, cache e cálculo da correção para renda fixa.
+    // ============================================================
+
+    const BCB_CACHE_KEY = 'bcbCache';
+    const BCB_START_DATE = '01/04/2022'; // início do histórico guardado
+
+    // Série SGS do BCB:
+    //   11  = Selic diária (% ao dia)
+    //   12  = CDI diário (% ao dia)
+    //   433 = IPCA mensal (% ao mês)
+    const BCB_SERIES = {
+        selic: 11,
+        cdi:   12,
+        ipca:  433
+    };
+
+    /**
+     * Formata Date para "DD/MM/AAAA" (formato esperado pelo BCB).
+     */
+    function formatDateForBcb(d) {
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    }
+
+    /**
+     * Lê o cache do BCB do localStorage.
+     */
+    function getBcbCache() {
+        try {
+            const raw = localStorage.getItem(BCB_CACHE_KEY);
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            return (parsed && typeof parsed === 'object') ? parsed : {};
+        } catch (_) { return {}; }
+    }
+
+    function saveBcbCache(cache) {
+        localStorage.setItem(BCB_CACHE_KEY, JSON.stringify(cache));
+    }
+
+    /**
+     * Busca uma série do BCB.
+     * Retorna um array de { data: 'DD/MM/AAAA', valor: number } ou [] se falhar.
+     * O valor retornado é em % (ex: 0.0523 = 0.0523% ao dia).
+     */
+    async function fetchBcbSerie(serieCode) {
+        const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${serieCode}/dados?formato=json&dataInicial=${BCB_START_DATE}`;
+        try {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            if (!Array.isArray(data)) return [];
+            return data
+                .map(item => ({
+                    data: item.data,
+                    valor: parseFloat(String(item.valor).replace(',', '.'))
+                }))
+                .filter(item => item.data && Number.isFinite(item.valor));
+        } catch (err) {
+            console.warn(`[investimentos.js] Falha ao buscar série ${serieCode}:`, err);
+            return [];
+        }
+    }
+
+    /**
+     * Garante que o cache de uma série está atualizado (24h de validade).
+     * Retorna o array de { data, valor } do cache.
+     */
+    async function ensureBcbSerie(kind) {
+        const serieCode = BCB_SERIES[kind];
+        if (!serieCode) return [];
+
+        const cache = getBcbCache();
+        const entry = cache[kind];
+        const now = Date.now();
+        const oneDayMs = 24 * 60 * 60 * 1000;
+
+        if (entry && Array.isArray(entry.values) && (now - entry.at) < oneDayMs) {
+            return entry.values;
+        }
+
+        // Busca
+        const values = await fetchBcbSerie(serieCode);
+        if (values.length > 0) {
+            cache[kind] = { at: now, values };
+            saveBcbCache(cache);
+        }
+        return values;
+    }
+
+    /**
+     * Retorna a taxa diária de CDI (em decimal, ex: 0.000523 = 0.0523%/dia).
+     * Se a data exata não existir na série, usa o último valor anterior.
+     * Retorna null se não houver dados.
+     */
+    function getCdiDaily(date) {
+        return getRateForDate('cdi', date);
+    }
+
+    function getSelicDaily(date) {
+        return getRateForDate('selic', date);
+    }
+
+    /**
+     * Retorna o IPCA do mês/ano (em decimal, ex: 0.005 = 0,5% no mês).
+     * Retorna null se não houver dado.
+     */
+    function getIpcaMonthly(year, month) {
+        const cache = getBcbCache();
+        const entry = cache.ipca;
+        if (!entry || !Array.isArray(entry.values)) return null;
+
+        // IPCA é mensal. A série traz "01/MM/AAAA".
+        const target = `01/${String(month + 1).padStart(2, '0')}/${year}`;
+        const found = entry.values.find(v => v.data === target);
+        return found ? found.valor / 100 : null;
+    }
+
+    /**
+     * Helper: pega a taxa de uma série diária para uma data específica.
+     * Usa o último valor da série <= data (ignora fins de semana/feriados).
+     */
+    function getRateForDate(kind, date) {
+        const cache = getBcbCache();
+        const entry = cache[kind];
+        if (!entry || !Array.isArray(entry.values)) return null;
+
+        const targetTs = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+
+        // Série está em ordem crescente por data. Itera de trás para frente.
+        for (let i = entry.values.length - 1; i >= 0; i--) {
+            const v = entry.values[i];
+            const [dd, mm, yyyy] = v.data.split('/').map(Number);
+            const ts = new Date(yyyy, mm - 1, dd).getTime();
+            if (ts <= targetTs) {
+                return v.valor / 100; // 0.0523 → 0.000523
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Conta dias úteis (aprox., sem considerar feriados) entre duas datas.
+     */
+    function countBusinessDays(fromDate, toDate) {
+        let count = 0;
+        const d = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+        const end = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+        while (d < end) {
+            d.setDate(d.getDate() + 1);
+            const dow = d.getDay();
+            if (dow !== 0 && dow !== 6) count++;
+        }
+        return count;
+    }
+
+    /**
+     * Conta dias corridos entre duas datas.
+     */
+    function countCalendarDays(fromDate, toDate) {
+        const a = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+        const b = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+        return Math.max(0, Math.round((b - a) / (24 * 60 * 60 * 1000)));
+    }
+
+    /**
+     * Aplica a correção de uma movimentação de renda fixa desde a data
+     * do aporte até hoje.
+     *
+     * Parâmetros:
+     *   tx         — a movimentação (com timestamp, total, type)
+     *   rateConfig — { kind, percent, fixedRate, ipcaSpread }
+     *   today      — Date de referência (hoje)
+     *
+     * Retorna:
+     *   { valorOriginal, valorCorrigido, diasCorridos, diasUteis, valorBrutoAjustado }
+     *   ou null se não houver dados suficientes para calcular.
+     */
+    function computeFixedIncomeReturnForTx(tx, rateConfig, today) {
+        if (!rateConfig || !rateConfig.kind) return null;
+
+        const startDate = new Date(tx.timestamp);
+        const kind = rateConfig.kind;
+
+        // Valor original (o que foi efetivamente pago/recebido)
+        const valorOriginal = Number(tx.total) || 0;
+        if (valorOriginal <= 0) return null;
+
+        const diasCorridos = countCalendarDays(startDate, today);
+        const diasUteis = countBusinessDays(startDate, today);
+
+        let fator = 1; // multiplicador total
+
+        if (kind === 'cdi' || kind === 'selic') {
+            const percent = Number(rateConfig.percent) || 100;
+            // Para cada dia útil, aplica a taxa do dia
+            // Para simplificar, usa a taxa média diária do período (pega a taxa de hoje)
+            // (evita varrer 620 dias × N aportes)
+            const dailyRate = (kind === 'cdi')
+                ? getCdiDaily(today)
+                : getSelicDaily(today);
+            if (dailyRate === null) return null;
+            const adjusted = dailyRate * (percent / 100);
+            fator = Math.pow(1 + adjusted, diasUteis);
+        } else if (kind === 'prefixado') {
+            const taxaAnual = Number(rateConfig.fixedRate) || 0;
+            if (taxaAnual <= 0) return null;
+            // Converte anual (252 dias úteis) para diária e compõe
+            const dailyRate = Math.pow(1 + taxaAnual / 100, 1 / 252) - 1;
+            fator = Math.pow(1 + dailyRate, diasUteis);
+        } else if (kind === 'ipca') {
+            const spreadAnual = Number(rateConfig.ipcaSpread) || 0;
+            // Aplica IPCA mês a mês + spread diário
+            // Simplificação: pega o IPCA acumulado dos últimos 12 meses e aplica proporcional
+            const ipcaAcumulado = getIpcaAcumulado12m(today);
+            const ipcaFator = (ipcaAcumulado !== null)
+                ? Math.pow(1 + ipcaAcumulado, diasCorridos / 365)
+                : 1;
+            const dailySpread = Math.pow(1 + spreadAnual / 100, 1 / 365) - 1;
+            fator = ipcaFator * Math.pow(1 + dailySpread, diasCorridos);
+        } else {
+            return null;
+        }
+
+        const valorCorrigido = valorOriginal * fator;
+
+        return {
+            valorOriginal,
+            valorCorrigido,
+            diasCorridos,
+            diasUteis,
+            fator
+        };
+    }
+
+    /**
+     * Retorna o IPCA acumulado dos últimos 12 meses (em decimal).
+     * Ex: 0.045 = 4,5% acumulado.
+     */
+    function getIpcaAcumulado12m(today) {
+        const cache = getBcbCache();
+        const entry = cache.ipca;
+        if (!entry || !Array.isArray(entry.values)) return null;
+
+        // Percorre os últimos 12 meses
+        let fator = 1;
+        let found = 0;
+        for (let i = 0; i < 12; i++) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const target = `01/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+            const foundItem = entry.values.find(v => v.data === target);
+            if (foundItem) {
+                fator *= (1 + foundItem.valor / 100);
+                found++;
+            }
+        }
+        return found > 0 ? fator - 1 : null;
+    }
+
+    /**
+     * Calcula a alíquota de IR regressivo com base no prazo (em dias corridos).
+     */
+    function getIrAliquota(diasCorridos) {
+        if (diasCorridos <= 180) return 0.225;
+        if (diasCorridos <= 360) return 0.20;
+        if (diasCorridos <= 720) return 0.175;
+        return 0.15;
+    }
+
+    /**
+     * Para um ativo de renda fixa, calcula o valor atual bruto e líquido
+     * considerando todas as movimentações.
+     *
+     * Retorna:
+     *   {
+     *     valorBrutoTotal,    // soma dos aportes corrigidos − resgates
+     *     valorLiquidoTotal,  // igual, mas com IR descontado sobre o rendimento
+     *     invested,           // soma dos aportes − resgates (custo)
+     *     irTotal,            // IR estimado se resgatar hoje
+     *     txsDetalhadas       // array com o detalhe de cada movimentação
+     *   }
+     */
+    function computeFixedIncomeValuation(asset) {
+        const txs = getInvestmentTxs().filter(t => t.assetId === asset.id);
+        const rateConfig = asset.rateConfig;
+        const today = new Date();
+
+        if (!rateConfig || !rateConfig.kind || txs.length === 0) {
+            return null;
+        }
+
+        // LCI é isenta de IR
+        const isentoIr = (asset.type === 'lci');
+
+        let valorBrutoTotal = 0;
+        let valorLiquidoTotal = 0;
+        let invested = 0;
+        let irTotal = 0;
+        const txsDetalhadas = [];
+
+        for (const tx of txs) {
+            const calc = computeFixedIncomeReturnForTx(tx, rateConfig, today);
+            if (!calc) continue;
+
+            const sinal = (tx.type === 'aporte') ? 1 : -1;
+
+            const rendimento = calc.valorCorrigido - calc.valorOriginal;
+            const aliquota = isentoIr ? 0 : getIrAliquota(calc.diasCorridos);
+            const ir = rendimento * aliquota;
+            const valorLiquidoTx = calc.valorCorrigido - ir;
+
+            valorBrutoTotal += sinal * calc.valorCorrigido;
+            valorLiquidoTotal += sinal * valorLiquidoTx;
+            invested += sinal * calc.valorOriginal;
+            irTotal += sinal * ir;
+
+            txsDetalhadas.push({
+                tx,
+                ...calc,
+                aliquota,
+                ir,
+                valorLiquidoTx
+            });
+        }
+
+        return {
+            valorBrutoTotal,
+            valorLiquidoTotal,
+            invested,
+            irTotal,
+            txsDetalhadas
+        };
+    }
+
+    /**
+     * Pré-carrega todas as séries do BCB (CDI, Selic, IPCA).
+     * Chamada no init para garantir que o cálculo funcione.
+     */
+    async function preloadBcbSeries() {
+        try {
+            await Promise.all([
+                ensureBcbSerie('cdi'),
+                ensureBcbSerie('selic'),
+                ensureBcbSerie('ipca')
+            ]);
+        } catch (err) {
+            console.warn('[investimentos.js] Falha ao pré-carregar séries do BCB:', err);
+        }
+    }
+
+   
     // ========== LISTENERS DE INTEGRAÇÃO ==========
 
     function setupIntegrationListeners() {
