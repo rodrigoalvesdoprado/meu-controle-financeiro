@@ -392,13 +392,23 @@
         ownersToShow.forEach(owner => {
             const assetsOfOwner = allAssets.filter(a => a.ownerId === owner.id);
             let totalInvested = 0;
-            let totalCurrent = 0;
+            let totalBruto = 0;
+            let totalLiquido = 0;
+            let hasFixedIncome = false;
+
             assetsOfOwner.forEach(asset => {
                 const v = computeAssetValuation(asset);
                 totalInvested += v.invested;
-                totalCurrent += v.currentValue;
+                totalBruto += v.currentValue;
+                if (v.valorLiquidoTotal !== undefined) {
+                    totalLiquido += v.valorLiquidoTotal;
+                    if (v.isFixedIncome) hasFixedIncome = true;
+                } else {
+                    totalLiquido += v.currentValue;
+                }
             });
-            const diff = totalCurrent - totalInvested;
+
+            const diff = totalBruto - totalInvested;
             const diffPct = totalInvested > 0 ? (diff / totalInvested) * 100 : 0;
 
             const card = document.createElement('div');
@@ -407,6 +417,28 @@
 
             const diffClass = diff > 0 ? 'positive' : (diff < 0 ? 'negative' : '');
             const diffSign = diff > 0 ? '+' : '';
+
+            // Monta a seção de valores atualizados
+            let valorAtualizadoHtml = '';
+            if (hasFixedIncome && Math.abs(totalLiquido - totalBruto) > 0.005) {
+                valorAtualizadoHtml = `
+                    <div class="owner-subtotal-row">
+                        <span class="label">Valor Bruto</span>
+                        <span class="value">${fmtBRL(totalBruto)}</span>
+                    </div>
+                    <div class="owner-subtotal-row">
+                        <span class="label">Valor Líquido</span>
+                        <span class="value">${fmtBRL(totalLiquido)}</span>
+                    </div>
+                `;
+            } else {
+                valorAtualizadoHtml = `
+                    <div class="owner-subtotal-row big">
+                        <span class="label">Valor Atualizado</span>
+                        <span class="value">${fmtBRL(totalBruto)}</span>
+                    </div>
+                `;
+            }
 
             card.innerHTML = `
                 <div class="owner-subtotal-header">
@@ -421,10 +453,7 @@
                     <span class="label">Valor Investido</span>
                     <span class="value">${fmtBRL(totalInvested)}</span>
                 </div>
-                <div class="owner-subtotal-row big">
-                    <span class="label">Valor Atualizado</span>
-                    <span class="value">${fmtBRL(totalCurrent)}</span>
-                </div>
+                ${valorAtualizadoHtml}
                 <div class="owner-subtotal-row">
                     <span class="label">Rentabilidade</span>
                     <span class="value ${diffClass}">${diffSign}${fmtBRL(diff)} (${fmtPct(diffPct)})</span>
@@ -477,7 +506,17 @@
                 priceCell = `<span class="quote-missing">—</span>`;
             }
 
-            const currentValueCell = fmtBRL(valuation.currentValue);
+            // Vlr. Atual — com bruto e líquido quando for renda fixa
+            let currentValueCell;
+            if (valuation.isFixedIncome && valuation.valorLiquidoTotal !== undefined
+                && Math.abs(valuation.valorLiquidoTotal - valuation.valorBrutoTotal) > 0.005) {
+                currentValueCell = `
+                    <div class="value-bruto">${fmtBRL(valuation.valorBrutoTotal)}</div>
+                    <div class="value-liquido" title="Valor líquido após IR">líq. ${fmtBRL(valuation.valorLiquidoTotal)}</div>
+                `;
+            } else {
+                currentValueCell = fmtBRL(valuation.currentValue);
+            }
 
             let returnCell;
             if (valuation.invested <= 0) {
@@ -520,11 +559,20 @@
             tbody.appendChild(tr);
         });
 
+        // Rodapé com totais
         let sumInvested = 0;
         let sumCurrent = 0;
+        let sumLiquido = 0;
+        let hasFixedIncome = false;
         enriched.forEach(({ valuation }) => {
             sumInvested += valuation.invested;
             sumCurrent += valuation.currentValue;
+            if (valuation.valorLiquidoTotal !== undefined) {
+                sumLiquido += valuation.valorLiquidoTotal;
+                if (valuation.isFixedIncome) hasFixedIncome = true;
+            } else {
+                sumLiquido += valuation.currentValue;
+            }
         });
         const sumDiff = sumCurrent - sumInvested;
         const sumPct = sumInvested > 0 ? (sumDiff / sumInvested) * 100 : 0;
@@ -532,12 +580,22 @@
                        : (sumDiff < 0 ? 'return-negative' : 'return-neutral');
         const sumSign = sumDiff > 0 ? '+' : '';
 
+        let totalsCurrentCell;
+        if (hasFixedIncome && Math.abs(sumLiquido - sumCurrent) > 0.005) {
+            totalsCurrentCell = `
+                <div class="value-bruto">${fmtBRL(sumCurrent)}</div>
+                <div class="value-liquido">líq. ${fmtBRL(sumLiquido)}</div>
+            `;
+        } else {
+            totalsCurrentCell = fmtBRL(sumCurrent);
+        }
+
         tfoot.innerHTML = `
             <tr>
                 <td colspan="6" class="total-label">TOTAIS (${enriched.length} ${enriched.length === 1 ? 'ativo' : 'ativos'})</td>
                 <td class="col-invested" data-label="Vlr. Inv">${fmtBRL(sumInvested)}</td>
                 <td class="col-price" data-label=""></td>
-                <td class="col-current" data-label="Vlr. Atual">${fmtBRL(sumCurrent)}</td>
+                <td class="col-current" data-label="Vlr. Atual">${totalsCurrentCell}</td>
                 <td class="col-return" data-label="Rent"><span class="${sumClass}">${sumSign}${fmtPct(sumPct)}</span></td>
                 <td class="col-actions" data-label=""></td>
             </tr>
@@ -580,6 +638,51 @@
         const v = computeAssetValuation(asset);
         const diffClass = v.returnAbs > 0 ? 'positive' : (v.returnAbs < 0 ? 'negative' : '');
 
+        // Bloco extra: informações de renda fixa (taxa, IR, bruto, líquido)
+        let fixedIncomeBlock = '';
+        if (v.isFixedIncome && v.txsDetalhadas) {
+            // Descrição da taxa
+            let taxaDesc = '—';
+            const rc = asset.rateConfig || {};
+            if (rc.kind === 'cdi')        taxaDesc = `${rc.percent || 100}% do CDI`;
+            else if (rc.kind === 'selic') taxaDesc = `${rc.percent || 100}% da Selic`;
+            else if (rc.kind === 'prefixado') taxaDesc = `${rc.fixedRate || 0}% a.a. (prefixado)`;
+            else if (rc.kind === 'ipca')  taxaDesc = `IPCA + ${rc.ipcaSpread || 0}% a.a.`;
+
+            // Alíquota de IR aplicada (a do primeiro aporte; se houver mais de um, mostra a média)
+            // Para simplificar, usa a maior alíquota (mais conservador)
+            let maiorAliquota = 0;
+            v.txsDetalhadas.forEach(t => {
+                if (t.aliquota > maiorAliquota) maiorAliquota = t.aliquota;
+            });
+
+            const isento = (asset.type === 'lci');
+            const irLabel = isento ? 'Isento (LCI)' : `${(maiorAliquota * 100).toFixed(1)}%`;
+
+            fixedIncomeBlock = `
+                <div class="summary-item">
+                    <span class="label">Taxa</span>
+                    <span class="value">${escapeHtmlText(taxaDesc)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">IR Aplicável</span>
+                    <span class="value">${escapeHtmlText(irLabel)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Valor Bruto</span>
+                    <span class="value">${fmtBRL(v.valorBrutoTotal)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Valor Líquido</span>
+                    <span class="value">${fmtBRL(v.valorLiquidoTotal)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">IR Estimado</span>
+                    <span class="value">${fmtBRL(v.irTotal)}</span>
+                </div>
+            `;
+        }
+
         summary.innerHTML = `
             <div class="summary-item">
                 <span class="label">Qtd. Atual</span>
@@ -593,16 +696,19 @@
                 <span class="label">Valor Investido</span>
                 <span class="value">${fmtBRL(v.invested)}</span>
             </div>
-            <div class="summary-item">
-                <span class="label">Valor Atualizado</span>
-                <span class="value">${fmtBRL(v.currentValue)}</span>
-            </div>
+            ${fixedIncomeBlock || `
+                <div class="summary-item">
+                    <span class="label">Valor Atualizado</span>
+                    <span class="value">${fmtBRL(v.currentValue)}</span>
+                </div>
+            `}
             <div class="summary-item">
                 <span class="label">Rentabilidade</span>
                 <span class="value ${diffClass}">${fmtBRL(v.returnAbs)}<br><small>${fmtPct(v.returnPct)}</small></span>
             </div>
         `;
 
+        // Histórico de movimentações
         const txs = getInvestmentTxs()
             .filter(t => t.assetId === assetId)
             .sort((a, b) => b.timestamp - a.timestamp);
@@ -613,11 +719,38 @@
             </p>`;
         } else {
             const ul = document.createElement('ul');
+            // Mapeia as movimentações detalhadas (se existirem) por id
+            const detalhesPorId = {};
+            if (v.txsDetalhadas) {
+                v.txsDetalhadas.forEach(d => {
+                    if (d.tx && d.tx.id) detalhesPorId[d.tx.id] = d;
+                });
+            }
+
             txs.forEach(tx => {
                 const li = document.createElement('li');
                 const isAporte = tx.type === 'aporte';
                 const cls = isAporte ? 'aporte' : 'resgate';
                 const sign = isAporte ? '+' : '−';
+
+                // Linha extra de rendimento/IR (só para renda fixa)
+                let rendimentoHtml = '';
+                const det = detalhesPorId[tx.id];
+                if (det && v.isFixedIncome) {
+                    const rendimento = det.valorCorrigido - det.valorOriginal;
+                    const aliquota = (det.aliquota * 100).toFixed(1);
+                    const isento = (asset.type === 'lci');
+                    const diasLabel = det.diasCorridos === 1 ? '1 dia' : `${det.diasCorridos} dias`;
+                    rendimentoHtml = `
+                        <div class="tx-detalhe-renda-fixa">
+                            <span class="det-item" title="Rendimento bruto desde o aporte">rend. ${fmtBRL(rendimento)}</span>
+                            <span class="det-item" title="Alíquota de IR aplicável (${diasLabel})">${isento ? 'isento' : `IR ${aliquota}%`}</span>
+                            <span class="det-item" title="Valor bruto corrigido">bruto ${fmtBRL(det.valorCorrigido)}</span>
+                            <span class="det-item" title="Valor líquido após IR">líq. ${fmtBRL(det.valorLiquidoTx)}</span>
+                        </div>
+                    `;
+                }
+
                 li.innerHTML = `
                     <div class="tx-info">
                         <strong>${isAporte ? 'Aporte' : 'Resgate'} — ${escapeHtmlText(tx.date)}</strong>
@@ -625,6 +758,7 @@
                             ${fmtQty(tx.quantity)} × ${fmtBRL(tx.unitPrice)}
                             ${tx.notes ? ' • ' + escapeHtmlText(tx.notes) : ''}
                         </small>
+                        ${rendimentoHtml}
                     </div>
                     <div class="tx-value ${cls}">${sign} ${fmtBRL(tx.total)}
                         <button class="btn-icon danger" style="margin-left:8px" title="Excluir movimentação" data-delete-tx-id="${escapeHtmlText(tx.id)}">
