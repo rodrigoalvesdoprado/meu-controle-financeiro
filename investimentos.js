@@ -1692,7 +1692,9 @@
      * O valor retornado é em % (ex: 0.0523 = 0.0523% ao dia).
      */
     async function fetchBcbSerie(serieCode) {
-        const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${serieCode}/dados?formato=json&dataInicial=${BCB_START_DATE}`;
+        //const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${serieCode}/dados?formato=json&dataInicial=${BCB_START_DATE}`;
+       const urlOriginal = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${serieCode}/dados?formato=json&dataInicial=${BCB_START_DATE}`;
+       const url = `https://corsproxy.io/?${encodeURIComponent(urlOriginal)}`;
         try {
             const resp = await fetch(url);
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
