@@ -656,8 +656,14 @@
                 if (t.aliquota > maiorAliquota) maiorAliquota = t.aliquota;
             });
 
+            //const isento = (asset.type === 'lci');
+            //const irLabel = isento ? 'Isento (LCI)' : `${(maiorAliquota * 100).toFixed(1)}%`;
+
             const isento = (asset.type === 'lci');
-            const irLabel = isento ? 'Isento (LCI)' : `${(maiorAliquota * 100).toFixed(1)}%`;
+            const aliquotaParaExibir = (v.aliquotaGlobal !== undefined)
+                ? v.aliquotaGlobal
+                : maiorAliquota;
+            const irLabel = isento ? 'Isento (LCI)' : `${(aliquotaParaExibir * 100).toFixed(1)}%`;
 
             fixedIncomeBlock = `
                 <div class="summary-item">
