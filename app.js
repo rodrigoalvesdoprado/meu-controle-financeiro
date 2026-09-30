@@ -494,6 +494,8 @@ function generateId() {
 
     function init() {
         initTheme();
+                // Migração única: garante que todas as transações tenham registeredAt
+        migrateTransactionsRegisteredAt();
         if (!localStorage.getItem('categories')) localStorage.setItem('categories', JSON.stringify(categories));
         else categories = JSON.parse(localStorage.getItem('categories'));
 
@@ -554,8 +556,8 @@ function generateId() {
         const s = getStartOfDay(new Date(customStartDate));
         const e = getEndOfDay(new Date(customEndDate));
         return transactions.filter(t => {
-            const d = new Date(t.timestamp);
-            return d >= s && d <= e;
+            const ref = t.registeredAt || t.timestamp;
+            return ref >= s.getTime() && ref <= e.getTime();
         });
     }
 
@@ -840,6 +842,9 @@ function isNoiseTransaction(description) {
         const mesAnteriorVenc = mesVenc === 0 ? 11 : mesVenc - 1;
         const anoMesAnteriorVenc = mesVenc === 0 ? anoVenc - 1 : anoVenc;
 
+        // registeredAt = data de vencimento da fatura (meio-dia para evitar fuso)
+        const registeredAtTs = new Date(anoVenc, mesVenc, currentDueDate.day, 12, 0, 0).getTime();
+
         for (let i = 0; i < lines.length; i++) {
             const line = normalizeLine(lines[i]);
             if (isIgnoredLine(line)) continue;
@@ -913,7 +918,6 @@ function isNoiseTransaction(description) {
             }
 
             const transaction = {
-                //id: Date.now() + Math.random() + Math.random(),
                 id: generateId(),
                 description: finalDescription,
                 amount: tx.amount,
@@ -921,6 +925,7 @@ function isNoiseTransaction(description) {
                 category: categoryId,
                 date: formatDateToDisplay(date),
                 timestamp: date.getTime(),
+                registeredAt: registeredAtTs,
                 month: date.getMonth(),
                 year: date.getFullYear(),
                 holder: currentHolder,
@@ -934,7 +939,7 @@ function isNoiseTransaction(description) {
 
         validation.netCalculated = validation.cardExpensesTotal - validation.creditsTotal;
 
-        // ========== LANÇAMENTO CONSOLIDADO DE CRÉDITOS DO DEMONSTRATIVO ==========
+        // Lançamento consolidado de créditos do demonstrativo
         if (validation.creditsTotal > 0.001) {
             const creditDate = new Date(anoVenc, mesVenc, 2);
             transactions.push({
@@ -945,6 +950,7 @@ function isNoiseTransaction(description) {
                 category: 'outros',
                 date: formatDateToDisplay(creditDate),
                 timestamp: creditDate.getTime(),
+                registeredAt: registeredAtTs,
                 month: creditDate.getMonth(),
                 year: creditDate.getFullYear(),
                 holder: null,
@@ -954,7 +960,6 @@ function isNoiseTransaction(description) {
                 isCreditAdjustment: true
             });
         }
-        // =========================================================================
 
         return { transactions, validation };
     }
@@ -1261,41 +1266,42 @@ function renderReviewTable(transactions) {
         reviewTotal.innerHTML = html;
     }
 
-function collectReviewData() {
-    // Preserva o que está na tela (caso o usuário salve sem ter reordenado)
-    syncPreviewFromDOM();
+    function collectReviewData() {
+        // Preserva o que está na tela (caso o usuário salve sem ter reordenado)
+        syncPreviewFromDOM();
 
-    const rows = reviewTableContainer.querySelectorAll('tr[data-txid]');
-    const collected = [];
-    rows.forEach(row => {
-        const txid = row.getAttribute('data-txid');
-        const dateStr = row.querySelector('.review-date').value;
-        const desc = row.querySelector('.review-desc').value;
-        const amount = parseFloat(row.querySelector('.review-amount').value);
-        const cat = row.querySelector('.review-cat').value;
-        const holderId = row.querySelector('.review-holder').value;
-        const type = row.querySelector('.review-type').value;
-        const date = createDateFromString(dateStr);
-        if (!date || !desc || isNaN(amount)) return;
-        const holder = holders.find(h => h.id === holderId);
+        const rows = reviewTableContainer.querySelectorAll('tr[data-txid]');
+        const collected = [];
+        rows.forEach(row => {
+            const txid = row.getAttribute('data-txid');
+            const dateStr = row.querySelector('.review-date').value;
+            const desc = row.querySelector('.review-desc').value;
+            const amount = parseFloat(row.querySelector('.review-amount').value);
+            const cat = row.querySelector('.review-cat').value;
+            const holderId = row.querySelector('.review-holder').value;
+            const type = row.querySelector('.review-type').value;
+            const date = createDateFromString(dateStr);
+            if (!date || !desc || isNaN(amount)) return;
+            const holder = holders.find(h => h.id === holderId);
 
-        const original = importPreview.transactions.find(t => String(t.id) === String(txid));
+            const original = importPreview.transactions.find(t => String(t.id) === String(txid));
 
-        collected.push({
-            id: generateId(),
-            description: desc, amount, type, category: cat,
-            date: formatDateToDisplay(date),
-            timestamp: date.getTime(),
-            month: date.getMonth(),
-            year: date.getFullYear(),
-            holder: holder ? holder.name : (holders.find(h => h.isDefault)?.name || 'Rodrigo A Prado'),
-            holderId: holder ? holder.id : null,
-            cardNumber: original?.cardNumber || null,
-            installment: original?.installment || null
+            collected.push({
+                id: generateId(),
+                description: desc, amount, type, category: cat,
+                date: formatDateToDisplay(date),
+                timestamp: date.getTime(),
+                registeredAt: original?.registeredAt || Date.now(),
+                month: date.getMonth(),
+                year: date.getFullYear(),
+                holder: holder ? holder.name : (holders.find(h => h.isDefault)?.name || 'Rodrigo A Prado'),
+                holderId: holder ? holder.id : null,
+                cardNumber: original?.cardNumber || null,
+                installment: original?.installment || null
+            });
         });
-    });
-    return collected;
-}
+        return collected;
+    }
 
     function confirmImport() {
         try {
@@ -1568,11 +1574,11 @@ if (holderDetailSortDirBtn) {
     // ========== TRANSAÇÕES ==========
     function addTransaction(description, amount, type, category, date, holderName, holderId) {
         transactions.push({
-            //id: Date.now() + Math.random(),
             id: generateId(),
             description, amount, type, category,
             date: formatDateToDisplay(date),
             timestamp: date.getTime(),
+            registeredAt: Date.now(),
             month: date.getMonth(),
             year: date.getFullYear(),
             holder: holderName || null,
@@ -1593,6 +1599,25 @@ if (holderDetailSortDirBtn) {
         renderHolderTotals();
     }
 
+    /**
+     * Migração única: para transações antigas que não têm `registeredAt`,
+     * define o valor igual ao `timestamp` (data da compra).
+     * Assim os gráficos funcionam consistentemente.
+     */
+    function migrateTransactionsRegisteredAt() {
+        let alterou = false;
+        transactions.forEach(tx => {
+            if (typeof tx.registeredAt !== 'number') {
+                tx.registeredAt = tx.timestamp;
+                alterou = true;
+            }
+        });
+        if (alterou) {
+            saveTransactions();
+            console.log('[app.js] Migração registeredAt: transações antigas ajustadas.');
+        }
+    }
+    
     function saveTransactions() { localStorage.setItem('transactions', JSON.stringify(transactions)); }
 
 function compareTransactions(a, b) {
@@ -2286,37 +2311,32 @@ function showCardDetails(holder, cardNumber, txs) {
         const gridColor = dark ? '#3a3f47' : '#eeeeee';
         const mn = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-        // 1. Pega as transações do período selecionado (mesma fonte do gráfico de categorias)
+        // Transações do período selecionado (já filtradas por registeredAt)
         const periodTxs = getPeriodTransactions();
 
-        // 2. Descobre os meses que o período abrange
-        //    Ex: 14/03 a 14/09 → Mar, Abr, Mai, Jun, Jul, Ago, Set = 7 meses
+        // Meses cobertos pelo período selecionado
         const s = new Date(customStartDate);
         const e2 = new Date(customEndDate);
         const meses = [];
         let cursor = new Date(s.getFullYear(), s.getMonth(), 1);
         const ultimoMes = new Date(e2.getFullYear(), e2.getMonth(), 1);
         while (cursor <= ultimoMes) {
-            meses.push({
-                year: cursor.getFullYear(),
-                month: cursor.getMonth()
-            });
+            meses.push({ year: cursor.getFullYear(), month: cursor.getMonth() });
             cursor.setMonth(cursor.getMonth() + 1);
         }
 
-        // 3. Inicializa o objeto mensal
         const monthly = {};
         meses.forEach(m => {
             const label = `${mn[m.month]}/${m.year}`;
             monthly[label] = { income: 0, expense: 0 };
         });
 
-        // 4. Para cada transação do período, joga no mês correspondente
-        //    Usa o timestamp da transação (data da compra) para definir o mês
+        // Cada transação cai no mês do seu registeredAt
         periodTxs.forEach(tx => {
-            const d = new Date(tx.timestamp);
+            const ref = tx.registeredAt || tx.timestamp;
+            const d = new Date(ref);
             const label = `${mn[d.getMonth()]}/${d.getFullYear()}`;
-            if (!monthly[label]) return; // Segurança: só conta se o mês está no período
+            if (!monthly[label]) return;
             if (tx.type === 'receita') monthly[label].income += parseFloat(tx.amount);
             else monthly[label].expense += parseFloat(tx.amount);
         });
