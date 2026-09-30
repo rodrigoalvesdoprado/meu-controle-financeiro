@@ -2284,24 +2284,49 @@ function showCardDetails(holder, cardNumber, txs) {
         const dark = isDarkMode();
         const textColor = dark ? '#e8eaed' : '#2c3e50';
         const gridColor = dark ? '#3a3f47' : '#eeeeee';
-        const monthly = {};
         const mn = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-        const today = new Date();
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-            const label = `${mn[d.getMonth()]}/${d.getFullYear()}`;
-            monthly[label] = { income: 0, expense: 0 };
-            transactions.forEach(tx => {
-                if (tx.month === d.getMonth() && tx.year === d.getFullYear()) {
-                    if (tx.type === 'receita') monthly[label].income += parseFloat(tx.amount);
-                    else monthly[label].expense += parseFloat(tx.amount);
-                }
+
+        // 1. Pega as transações do período selecionado (mesma fonte do gráfico de categorias)
+        const periodTxs = getPeriodTransactions();
+
+        // 2. Descobre os meses que o período abrange
+        //    Ex: 14/03 a 14/09 → Mar, Abr, Mai, Jun, Jul, Ago, Set = 7 meses
+        const s = new Date(customStartDate);
+        const e2 = new Date(customEndDate);
+        const meses = [];
+        let cursor = new Date(s.getFullYear(), s.getMonth(), 1);
+        const ultimoMes = new Date(e2.getFullYear(), e2.getMonth(), 1);
+        while (cursor <= ultimoMes) {
+            meses.push({
+                year: cursor.getFullYear(),
+                month: cursor.getMonth()
             });
+            cursor.setMonth(cursor.getMonth() + 1);
         }
+
+        // 3. Inicializa o objeto mensal
+        const monthly = {};
+        meses.forEach(m => {
+            const label = `${mn[m.month]}/${m.year}`;
+            monthly[label] = { income: 0, expense: 0 };
+        });
+
+        // 4. Para cada transação do período, joga no mês correspondente
+        //    Usa o timestamp da transação (data da compra) para definir o mês
+        periodTxs.forEach(tx => {
+            const d = new Date(tx.timestamp);
+            const label = `${mn[d.getMonth()]}/${d.getFullYear()}`;
+            if (!monthly[label]) return; // Segurança: só conta se o mês está no período
+            if (tx.type === 'receita') monthly[label].income += parseFloat(tx.amount);
+            else monthly[label].expense += parseFloat(tx.amount);
+        });
+
         const labels = Object.keys(monthly);
         const incData = labels.map(l => monthly[l].income);
         const expData = labels.map(l => monthly[l].expense);
+
         if (window.incomeVsExpensesChart) window.incomeVsExpensesChart.destroy();
+
         if (labels.length > 0) {
             window.incomeVsExpensesChart = new Chart(ctx, {
                 type: 'bar',
