@@ -1992,7 +1992,8 @@
             data: { labels, datasets },
             options: {
                 responsive: true,
-                interaction: { mode: 'index', intersect: false },
+                //interaction: { mode: 'index', intersect: false },
+               interaction: { mode: 'nearest', intersect: true },
                 scales: {
                     y: {
                         beginAtZero: true,
