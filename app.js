@@ -842,8 +842,13 @@ function isNoiseTransaction(description) {
         const mesAnteriorVenc = mesVenc === 0 ? 11 : mesVenc - 1;
         const anoMesAnteriorVenc = mesVenc === 0 ? anoVenc - 1 : anoVenc;
 
-        // registeredAt = data de vencimento da fatura (meio-dia para evitar fuso)
-        const registeredAtTs = new Date(anoVenc, mesVenc, currentDueDate.day, 12, 0, 0).getTime();
+        // registeredAt = dia 1 do mês do vencimento.
+        // Isso garante que todos os lançamentos da fatura caiam no período 14/14
+        // cujo mês final coincide com o mês descrito no nome do arquivo.
+        // O dia exato do fechamento (11, 13, 14) é irrelevante.
+        // Ex: fatura23092026.txt (mês 09) → 01/09/2026 → período 14/08-14/09.
+        const registeredAtDate = new Date(anoVenc, mesVenc, 1, 12, 0, 0);
+        const registeredAtTs = registeredAtDate.getTime();
 
         for (let i = 0; i < lines.length; i++) {
             const line = normalizeLine(lines[i]);
