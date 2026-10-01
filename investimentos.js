@@ -1993,7 +1993,8 @@
             options: {
                 responsive: true,
                 //interaction: { mode: 'index', intersect: false },
-               interaction: { mode: 'nearest', intersect: true },
+               //interaction: { mode: 'nearest', intersect: true },
+               interaction: { mode: 'nearest', intersect: false },
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -2049,6 +2050,7 @@
     /**
      * Constrói os datasets do gráfico de evolução conforme o agrupamento escolhido.
      */
+   /*
     function buildEvolutionDatasets(dates, history, dark) {
         const owners = getOwners();
         const ownerColors = {};
@@ -2166,14 +2168,14 @@
                 tension: 0.25,
                 fill: false,
                 pointRadius: 3,
-                pointHoverRadius: 6,
+                pointHoverRadius: 10,
                 borderWidth: 2
             });
         });
 
         return datasets;
     }
-
+*/
     /**
      * Retorna o valor de mercado de um ativo específico dentro de um snapshot.
      * Como o snapshot grava por classe (byClass), precisamos estimar a fração do ativo.
@@ -2858,7 +2860,7 @@
                 tension: 0.25,
                 fill: false,
                 pointRadius: 3,
-                pointHoverRadius: 6,
+                pointHoverRadius: 10,
                 borderWidth: 2
             });
         });
