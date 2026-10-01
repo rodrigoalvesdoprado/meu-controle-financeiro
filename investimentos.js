@@ -1701,6 +1701,14 @@
      *   - Ação/FII/Ação EUA: usa o preço unitário do aporte mais recente
      * Retorna null se não houver base para estimar.
      */
+    /**
+     * Estima o preço unitário de um ativo numa data passada.
+     * Estratégia por tipo:
+     *   - Tesouro: usa o PU atual do cache (aproximação; PU histórico não disponível)
+     *   - CDB/LCI/Cofrinho: aplica a fórmula de renda fixa retroativa até a data
+     *   - Ação/FII/Ação EUA: usa o preço unitário do aporte mais recente
+     * Retorna null se não houver base para estimar.
+     */
     function estimateAssetPriceAtDate(asset, timestampRef) {
         const txs = getInvestmentTxs()
             .filter(t => t.assetId === asset.id && t.type === 'aporte' && t.timestamp <= timestampRef)
@@ -1710,22 +1718,34 @@
 
         const ultimoAporte = txs[0];
 
-        // Tesouro: tenta cache atual primeiro (PU mais preciso), senão usa o do aporte
+        // Tesouro: usa PU atual do cache (aproximação)
         if (asset.type === 'tesouro') {
             const cache = getQuotesCache();
             const entry = cache[asset.code];
-            if (entry && entry.price > 0 && asset.apiSymbol) {
-                // Como não temos PU histórico, usamos o PU atual do cache
-                // (é uma aproximação; será marcado como estimativa)
+            if (entry && entry.price > 0) {
                 return entry.price;
             }
             return Number(ultimoAporte.unitPrice) || null;
         }
 
-        // CDB/LCI/Cofrinho: usa o preço unitário do aporte mais recente
-        // (aproximação; o valor real cresce com o tempo)
+        // CDB / LCI / Cofrinho: fórmula de renda fixa retroativa
         if (asset.type === 'cdb' || asset.type === 'lci' || asset.type === 'cofrinho') {
-            return Number(ultimoAporte.unitPrice) || null;
+            if (!asset.rateConfig || !asset.rateConfig.kind) {
+                return Number(ultimoAporte.unitPrice) || null;
+            }
+
+            // Data de referência como Date
+            const dataRef = new Date(timestampRef);
+
+            // Aplica a fórmula de renda fixa, mas usando dataRef como "hoje"
+            const calc = computeFixedIncomeReturnForTx(ultimoAporte, asset.rateConfig, dataRef);
+            if (!calc) {
+                return Number(ultimoAporte.unitPrice) || null;
+            }
+
+            // Retorna o valor unitário corrigido = preço do aporte × fator
+            const precoUnitarioCorrigido = Number(ultimoAporte.unitPrice) * calc.fator;
+            return precoUnitarioCorrigido;
         }
 
         // Ação, FII, Ação EUA: usa o preço unitário do aporte mais recente
