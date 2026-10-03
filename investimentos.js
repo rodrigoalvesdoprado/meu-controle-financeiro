@@ -262,8 +262,8 @@ async function fetchHistoricalQuotesForTicker(code, startDate, endDate) {
 /**
  * Garante que o cache histórico de um ativo está populado.
  * - Se o cache está vazio, baixa tudo desde o primeiro aporte.
- * - Se o cache existe mas está desatualizado (faltam meses recentes),
- *   baixa APENAS os meses faltantes.
+ * - Se o cache existe mas está incompleto (faltam meses), rebaixa do zero.
+ * - Se o cache existe e está completo, baixa apenas meses novos desde a última data.
  *
  * @param {object} asset - O ativo
  * @param {object} [opts] - Opções
@@ -300,7 +300,7 @@ async function ensureHistoricalQuotesForAsset(asset, opts = {}) {
     // Cada mês tem ~20 dias úteis. Esperado mínimo: 15 pontos por mês.
     const pontosMinimosEsperados = mesesEsperados * 15;
 
-    // Se o cache atual tem menos pontos do que o esperado, considera incompleto
+    // Cache está completo se tiver pontos suficientes E não for muito antigo
     const cacheCompleto = pontosExistentes.length >= pontosMinimosEsperados;
 
     // Descobre até onde já temos dados (última data do cache)
@@ -1823,7 +1823,7 @@ function getHistoricalPriceAtDate(asset, timestampRef) {
 
 /**
  * Reconstrói snapshots mensais retroativos a partir do primeiro aporte.
- * Baixa automaticamente o histórico de ativos novos/desatualizados.
+ * Baixa automaticamente o histórico de ativos novos ou com cache incompleto.
  */
 async function reconstructHistoricalSnapshots() {
     try {
@@ -1836,17 +1836,34 @@ async function reconstructHistoricalSnapshots() {
         const history = getQuotesHistory();
         const assets = getAssets();
 
-        // ========== 1. Backfill inteligente ==========
+        // ========== 1. Backfill automático ==========
         const ativosRV = assets.filter(a => a.type === 'acao' || a.type === 'fii');
         const cacheHist = getHistoricalQuotesCache();
+        const hoje = new Date();
 
         // Detecta quais precisam ser baixados
         const precisamBaixar = ativosRV.filter(asset => {
             const entry = cacheHist[asset.code];
-            if (!entry || !Array.isArray(entry.points) || entry.points.length === 0) return true;
-            // Verifica se o último ponto é do mês atual
-            const ultimaData = entry.points[entry.points.length - 1].date;
-            const hoje = new Date();
+            const pts = (entry && Array.isArray(entry.points)) ? entry.points : [];
+
+            // Sem cache nenhum → precisa
+            if (pts.length === 0) return true;
+
+            // Descobre quantos meses deveria ter
+            const txsDoAtivo = getInvestmentTxs().filter(t => t.assetId === asset.id && t.type === 'aporte');
+            if (txsDoAtivo.length === 0) return false;
+            const primeiroTs = Math.min(...txsDoAtivo.map(t => t.timestamp));
+            const primeiroAporte = new Date(primeiroTs);
+            const mesesEsperados = (hoje.getFullYear() - primeiroAporte.getFullYear()) * 12
+                                 + (hoje.getMonth() - primeiroAporte.getMonth())
+                                 + 1;
+            const pontosMinimos = mesesEsperados * 15;
+
+            // Se tem menos pontos que o esperado, considera incompleto
+            if (pts.length < pontosMinimos) return true;
+
+            // Se o último ponto é anterior ao mês atual, precisa atualizar
+            const ultimaData = pts[pts.length - 1].date;
             const mesAtualKey = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
             return ultimaData.substring(0, 7) < mesAtualKey;
         });
@@ -1855,40 +1872,42 @@ async function reconstructHistoricalSnapshots() {
             const avisoEl = document.getElementById('evolutionReconstructing');
             const avisoTextEl = document.getElementById('evolutionReconstructingText');
             if (avisoEl) avisoEl.style.display = 'flex';
-            if (avisoTextEl) avisoTextEl.textContent = `Verificando histórico (${precisamBaixar.length} ativos)...`;
 
             let baixados = 0;
             for (const asset of precisamBaixar) {
+                if (avisoTextEl) {
+                    avisoTextEl.textContent = `Baixando histórico (${baixados + 1}/${precisamBaixar.length}): ${asset.code}`;
+                }
                 try {
                     await ensureHistoricalQuotesForAsset(asset, {
-                        onProgress: (msg) => {
-                            if (avisoTextEl) avisoTextEl.textContent = msg;
-                        }
+                        onProgress: (msg) => { if (avisoTextEl) avisoTextEl.textContent = msg; }
                     });
                     baixados++;
-                    if (avisoTextEl) {
-                        avisoTextEl.textContent = `Histórico atualizado: ${baixados}/${precisamBaixar.length}`;
-                    }
                 } catch (err) {
                     console.warn(`[investimentos.js] Falha ao baixar ${asset.code}:`, err);
                 }
             }
             if (avisoEl) avisoEl.style.display = 'none';
+
+            // Se algum ativo foi (re)baixado, invalida TODOS os snapshots
+            // reconstruídos, para forçar o recálculo
+            if (baixados > 0) {
+                Object.keys(history).forEach(k => {
+                    if (history[k].reconstructed) delete history[k];
+                });
+                console.log(`[investimentos.js] ${baixados} ativo(s) atualizado(s). Snapshots invalidados para reconstrução.`);
+            }
         }
 
         // ========== 2. Reconstrução mês a mês ==========
         const primeiroTimestamp = Math.min(...aportes.map(t => t.timestamp));
         const primeiroDate = new Date(primeiroTimestamp);
-        const hoje = new Date();
 
         const meses = [];
         let cursor = new Date(primeiroDate.getFullYear(), primeiroDate.getMonth(), 1);
         const ultimoMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
         while (cursor <= ultimoMes) {
-            meses.push({
-                year: cursor.getFullYear(),
-                month: cursor.getMonth()
-            });
+            meses.push({ year: cursor.getFullYear(), month: cursor.getMonth() });
             cursor.setMonth(cursor.getMonth() + 1);
         }
 
