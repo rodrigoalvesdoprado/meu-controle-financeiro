@@ -261,26 +261,30 @@ async function fetchHistoricalQuotesForTicker(code, startDate, endDate) {
 
 /**
  * Garante que o cache histórico de um ativo está populado.
- * Varre mês a mês desde o mês do primeiro aporte até hoje, baixando
- * os preços diários via startDate/endDate (única forma aceita no free).
+ * - Se o cache está vazio, baixa tudo desde o primeiro aporte.
+ * - Se o cache existe mas está desatualizado (faltam meses recentes),
+ *   baixa APENAS os meses faltantes.
+ *
+ * @param {object} asset - O ativo
+ * @param {object} [opts] - Opções
+ * @param {function} [opts.onProgress] - callback(mensagem) para UI
+ * @returns {Promise<Array<{date:string, price:number}>>}
  */
-async function ensureHistoricalQuotesForAsset(asset) {
+async function ensureHistoricalQuotesForAsset(asset, opts = {}) {
+    const onProgress = opts.onProgress || (() => {});
+
     if (asset.type !== 'acao' && asset.type !== 'fii') {
         return [];
     }
 
     const cache = getHistoricalQuotesCache();
+    const entryAtual = cache[asset.code];
+    const pontosExistentes = (entryAtual && Array.isArray(entryAtual.points)) ? entryAtual.points : [];
 
-    // Se já existe cache para este ticker, não refaz
-    if (cache[asset.code] && Array.isArray(cache[asset.code].points) && cache[asset.code].points.length > 0) {
-        return cache[asset.code].points;
-    }
-
-    // Descobre o mês do primeiro aporte deste ativo
+    // Descobre o mês do primeiro aporte
     const txs = getInvestmentTxs().filter(t => t.assetId === asset.id && t.type === 'aporte');
-    if (txs.length === 0) {
-        return [];
-    }
+    if (txs.length === 0) return pontosExistentes;
+
     const primeiroTs = Math.min(...txs.map(t => t.timestamp));
     const primeiroAporte = new Date(primeiroTs);
 
@@ -288,31 +292,50 @@ async function ensureHistoricalQuotesForAsset(asset) {
     const mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const mesPrimeiroAporte = new Date(primeiroAporte.getFullYear(), primeiroAporte.getMonth(), 1);
 
-    // Lista de janelas mensais, da mais antiga para a mais recente
-    const janelas = [];
+    // Descobre até onde já temos dados (última data do cache)
+    let ultimaDataCache = null;
+    if (pontosExistentes.length > 0) {
+        ultimaDataCache = pontosExistentes[pontosExistentes.length - 1].date; // 'YYYY-MM-DD'
+    }
+
+    // Lista de janelas mensais necessárias (do primeiro aporte até hoje)
+    const todasJanelas = [];
     let cursor = new Date(mesPrimeiroAporte);
     while (cursor <= mesAtual) {
         const fimMes = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0, 23, 59, 59);
-        janelas.push({
+        todasJanelas.push({
             start: new Date(cursor.getFullYear(), cursor.getMonth(), 1),
-            end: fimMes > hoje ? hoje : fimMes
+            end: fimMes > hoje ? hoje : fimMes,
+            key: `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`
         });
         cursor.setMonth(cursor.getMonth() + 1);
     }
 
-    // Baixa cada janela sequencialmente
-    const todosPontos = [];
-    for (let i = 0; i < janelas.length; i++) {
-        const j = janelas[i];
+    // Filtra apenas as janelas que ainda não temos
+    // (se temos cache até 2026-10, não precisa rebaixar meses anteriores a 2026-10)
+    const janelasFaltando = todasJanelas.filter(j => {
+        if (!ultimaDataCache) return true;
+        // Compara como string YYYY-MM
+        return j.key > ultimaDataCache.substring(0, 7);
+    });
+
+    if (janelasFaltando.length === 0 && pontosExistentes.length > 0) {
+        // Já está tudo em cache, não faz nada
+        return pontosExistentes;
+    }
+
+    // Baixa apenas as janelas faltantes
+    const todosPontos = [...pontosExistentes];
+    for (let i = 0; i < janelasFaltando.length; i++) {
+        const j = janelasFaltando[i];
+        onProgress(`Baixando ${asset.code} (${j.key})...`);
         try {
             const pontos = await fetchHistoricalQuotesForTicker(asset.code, j.start, j.end);
             todosPontos.push(...pontos);
         } catch (err) {
-            console.warn(`[investimentos.js] Falha em ${asset.code} (${j.start.toISOString().substring(0,7)}):`, err.message || err);
+            console.warn(`[investimentos.js] Falha em ${asset.code} (${j.key}):`, err.message || err);
         }
-
-        // Pausa entre chamadas (rate limit)
-        if (i < janelas.length - 1) {
+        if (i < janelasFaltando.length - 1) {
             await new Promise(r => setTimeout(r, 1200));
         }
     }
@@ -1759,10 +1782,18 @@ function getHistoricalPriceAtDate(asset, timestampRef) {
             }
         }
 
-        saveQuotesCache(cache);
-        saveDailySnapshot();
-        renderAll();
-        renderInvestmentCharts();
+         saveQuotesCache(cache);
+         saveDailySnapshot();
+         
+         // Atualiza também o histórico dos ativos de renda variável
+         try {
+             await reconstructHistoricalSnapshots();
+         } catch (e) {
+             console.warn('[investimentos.js] Falha ao atualizar histórico:', e);
+         }
+         
+         renderAll();
+         renderInvestmentCharts();
 
         if (btn) {
             btn.disabled = false;
@@ -1778,16 +1809,9 @@ function getHistoricalPriceAtDate(asset, timestampRef) {
         return { updated, failed, skipped };
     }
 
-       /**
-     * Reconstrói snapshots mensais retroativos a partir do primeiro aporte.
-     * Estima o patrimônio de cada mês usando:
-     *   - Quantidade acumulada até aquela data
-     *   - Cotação estimada (PU do aporte, preço do aporte, ou fórmula retroativa)
-     * Marca os pontos como "estimativa" (reconstructed: true).
-     */
 /**
  * Reconstrói snapshots mensais retroativos a partir do primeiro aporte.
- * Usa o histórico real de cotações da brapi para renda variável.
+ * Baixa automaticamente o histórico de ativos novos/desatualizados.
  */
 async function reconstructHistoricalSnapshots() {
     try {
@@ -1796,67 +1820,73 @@ async function reconstructHistoricalSnapshots() {
 
         const aportes = txs.filter(t => t.type === 'aporte');
         if (aportes.length === 0) return;
-        const primeiroTimestamp = Math.min(...aportes.map(t => t.timestamp));
-        const primeiroDate = new Date(primeiroTimestamp);
-
-        const hoje = new Date();
-        const meses = [];
-        let cursor = new Date(primeiroDate.getFullYear(), primeiroDate.getMonth(), 1);
-        const ultimoMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-
-        while (cursor <= ultimoMes) {
-            meses.push({
-                year: cursor.getFullYear(),
-                month: cursor.getMonth(),
-                key: `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-01`
-            });
-            cursor.setMonth(cursor.getMonth() + 1);
-        }
 
         const history = getQuotesHistory();
         const assets = getAssets();
 
-        // ========== NOVO: pré-carrega histórico de cotações para renda variável ==========
-        const avisoEl = document.getElementById('evolutionReconstructing');
-        const avisoTextEl = document.getElementById('evolutionReconstructingText');
-        if (avisoEl) avisoEl.style.display = 'flex';
-        if (avisoTextEl) avisoTextEl.textContent = 'Baixando histórico de cotações...';
-
+        // ========== 1. Backfill inteligente ==========
         const ativosRV = assets.filter(a => a.type === 'acao' || a.type === 'fii');
         const cacheHist = getHistoricalQuotesCache();
-        let baixados = 0;
 
-         for (const asset of ativosRV) {
-             const jáTem = cacheHist[asset.code] && Array.isArray(cacheHist[asset.code].points) && cacheHist[asset.code].points.length > 0;
-             if (jáTem) continue;
-         
-             try {
-                 if (avisoTextEl) {
-                     avisoTextEl.textContent = `Baixando histórico de ${asset.code}...`;
-                 }
-                 await ensureHistoricalQuotesForAsset(asset);
-                 baixados++;
-             } catch (err) {
-                 console.warn(`[investimentos.js] Falha ao baixar histórico de ${asset.code}:`, err);
-             }
-         }
+        // Detecta quais precisam ser baixados
+        const precisamBaixar = ativosRV.filter(asset => {
+            const entry = cacheHist[asset.code];
+            if (!entry || !Array.isArray(entry.points) || entry.points.length === 0) return true;
+            // Verifica se o último ponto é do mês atual
+            const ultimaData = entry.points[entry.points.length - 1].date;
+            const hoje = new Date();
+            const mesAtualKey = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+            return ultimaData.substring(0, 7) < mesAtualKey;
+        });
 
-        if (avisoTextEl) {
-            avisoTextEl.textContent = baixados > 0
-                ? `Histórico baixado (${baixados} tickers). Reconstruindo...`
-                : 'Reconstruindo histórico...';
+        if (precisamBaixar.length > 0) {
+            const avisoEl = document.getElementById('evolutionReconstructing');
+            const avisoTextEl = document.getElementById('evolutionReconstructingText');
+            if (avisoEl) avisoEl.style.display = 'flex';
+            if (avisoTextEl) avisoTextEl.textContent = `Verificando histórico (${precisamBaixar.length} ativos)...`;
+
+            let baixados = 0;
+            for (const asset of precisamBaixar) {
+                try {
+                    await ensureHistoricalQuotesForAsset(asset, {
+                        onProgress: (msg) => {
+                            if (avisoTextEl) avisoTextEl.textContent = msg;
+                        }
+                    });
+                    baixados++;
+                    if (avisoTextEl) {
+                        avisoTextEl.textContent = `Histórico atualizado: ${baixados}/${precisamBaixar.length}`;
+                    }
+                } catch (err) {
+                    console.warn(`[investimentos.js] Falha ao baixar ${asset.code}:`, err);
+                }
+            }
+            if (avisoEl) avisoEl.style.display = 'none';
         }
 
-        // ========== Reconstrução mês a mês ==========
-        let contador = 0;
+        // ========== 2. Reconstrução mês a mês ==========
+        const primeiroTimestamp = Math.min(...aportes.map(t => t.timestamp));
+        const primeiroDate = new Date(primeiroTimestamp);
+        const hoje = new Date();
 
+        const meses = [];
+        let cursor = new Date(primeiroDate.getFullYear(), primeiroDate.getMonth(), 1);
+        const ultimoMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        while (cursor <= ultimoMes) {
+            meses.push({
+                year: cursor.getFullYear(),
+                month: cursor.getMonth()
+            });
+            cursor.setMonth(cursor.getMonth() + 1);
+        }
+
+        let contador = 0;
         for (const mes of meses) {
             const fimDoMes = new Date(mes.year, mes.month + 1, 0, 23, 59, 59);
             const dataRef = (fimDoMes > hoje) ? hoje : fimDoMes;
             const timestampRef = dataRef.getTime();
             const mesKey = formatDateToString(dataRef);
 
-            // Se já existe snapshot real deste dia (não reconstruído), pula
             if (history[mesKey] && !history[mesKey].reconstructed) continue;
 
             const byOwner = {};
@@ -1870,7 +1900,6 @@ async function reconstructHistoricalSnapshots() {
                 if (precoEstimado === null) continue;
 
                 const valor = aggNoMes.quantity * precoEstimado;
-
                 byOwner[asset.ownerId] = (byOwner[asset.ownerId] || 0) + valor;
                 byClass[asset.type] = (byClass[asset.type] || 0) + valor;
             }
@@ -1883,18 +1912,12 @@ async function reconstructHistoricalSnapshots() {
             };
             contador++;
 
-            if (avisoTextEl) {
-                avisoTextEl.textContent = `Reconstruindo histórico... (${contador} meses)`;
-            }
-
             if (contador % 5 === 0) {
                 await new Promise(r => setTimeout(r, 0));
             }
         }
 
         saveQuotesHistory(history);
-        if (avisoEl) avisoEl.style.display = 'none';
-
         console.log(`[investimentos.js] Reconstrução concluída: ${contador} meses processados.`);
     } catch (err) {
         console.warn('[investimentos.js] Falha na reconstrução histórica:', err);
@@ -3103,22 +3126,23 @@ function estimateAssetPriceAtDate(asset, timestampRef) {
 
     // ========== INICIALIZAÇÃO ==========
 
-    function initInvestimentos() {
-        setupCoreListeners();
-        setupIntegrationListeners();
+function initInvestimentos() {
+    setupCoreListeners();
+    setupIntegrationListeners();
+    renderAll();
+    saveDailySnapshot();
+
+    // Pré-carrega séries do BCB em background
+    preloadBcbSeries().then(() => {
         renderAll();
-        saveDailySnapshot();
-        // Pré-carrega séries do BCB em background (não bloqueia a UI)
-        preloadBcbSeries().then(() => {
-            // Quando as séries estiverem prontas, re-renderiza para refletir
-            // os valores corrigidos de CDB/LCI/Cofrinho/Tesouro
-            renderAll();
-        });
-            // Reconstrói snapshots históricos em background
-        reconstructHistoricalSnapshots().then(() => {
-            renderInvestmentCharts();
-        });
-    }
+    });
+
+    // Reconstrói o histórico (baixa ativos novos se necessário)
+    // Roda em background, sem bloquear a UI
+    reconstructHistoricalSnapshots().then(() => {
+        renderInvestmentCharts();
+    });
+}
 
     const observer = new MutationObserver(() => {
         const investmentsTab = document.getElementById('investments-tab');
