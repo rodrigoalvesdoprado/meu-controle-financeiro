@@ -193,14 +193,27 @@ function saveHistoricalQuotesCache(cache) {
  * @param {string} range - Período (padrão: '5y')
  * @param {string} interval - Intervalo (padrão: '1mo')
  */
-async function fetchHistoricalQuotesForTicker(code, range = '5y', interval = '1mo') {
+/**
+ * Busca o histórico de cotações de um ticker na brapi, dentro de uma janela
+ * de tempo específica. Como o plano free não aceita ranges longos, usamos
+ * range=1mo com interval=1d e deslizamos a janela mês a mês.
+ *
+ * @param {string} code      - Ticker (ex: WEGE3)
+ * @param {Date}   startDate - Início da janela
+ * @param {Date}   endDate   - Fim da janela
+ * @returns {Promise<Array<{date:string, price:number}>>}
+ */
+async function fetchHistoricalQuotesForTicker(code, startDate, endDate) {
     const key = (window.Configuracoes && window.Configuracoes.getBrapiKey)
         ? window.Configuracoes.getBrapiKey()
         : '';
 
+    // A brapi usa range=1mo&interval=1d. Não conseguimos restringir
+    // a janela exata pela URL, então pegamos o mês inteiro e filtramos
+    // localmente pelas datas que interessam.
     const url = key
-        ? `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?range=${range}&interval=${interval}&token=${encodeURIComponent(key)}`
-        : `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?range=${range}&interval=${interval}`;
+        ? `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?range=1mo&interval=1d&token=${encodeURIComponent(key)}`
+        : `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?range=1mo&interval=1d`;
 
     if (window.Configuracoes && typeof window.Configuracoes.incrementApiUsage === 'function') {
         window.Configuracoes.incrementApiUsage(1);
@@ -210,10 +223,15 @@ async function fetchHistoricalQuotesForTicker(code, range = '5y', interval = '1m
     if (!resp.ok) {
         const err = new Error(`HTTP ${resp.status}`);
         err.status = resp.status;
+        // Tenta ler a mensagem de erro da brapi para log útil
+        try {
+            const j = await resp.json();
+            err.message = j.message || err.message;
+        } catch (_) {}
         throw err;
     }
-    const data = await resp.json();
 
+    const data = await resp.json();
     if (!data || !Array.isArray(data.results) || data.results.length === 0) {
         return [];
     }
@@ -224,9 +242,9 @@ async function fetchHistoricalQuotesForTicker(code, range = '5y', interval = '1m
 
     const pontos = [];
     hist.forEach(item => {
-        // A brapi retorna o timestamp em segundos ou a data em "YYYY-MM-DD"
         let isoDate;
         if (typeof item.date === 'number') {
+            // A brapi retorna timestamp em SEGUNDOS
             const d = new Date(item.date * 1000);
             isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         } else if (typeof item.date === 'string') {
@@ -235,7 +253,6 @@ async function fetchHistoricalQuotesForTicker(code, range = '5y', interval = '1m
             return;
         }
 
-        // Preço de fechamento: prioriza close, senão adjustedClose, senão regularMarketPrice
         const preco = Number(
             item.close !== undefined ? item.close :
             item.adjustedClose !== undefined ? item.adjustedClose :
@@ -243,21 +260,14 @@ async function fetchHistoricalQuotesForTicker(code, range = '5y', interval = '1m
         );
         if (!Number.isFinite(preco) || preco <= 0) return;
 
+        const d = new Date(isoDate + 'T12:00:00');
+        if (d < startDate || d > endDate) return;
+
         pontos.push({ date: isoDate, price: preco });
     });
 
-    // Ordena do mais antigo para o mais recente e deduplica por data
     pontos.sort((a, b) => a.date.localeCompare(b.date));
-    const dedup = [];
-    const vistos = new Set();
-    pontos.forEach(p => {
-        if (!vistos.has(p.date)) {
-            vistos.add(p.date);
-            dedup.push(p);
-        }
-    });
-
-    return dedup;
+    return pontos;
 }
 
 /**
@@ -265,31 +275,95 @@ async function fetchHistoricalQuotesForTicker(code, range = '5y', interval = '1m
  * Se já estiver no cache, não faz nada.
  * Retorna o array de pontos.
  */
+/**
+ * Garante que o cache histórico de um ativo está populado.
+ * Faz backfill retroativo mês a mês desde o mês atual até o mês do
+ * primeiro aporte do ativo (ou até 12 meses, o que for menor).
+ *
+ * Só se aplica a ações e FIIs (renda variável cotada na brapi).
+ */
 async function ensureHistoricalQuotesForAsset(asset) {
-    // Só faz sentido para renda variável cotada na brapi
     if (asset.type !== 'acao' && asset.type !== 'fii') {
         return [];
     }
 
     const cache = getHistoricalQuotesCache();
+
+    // Se já existe cache para este ticker, não refaz
     if (cache[asset.code] && Array.isArray(cache[asset.code].points) && cache[asset.code].points.length > 0) {
         return cache[asset.code].points;
     }
 
-    try {
-        const pontos = await fetchHistoricalQuotesForTicker(asset.code, '5y', '1mo');
-        if (pontos.length > 0) {
-            cache[asset.code] = {
-                points: pontos,
-                at: Date.now()
-            };
-            saveHistoricalQuotesCache(cache);
-        }
-        return pontos;
-    } catch (err) {
-        console.warn(`[investimentos.js] Falha ao buscar histórico de ${asset.code}:`, err);
+    // Descobre o mês do primeiro aporte deste ativo
+    const txs = getInvestmentTxs().filter(t => t.assetId === asset.id && t.type === 'aporte');
+    if (txs.length === 0) {
+        // Sem aporte, nada a reconstruir
         return [];
     }
+    const primeiroTs = Math.min(...txs.map(t => t.timestamp));
+    const primeiroAporte = new Date(primeiroTs);
+
+    // Define o range de meses a varrer:
+    // do mês atual (0) até o mês do primeiro aporte (limite máximo: 12 meses atrás)
+    const hoje = new Date();
+    const mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const mesPrimeiroAporte = new Date(primeiroAporte.getFullYear(), primeiroAporte.getMonth(), 1);
+
+    // Limite de 12 meses atrás para não estourar cota
+    const limiteInferior = new Date(hoje.getFullYear(), hoje.getMonth() - 12, 1);
+
+    // Pega o mais recente entre: primeiro aporte e limiteInferior
+    const inicio = mesPrimeiroAporte > limiteInferior ? mesPrimeiroAporte : limiteInferior;
+
+    // Lista de janelas mensais, da mais antiga para a mais recente
+    const janelas = [];
+    let cursor = new Date(inicio);
+    while (cursor <= mesAtual) {
+        const fimMes = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0, 23, 59, 59);
+        janelas.push({
+            start: new Date(cursor.getFullYear(), cursor.getMonth(), 1),
+            end: fimMes > hoje ? hoje : fimMes
+        });
+        cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    // Baixa cada janela sequencialmente
+    const todosPontos = [];
+    for (let i = 0; i < janelas.length; i++) {
+        const j = janelas[i];
+        try {
+            const pontos = await fetchHistoricalQuotesForTicker(asset.code, j.start, j.end);
+            todosPontos.push(...pontos);
+        } catch (err) {
+            console.warn(`[investimentos.js] Falha em ${asset.code} (${j.start.toISOString().substring(0,7)}):`, err.message || err);
+        }
+
+        // Pausa entre chamadas (rate limit)
+        if (i < janelas.length - 1) {
+            await new Promise(r => setTimeout(r, 1200));
+        }
+    }
+
+    // Deduplica por data (mantém a última ocorrência)
+    todosPontos.sort((a, b) => a.date.localeCompare(b.date));
+    const dedup = [];
+    const vistos = new Set();
+    for (let i = todosPontos.length - 1; i >= 0; i--) {
+        if (!vistos.has(todosPontos[i].date)) {
+            vistos.add(todosPontos[i].date);
+            dedup.unshift(todosPontos[i]);
+        }
+    }
+
+    if (dedup.length > 0) {
+        cache[asset.code] = {
+            points: dedup,
+            at: Date.now()
+        };
+        saveHistoricalQuotesCache(cache);
+    }
+
+    return dedup;
 }
 
 /**
@@ -1779,23 +1853,20 @@ async function reconstructHistoricalSnapshots() {
         const cacheHist = getHistoricalQuotesCache();
         let baixados = 0;
 
-        for (const asset of ativosRV) {
-            const jáTem = cacheHist[asset.code] && Array.isArray(cacheHist[asset.code].points) && cacheHist[asset.code].points.length > 0;
-            if (jáTem) continue;
-
-            try {
-                if (avisoTextEl) {
-                    avisoTextEl.textContent = `Baixando histórico de ${asset.code}...`;
-                }
-                await ensureHistoricalQuotesForAsset(asset);
-                baixados++;
-            } catch (err) {
-                console.warn(`[investimentos.js] Falha ao baixar histórico de ${asset.code}:`, err);
-            }
-
-            // Pausa entre chamadas para evitar rate limit
-            await new Promise(r => setTimeout(r, 1200));
-        }
+         for (const asset of ativosRV) {
+             const jáTem = cacheHist[asset.code] && Array.isArray(cacheHist[asset.code].points) && cacheHist[asset.code].points.length > 0;
+             if (jáTem) continue;
+         
+             try {
+                 if (avisoTextEl) {
+                     avisoTextEl.textContent = `Baixando histórico de ${asset.code}...`;
+                 }
+                 await ensureHistoricalQuotesForAsset(asset);
+                 baixados++;
+             } catch (err) {
+                 console.warn(`[investimentos.js] Falha ao baixar histórico de ${asset.code}:`, err);
+             }
+         }
 
         if (avisoTextEl) {
             avisoTextEl.textContent = baixados > 0
