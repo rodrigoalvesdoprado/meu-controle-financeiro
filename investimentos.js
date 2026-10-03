@@ -186,17 +186,11 @@ function saveHistoricalQuotesCache(cache) {
 }
 
 /**
- * Busca o histórico mensal de cotações de um ticker na brapi.
- * Retorna um array de { date: 'YYYY-MM-DD', price: number } ou [] em caso de falha.
+ * Busca o histórico de cotações de um ticker na brapi dentro de uma janela
+ * de tempo específica (startDate → endDate).
  *
- * @param {string} code - Ticker (ex: PETR4)
- * @param {string} range - Período (padrão: '5y')
- * @param {string} interval - Intervalo (padrão: '1mo')
- */
-/**
- * Busca o histórico de cotações de um ticker na brapi, dentro de uma janela
- * de tempo específica. Como o plano free não aceita ranges longos, usamos
- * range=1mo com interval=1d e deslizamos a janela mês a mês.
+ * O plano free da brapi só aceita interval=1d com datas explícitas.
+ * Por isso usamos startDate/endDate em vez de range.
  *
  * @param {string} code      - Ticker (ex: WEGE3)
  * @param {Date}   startDate - Início da janela
@@ -208,12 +202,11 @@ async function fetchHistoricalQuotesForTicker(code, startDate, endDate) {
         ? window.Configuracoes.getBrapiKey()
         : '';
 
-    // A brapi usa range=1mo&interval=1d. Não conseguimos restringir
-    // a janela exata pela URL, então pegamos o mês inteiro e filtramos
-    // localmente pelas datas que interessam.
+    const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
     const url = key
-        ? `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?range=1mo&interval=1d&token=${encodeURIComponent(key)}`
-        : `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?range=1mo&interval=1d`;
+        ? `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?startDate=${fmt(startDate)}&endDate=${fmt(endDate)}&interval=1d&token=${encodeURIComponent(key)}`
+        : `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?startDate=${fmt(startDate)}&endDate=${fmt(endDate)}&interval=1d`;
 
     if (window.Configuracoes && typeof window.Configuracoes.incrementApiUsage === 'function') {
         window.Configuracoes.incrementApiUsage(1);
@@ -223,7 +216,6 @@ async function fetchHistoricalQuotesForTicker(code, startDate, endDate) {
     if (!resp.ok) {
         const err = new Error(`HTTP ${resp.status}`);
         err.status = resp.status;
-        // Tenta ler a mensagem de erro da brapi para log útil
         try {
             const j = await resp.json();
             err.message = j.message || err.message;
@@ -260,9 +252,6 @@ async function fetchHistoricalQuotesForTicker(code, startDate, endDate) {
         );
         if (!Number.isFinite(preco) || preco <= 0) return;
 
-        const d = new Date(isoDate + 'T12:00:00');
-        if (d < startDate || d > endDate) return;
-
         pontos.push({ date: isoDate, price: preco });
     });
 
@@ -272,15 +261,8 @@ async function fetchHistoricalQuotesForTicker(code, startDate, endDate) {
 
 /**
  * Garante que o cache histórico de um ativo está populado.
- * Se já estiver no cache, não faz nada.
- * Retorna o array de pontos.
- */
-/**
- * Garante que o cache histórico de um ativo está populado.
- * Faz backfill retroativo mês a mês desde o mês atual até o mês do
- * primeiro aporte do ativo (ou até 12 meses, o que for menor).
- *
- * Só se aplica a ações e FIIs (renda variável cotada na brapi).
+ * Varre mês a mês desde o mês do primeiro aporte até hoje, baixando
+ * os preços diários via startDate/endDate (única forma aceita no free).
  */
 async function ensureHistoricalQuotesForAsset(asset) {
     if (asset.type !== 'acao' && asset.type !== 'fii') {
@@ -297,27 +279,18 @@ async function ensureHistoricalQuotesForAsset(asset) {
     // Descobre o mês do primeiro aporte deste ativo
     const txs = getInvestmentTxs().filter(t => t.assetId === asset.id && t.type === 'aporte');
     if (txs.length === 0) {
-        // Sem aporte, nada a reconstruir
         return [];
     }
     const primeiroTs = Math.min(...txs.map(t => t.timestamp));
     const primeiroAporte = new Date(primeiroTs);
 
-    // Define o range de meses a varrer:
-    // do mês atual (0) até o mês do primeiro aporte (limite máximo: 12 meses atrás)
     const hoje = new Date();
     const mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const mesPrimeiroAporte = new Date(primeiroAporte.getFullYear(), primeiroAporte.getMonth(), 1);
 
-    // Limite de 12 meses atrás para não estourar cota
-    const limiteInferior = new Date(hoje.getFullYear(), hoje.getMonth() - 12, 1);
-
-    // Pega o mais recente entre: primeiro aporte e limiteInferior
-    const inicio = mesPrimeiroAporte > limiteInferior ? mesPrimeiroAporte : limiteInferior;
-
     // Lista de janelas mensais, da mais antiga para a mais recente
     const janelas = [];
-    let cursor = new Date(inicio);
+    let cursor = new Date(mesPrimeiroAporte);
     while (cursor <= mesAtual) {
         const fimMes = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0, 23, 59, 59);
         janelas.push({
