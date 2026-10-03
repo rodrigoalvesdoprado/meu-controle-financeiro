@@ -12,15 +12,16 @@
 
     // ========== CONSTANTES ==========
 
-    const STORAGE_KEYS = {
-        ASSETS: 'assets',
-        INVESTMENT_TXS: 'investmentTxs',
-        QUOTES_CACHE: 'quotesCache',
-        QUOTES_HISTORY: 'quotesHistory',
-        SORT_FIELD: 'investmentSortField',
-        SORT_DIR: 'investmentSortDir',
-        OWNER_FILTER: 'investmentOwnerFilter'
-    };
+const STORAGE_KEYS = {
+    ASSETS: 'assets',
+    INVESTMENT_TXS: 'investmentTxs',
+    QUOTES_CACHE: 'quotesCache',
+    QUOTES_HISTORY: 'quotesHistory',
+    HISTORICAL_QUOTES: 'historicalQuotesCache',
+    SORT_FIELD: 'investmentSortField',
+    SORT_DIR: 'investmentSortDir',
+    OWNER_FILTER: 'investmentOwnerFilter'
+};
 
     const ASSET_TYPES = {
         acao:      { label: 'Ação',     currency: 'BRL', api: 'brapi' },
@@ -164,6 +165,160 @@
     function saveQuotesHistory(history) {
         localStorage.setItem(STORAGE_KEYS.QUOTES_HISTORY, JSON.stringify(history));
     }
+
+   // ========== CACHE DE HISTÓRICO DE COTAÇÕES ==========
+//
+// Armazena, por ticker, um array de pontos { date: 'YYYY-MM-DD', price: number },
+// ordenados do mais antigo para o mais recente.
+// Esse cache NÃO expira: dados históricos passados não mudam.
+
+function getHistoricalQuotesCache() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEYS.HISTORICAL_QUOTES);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === 'object') ? parsed : {};
+    } catch (_) { return {}; }
+}
+
+function saveHistoricalQuotesCache(cache) {
+    localStorage.setItem(STORAGE_KEYS.HISTORICAL_QUOTES, JSON.stringify(cache));
+}
+
+/**
+ * Busca o histórico mensal de cotações de um ticker na brapi.
+ * Retorna um array de { date: 'YYYY-MM-DD', price: number } ou [] em caso de falha.
+ *
+ * @param {string} code - Ticker (ex: PETR4)
+ * @param {string} range - Período (padrão: '5y')
+ * @param {string} interval - Intervalo (padrão: '1mo')
+ */
+async function fetchHistoricalQuotesForTicker(code, range = '5y', interval = '1mo') {
+    const key = (window.Configuracoes && window.Configuracoes.getBrapiKey)
+        ? window.Configuracoes.getBrapiKey()
+        : '';
+
+    const url = key
+        ? `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?range=${range}&interval=${interval}&token=${encodeURIComponent(key)}`
+        : `${BRAPI_BASE}/quote/${encodeURIComponent(code)}?range=${range}&interval=${interval}`;
+
+    if (window.Configuracoes && typeof window.Configuracoes.incrementApiUsage === 'function') {
+        window.Configuracoes.incrementApiUsage(1);
+    }
+
+    const resp = await fetch(url);
+    if (!resp.ok) {
+        const err = new Error(`HTTP ${resp.status}`);
+        err.status = resp.status;
+        throw err;
+    }
+    const data = await resp.json();
+
+    if (!data || !Array.isArray(data.results) || data.results.length === 0) {
+        return [];
+    }
+
+    const result = data.results[0];
+    const hist = result.historicalDataPrice || result.historicalData || [];
+    if (!Array.isArray(hist) || hist.length === 0) return [];
+
+    const pontos = [];
+    hist.forEach(item => {
+        // A brapi retorna o timestamp em segundos ou a data em "YYYY-MM-DD"
+        let isoDate;
+        if (typeof item.date === 'number') {
+            const d = new Date(item.date * 1000);
+            isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        } else if (typeof item.date === 'string') {
+            isoDate = item.date.substring(0, 10);
+        } else {
+            return;
+        }
+
+        // Preço de fechamento: prioriza close, senão adjustedClose, senão regularMarketPrice
+        const preco = Number(
+            item.close !== undefined ? item.close :
+            item.adjustedClose !== undefined ? item.adjustedClose :
+            item.regularMarketPrice
+        );
+        if (!Number.isFinite(preco) || preco <= 0) return;
+
+        pontos.push({ date: isoDate, price: preco });
+    });
+
+    // Ordena do mais antigo para o mais recente e deduplica por data
+    pontos.sort((a, b) => a.date.localeCompare(b.date));
+    const dedup = [];
+    const vistos = new Set();
+    pontos.forEach(p => {
+        if (!vistos.has(p.date)) {
+            vistos.add(p.date);
+            dedup.push(p);
+        }
+    });
+
+    return dedup;
+}
+
+/**
+ * Garante que o cache histórico de um ativo está populado.
+ * Se já estiver no cache, não faz nada.
+ * Retorna o array de pontos.
+ */
+async function ensureHistoricalQuotesForAsset(asset) {
+    // Só faz sentido para renda variável cotada na brapi
+    if (asset.type !== 'acao' && asset.type !== 'fii') {
+        return [];
+    }
+
+    const cache = getHistoricalQuotesCache();
+    if (cache[asset.code] && Array.isArray(cache[asset.code].points) && cache[asset.code].points.length > 0) {
+        return cache[asset.code].points;
+    }
+
+    try {
+        const pontos = await fetchHistoricalQuotesForTicker(asset.code, '5y', '1mo');
+        if (pontos.length > 0) {
+            cache[asset.code] = {
+                points: pontos,
+                at: Date.now()
+            };
+            saveHistoricalQuotesCache(cache);
+        }
+        return pontos;
+    } catch (err) {
+        console.warn(`[investimentos.js] Falha ao buscar histórico de ${asset.code}:`, err);
+        return [];
+    }
+}
+
+/**
+ * Retorna o preço de fechamento mais próximo de uma data de referência
+ * consultando o cache histórico.
+ * Usa o ponto com data <= timestampRef (o mais recente antes da data).
+ * Retorna null se não houver.
+ */
+function getHistoricalPriceAtDate(asset, timestampRef) {
+    const cache = getHistoricalQuotesCache();
+    const entry = cache[asset.code];
+    if (!entry || !Array.isArray(entry.points) || entry.points.length === 0) {
+        return null;
+    }
+
+    const refDate = new Date(timestampRef);
+    const refISO = `${refDate.getFullYear()}-${String(refDate.getMonth() + 1).padStart(2, '0')}-${String(refDate.getDate()).padStart(2, '0')}`;
+
+    // Pontos estão em ordem crescente. Itera de trás para frente.
+    for (let i = entry.points.length - 1; i >= 0; i--) {
+        if (entry.points[i].date <= refISO) {
+            return entry.points[i].price;
+        }
+    }
+
+    // Se a data de referência for anterior ao primeiro ponto do histórico,
+    // usa o primeiro ponto (melhor aproximação possível).
+    return entry.points[0].price;
+}
 
     function getOwners() {
         if (window.Configuracoes && typeof window.Configuracoes.getOwners === 'function') {
@@ -1583,100 +1738,126 @@
      *   - Cotação estimada (PU do aporte, preço do aporte, ou fórmula retroativa)
      * Marca os pontos como "estimativa" (reconstructed: true).
      */
-    async function reconstructHistoricalSnapshots() {
-        try {
-            const txs = getInvestmentTxs();
-            if (txs.length === 0) return;
+/**
+ * Reconstrói snapshots mensais retroativos a partir do primeiro aporte.
+ * Usa o histórico real de cotações da brapi para renda variável.
+ */
+async function reconstructHistoricalSnapshots() {
+    try {
+        const txs = getInvestmentTxs();
+        if (txs.length === 0) return;
 
-            // Encontra o primeiro aporte
-            const aportes = txs.filter(t => t.type === 'aporte');
-            if (aportes.length === 0) return;
-            const primeiroTimestamp = Math.min(...aportes.map(t => t.timestamp));
-            const primeiroDate = new Date(primeiroTimestamp);
+        const aportes = txs.filter(t => t.type === 'aporte');
+        if (aportes.length === 0) return;
+        const primeiroTimestamp = Math.min(...aportes.map(t => t.timestamp));
+        const primeiroDate = new Date(primeiroTimestamp);
 
-            // Gera lista de meses do primeiro aporte até hoje
-            const hoje = new Date();
-            const meses = [];
-            let cursor = new Date(primeiroDate.getFullYear(), primeiroDate.getMonth(), 1);
-            const ultimoMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        const hoje = new Date();
+        const meses = [];
+        let cursor = new Date(primeiroDate.getFullYear(), primeiroDate.getMonth(), 1);
+        const ultimoMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
 
-            while (cursor <= ultimoMes) {
-                meses.push({
-                    year: cursor.getFullYear(),
-                    month: cursor.getMonth(),
-                    key: `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-01`
-                });
-                cursor.setMonth(cursor.getMonth() + 1);
-            }
-
-            const history = getQuotesHistory();
-            const assets = getAssets();
-
-            // Aviso visual
-            const avisoEl = document.getElementById('evolutionReconstructing');
-            const avisoTextEl = document.getElementById('evolutionReconstructingText');
-            if (avisoEl) avisoEl.style.display = 'flex';
-
-            let contador = 0;
-
-            for (const mes of meses) {
-                // Fim do mês (último dia) OU hoje, se for o mês atual
-                const fimDoMes = new Date(mes.year, mes.month + 1, 0, 23, 59, 59);
-                const dataRef = (fimDoMes > hoje) ? hoje : fimDoMes;
-                const timestampRef = dataRef.getTime();
-
-                const mesKey = formatDateToString(dataRef);
-
-                // Se já existe snapshot real deste dia (não reconstruído), pula
-                if (history[mesKey] && !history[mesKey].reconstructed) continue;
-
-                // Calcula patrimônio no final desse mês
-                const byOwner = {};
-                const byClass = {};
-
-                for (const asset of assets) {
-                    const aggNoMes = computeAggregatesUpToDate(asset.id, timestampRef);
-                    if (aggNoMes.quantity <= 0) continue;
-
-                    // Cotação estimada para aquela data
-                    const precoEstimado = estimateAssetPriceAtDate(asset, timestampRef);
-                    if (precoEstimado === null) continue;
-
-                    const valor = aggNoMes.quantity * precoEstimado;
-
-                    byOwner[asset.ownerId] = (byOwner[asset.ownerId] || 0) + valor;
-                    byClass[asset.type] = (byClass[asset.type] || 0) + valor;
-                }
-
-                history[mesKey] = {
-                    byOwner,
-                    byClass,
-                    at: timestampRef,
-                    reconstructed: true
-                };
-                contador++;
-
-                if (avisoTextEl) {
-                    avisoTextEl.textContent = `Reconstruindo histórico... (${contador} meses)`;
-                }
-
-                // Deixa o navegador respirar entre iterações
-                if (contador % 5 === 0) {
-                    await new Promise(r => setTimeout(r, 0));
-                }
-            }
-
-            saveQuotesHistory(history);
-
-            if (avisoEl) avisoEl.style.display = 'none';
-
-            console.log(`[investimentos.js] Reconstrução concluída: ${contador} meses processados.`);
-        } catch (err) {
-            console.warn('[investimentos.js] Falha na reconstrução histórica:', err);
-            const avisoEl = document.getElementById('evolutionReconstructing');
-            if (avisoEl) avisoEl.style.display = 'none';
+        while (cursor <= ultimoMes) {
+            meses.push({
+                year: cursor.getFullYear(),
+                month: cursor.getMonth(),
+                key: `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-01`
+            });
+            cursor.setMonth(cursor.getMonth() + 1);
         }
+
+        const history = getQuotesHistory();
+        const assets = getAssets();
+
+        // ========== NOVO: pré-carrega histórico de cotações para renda variável ==========
+        const avisoEl = document.getElementById('evolutionReconstructing');
+        const avisoTextEl = document.getElementById('evolutionReconstructingText');
+        if (avisoEl) avisoEl.style.display = 'flex';
+        if (avisoTextEl) avisoTextEl.textContent = 'Baixando histórico de cotações...';
+
+        const ativosRV = assets.filter(a => a.type === 'acao' || a.type === 'fii');
+        const cacheHist = getHistoricalQuotesCache();
+        let baixados = 0;
+
+        for (const asset of ativosRV) {
+            const jáTem = cacheHist[asset.code] && Array.isArray(cacheHist[asset.code].points) && cacheHist[asset.code].points.length > 0;
+            if (jáTem) continue;
+
+            try {
+                if (avisoTextEl) {
+                    avisoTextEl.textContent = `Baixando histórico de ${asset.code}...`;
+                }
+                await ensureHistoricalQuotesForAsset(asset);
+                baixados++;
+            } catch (err) {
+                console.warn(`[investimentos.js] Falha ao baixar histórico de ${asset.code}:`, err);
+            }
+
+            // Pausa entre chamadas para evitar rate limit
+            await new Promise(r => setTimeout(r, 1200));
+        }
+
+        if (avisoTextEl) {
+            avisoTextEl.textContent = baixados > 0
+                ? `Histórico baixado (${baixados} tickers). Reconstruindo...`
+                : 'Reconstruindo histórico...';
+        }
+
+        // ========== Reconstrução mês a mês ==========
+        let contador = 0;
+
+        for (const mes of meses) {
+            const fimDoMes = new Date(mes.year, mes.month + 1, 0, 23, 59, 59);
+            const dataRef = (fimDoMes > hoje) ? hoje : fimDoMes;
+            const timestampRef = dataRef.getTime();
+            const mesKey = formatDateToString(dataRef);
+
+            // Se já existe snapshot real deste dia (não reconstruído), pula
+            if (history[mesKey] && !history[mesKey].reconstructed) continue;
+
+            const byOwner = {};
+            const byClass = {};
+
+            for (const asset of assets) {
+                const aggNoMes = computeAggregatesUpToDate(asset.id, timestampRef);
+                if (aggNoMes.quantity <= 0) continue;
+
+                const precoEstimado = estimateAssetPriceAtDate(asset, timestampRef);
+                if (precoEstimado === null) continue;
+
+                const valor = aggNoMes.quantity * precoEstimado;
+
+                byOwner[asset.ownerId] = (byOwner[asset.ownerId] || 0) + valor;
+                byClass[asset.type] = (byClass[asset.type] || 0) + valor;
+            }
+
+            history[mesKey] = {
+                byOwner,
+                byClass,
+                at: timestampRef,
+                reconstructed: true
+            };
+            contador++;
+
+            if (avisoTextEl) {
+                avisoTextEl.textContent = `Reconstruindo histórico... (${contador} meses)`;
+            }
+
+            if (contador % 5 === 0) {
+                await new Promise(r => setTimeout(r, 0));
+            }
+        }
+
+        saveQuotesHistory(history);
+        if (avisoEl) avisoEl.style.display = 'none';
+
+        console.log(`[investimentos.js] Reconstrução concluída: ${contador} meses processados.`);
+    } catch (err) {
+        console.warn('[investimentos.js] Falha na reconstrução histórica:', err);
+        const avisoEl = document.getElementById('evolutionReconstructing');
+        if (avisoEl) avisoEl.style.display = 'none';
     }
+}
 
     /**
      * Calcula quantidade acumulada de um ativo até uma data (timestamp).
@@ -1709,48 +1890,56 @@
      *   - Ação/FII/Ação EUA: usa o preço unitário do aporte mais recente
      * Retorna null se não houver base para estimar.
      */
-    function estimateAssetPriceAtDate(asset, timestampRef) {
-        const txs = getInvestmentTxs()
-            .filter(t => t.assetId === asset.id && t.type === 'aporte' && t.timestamp <= timestampRef)
-            .sort((a, b) => b.timestamp - a.timestamp);
+function estimateAssetPriceAtDate(asset, timestampRef) {
+    const txs = getInvestmentTxs()
+        .filter(t => t.assetId === asset.id && t.type === 'aporte' && t.timestamp <= timestampRef)
+        .sort((a, b) => b.timestamp - a.timestamp);
 
-        if (txs.length === 0) return null;
+    if (txs.length === 0) return null;
 
-        const ultimoAporte = txs[0];
+    const ultimoAporte = txs[0];
 
-        // Tesouro: usa PU atual do cache (aproximação)
-        if (asset.type === 'tesouro') {
-            const cache = getQuotesCache();
-            const entry = cache[asset.code];
-            if (entry && entry.price > 0) {
-                return entry.price;
-            }
-            return Number(ultimoAporte.unitPrice) || null;
+    // ========== RENDA VARIÁVEL (ação, FII): usa histórico real da brapi ==========
+    if (asset.type === 'acao' || asset.type === 'fii') {
+        const precoHistorico = getHistoricalPriceAtDate(asset, timestampRef);
+        if (precoHistorico !== null && precoHistorico > 0) {
+            return precoHistorico;
         }
-
-        // CDB / LCI / Cofrinho: fórmula de renda fixa retroativa
-        if (asset.type === 'cdb' || asset.type === 'lci' || asset.type === 'cofrinho') {
-            if (!asset.rateConfig || !asset.rateConfig.kind) {
-                return Number(ultimoAporte.unitPrice) || null;
-            }
-
-            // Data de referência como Date
-            const dataRef = new Date(timestampRef);
-
-            // Aplica a fórmula de renda fixa, mas usando dataRef como "hoje"
-            const calc = computeFixedIncomeReturnForTx(ultimoAporte, asset.rateConfig, dataRef);
-            if (!calc) {
-                return Number(ultimoAporte.unitPrice) || null;
-            }
-
-            // Retorna o valor unitário corrigido = preço do aporte × fator
-            const precoUnitarioCorrigido = Number(ultimoAporte.unitPrice) * calc.fator;
-            return precoUnitarioCorrigido;
-        }
-
-        // Ação, FII, Ação EUA: usa o preço unitário do aporte mais recente
+        // Fallback: se não houver histórico, usa o preço do último aporte
         return Number(ultimoAporte.unitPrice) || null;
     }
+
+    // ========== AÇÃO EUA: sem cotação automática, usa o último aporte ==========
+    if (asset.type === 'acao_eua') {
+        return Number(ultimoAporte.unitPrice) || null;
+    }
+
+    // ========== TESOURO: usa PU atual do cache (aproximação) ==========
+    if (asset.type === 'tesouro') {
+        const cache = getQuotesCache();
+        const entry = cache[asset.code];
+        if (entry && entry.price > 0) {
+            return entry.price;
+        }
+        return Number(ultimoAporte.unitPrice) || null;
+    }
+
+    // ========== RENDA FIXA (CDB / LCI / Cofrinho): fórmula retroativa ==========
+    if (asset.type === 'cdb' || asset.type === 'lci' || asset.type === 'cofrinho') {
+        if (!asset.rateConfig || !asset.rateConfig.kind) {
+            return Number(ultimoAporte.unitPrice) || null;
+        }
+        const dataRef = new Date(timestampRef);
+        const calc = computeFixedIncomeReturnForTx(ultimoAporte, asset.rateConfig, dataRef);
+        if (!calc) {
+            return Number(ultimoAporte.unitPrice) || null;
+        }
+        return Number(ultimoAporte.unitPrice) * calc.fator;
+    }
+
+    // Fallback genérico
+    return Number(ultimoAporte.unitPrice) || null;
+}
 
    
     // ========== SNAPSHOTS ==========
