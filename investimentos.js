@@ -292,10 +292,21 @@ async function ensureHistoricalQuotesForAsset(asset, opts = {}) {
     const mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const mesPrimeiroAporte = new Date(primeiroAporte.getFullYear(), primeiroAporte.getMonth(), 1);
 
+    // Calcula quantos meses o cache DEVERIA ter
+    const mesesEsperados = (mesAtual.getFullYear() - mesPrimeiroAporte.getFullYear()) * 12
+                         + (mesAtual.getMonth() - mesPrimeiroAporte.getMonth())
+                         + 1;
+
+    // Cada mês tem ~20 dias úteis. Esperado mínimo: 15 pontos por mês.
+    const pontosMinimosEsperados = mesesEsperados * 15;
+
+    // Se o cache atual tem menos pontos do que o esperado, considera incompleto
+    const cacheCompleto = pontosExistentes.length >= pontosMinimosEsperados;
+
     // Descobre até onde já temos dados (última data do cache)
     let ultimaDataCache = null;
-    if (pontosExistentes.length > 0) {
-        ultimaDataCache = pontosExistentes[pontosExistentes.length - 1].date; // 'YYYY-MM-DD'
+    if (cacheCompleto && pontosExistentes.length > 0) {
+        ultimaDataCache = pontosExistentes[pontosExistentes.length - 1].date;
     }
 
     // Lista de janelas mensais necessárias (do primeiro aporte até hoje)
@@ -311,21 +322,22 @@ async function ensureHistoricalQuotesForAsset(asset, opts = {}) {
         cursor.setMonth(cursor.getMonth() + 1);
     }
 
-    // Filtra apenas as janelas que ainda não temos
-    // (se temos cache até 2026-10, não precisa rebaixar meses anteriores a 2026-10)
+    // Filtra as janelas que precisam ser baixadas:
+    // - Se cache incompleto: baixa tudo (todas as janelas)
+    // - Se cache completo: baixa só as janelas após a última data do cache
     const janelasFaltando = todasJanelas.filter(j => {
+        if (!cacheCompleto) return true;
         if (!ultimaDataCache) return true;
-        // Compara como string YYYY-MM
         return j.key > ultimaDataCache.substring(0, 7);
     });
 
-    if (janelasFaltando.length === 0 && pontosExistentes.length > 0) {
-        // Já está tudo em cache, não faz nada
+    if (janelasFaltando.length === 0 && cacheCompleto) {
         return pontosExistentes;
     }
 
-    // Baixa apenas as janelas faltantes
-    const todosPontos = [...pontosExistentes];
+    // Se o cache está incompleto, começa do zero (não mistura pontos antigos truncados)
+    const todosPontos = cacheCompleto ? [...pontosExistentes] : [];
+
     for (let i = 0; i < janelasFaltando.length; i++) {
         const j = janelasFaltando[i];
         onProgress(`Baixando ${asset.code} (${j.key})...`);
