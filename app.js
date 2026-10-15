@@ -3,7 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('transaction-form');
     const categoryForm = document.getElementById('category-form');
     const holderForm = document.getElementById('holder-form');
-    const transactionsList = document.getElementById('transactions-list');
+    //const transactionsList = document.getElementById('transactions-list');
+        const transactionsTableContainer = document.getElementById('transactions-table-container');
+    const txFilterChips = document.getElementById('tx-filter-chips');
     const categoriesList = document.getElementById('categories-list');
     const holdersList = document.getElementById('holders-list');
     const categorySelect = document.getElementById('category');
@@ -318,8 +320,11 @@ const CATEGORY_TAGS = {
     let currentDueDate = null;
     //let sortField = localStorage.getItem('sortField') || 'date';
     //let sortDir = localStorage.getItem('sortDir') || 'desc'; // 'asc' | 'desc'
-    let sortField = 'date';
+    //let sortField = 'date';
+    //let sortDir   = 'desc';
+        let sortField = 'date';
     let sortDir   = 'desc';
+    let txFilter  = 'all'; // 'all' | 'installment' | 'cash'
     
     let holderDetailSortField = localStorage.getItem('holderDetailSortField') || 'date';
     let holderDetailSortDir   = localStorage.getItem('holderDetailSortDir')   || 'desc';
@@ -559,6 +564,15 @@ function generateId() {
             const ref = t.registeredAt || t.timestamp;
             return ref >= s.getTime() && ref <= e.getTime();
         });
+    }
+
+        /**
+     * Uma transação é considerada "parcelada" se:
+     *  - veio de fatura (campo `installment` preenchido com "NN/MM"), OU
+     *  - foi marcada manualmente (campo `isInstallment === true`).
+     */
+    function isInstallmentTx(tx) {
+        return !!(tx.installment || tx.isInstallment);
     }
 
     // ========== PWA ==========
@@ -1369,6 +1383,7 @@ function updateSortDirIcon() {
             const date = createDateFromString(dateString);
             if (!date) { alert('Data inválida!'); return; }
             const parcelas = parseInt(document.getElementById('parcelas').value) || 1;
+            const isInstallment = document.getElementById('is-installment').checked;
 
             let holderName = 'Rodrigo A Prado', finalHolderId = null;
             if (holderId) {
@@ -1383,12 +1398,21 @@ function updateSortDirIcon() {
                 for (let i = 0; i < parcelas; i++) {
                     const pd = new Date(date);
                     pd.setMonth(pd.getMonth() + i);
-                    addTransaction(`${description} (${i+1}/${parcelas})`, amount / parcelas, type, category, pd, holderName, finalHolderId);
+                    addTransaction(
+                        `${description} (${i+1}/${parcelas})`,
+                        amount / parcelas,
+                        type, category, pd, holderName, finalHolderId,
+                        true // <- toda transação gerada por parcelamento é parcelada
+                    );
                 }
             } else {
-                addTransaction(description, amount, type, category, date, holderName, finalHolderId);
+                addTransaction(
+                    description, amount, type, category, date, holderName, finalHolderId,
+                    isInstallment
+                );
             }
             form.reset();
+            document.getElementById('is-installment').checked = false;
             transactionDateInput.value = formatDateToString(new Date());
         });
 
@@ -1500,7 +1524,9 @@ function updateSortDirIcon() {
         }
         voiceBtn.addEventListener('click', toggleListening);
         voiceStatusClose.addEventListener('click', () => { stopListening(); hideVoiceStatus(); });
+        
         // ---- Edição inline de categoria na lista de Lançamentos ----
+        /*
 transactionsList.addEventListener('click', (e) => {
     const badge = e.target.closest('.category-badge.clickable');
     if (!badge) return;
@@ -1520,6 +1546,8 @@ transactionsList.addEventListener('keydown', (e) => {
         e.target.blur();
     }
 });
+*/
+        
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && reviewModal.classList.contains('show')) closeReviewModal();
         });
@@ -1557,6 +1585,18 @@ if (holderDetailSortDirBtn) {
         renderHolderDetailList();
     });
 }
+
+                // ---- Chips de filtro (Todos / Parceladas / À vista) ----
+        if (txFilterChips) {
+            txFilterChips.querySelectorAll('.chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    txFilterChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    txFilter = chip.getAttribute('data-filter') || 'all';
+                    renderTransactions();
+                });
+            });
+        }
         
     }
 
@@ -1577,7 +1617,7 @@ if (holderDetailSortDirBtn) {
     }
 
     // ========== TRANSAÇÕES ==========
-    function addTransaction(description, amount, type, category, date, holderName, holderId) {
+    function addTransaction(description, amount, type, category, date, holderName, holderId, isInstallment) {
         transactions.push({
             id: generateId(),
             description, amount, type, category,
@@ -1588,7 +1628,8 @@ if (holderDetailSortDirBtn) {
             year: date.getFullYear(),
             holder: holderName || null,
             holderId: holderId || null,
-            installment: null
+            installment: null,
+            isInstallment: !!isInstallment
         });
         saveTransactions();
         renderTransactions();
@@ -1625,45 +1666,44 @@ if (holderDetailSortDirBtn) {
     
     function saveTransactions() { localStorage.setItem('transactions', JSON.stringify(transactions)); }
 
-function compareTransactions(a, b) {
-    let result = 0;
+    function compareTransactions(a, b) {
+        let result = 0;
 
-    switch (sortField) {
-        case 'description': {
-            result = (a.description || '').localeCompare(b.description || '', 'pt-BR', { sensitivity: 'base' });
-            break;
+        switch (sortField) {
+            case 'description': {
+                result = (a.description || '').localeCompare(b.description || '', 'pt-BR', { sensitivity: 'base' });
+                break;
+            }
+            case 'category': {
+                const ca = getCategoryName(a.category);
+                const cb = getCategoryName(b.category);
+                result = ca.localeCompare(cb, 'pt-BR', { sensitivity: 'base' });
+                break;
+            }
+            case 'amount': {
+                result = parseFloat(a.amount) - parseFloat(b.amount);
+                break;
+            }
+            case 'holder': {
+                result = (a.holder || '').localeCompare(b.holder || '', 'pt-BR', { sensitivity: 'base' });
+                break;
+            }
+            case 'date':
+            default: {
+                result = a.timestamp - b.timestamp;
+                break;
+            }
         }
-        case 'category': {
-            const ca = getCategoryName(a.category);
-            const cb = getCategoryName(b.category);
-            result = ca.localeCompare(cb, 'pt-BR', { sensitivity: 'base' });
-            break;
+
+        if (sortDir === 'desc') result = -result;
+
+        // Desempate SEMPRE por data mais recente primeiro
+        if (result === 0) {
+            result = b.timestamp - a.timestamp;
         }
-        case 'amount': {
-            result = parseFloat(a.amount) - parseFloat(b.amount);
-            break;
-        }
-        case 'holder': {
-            result = (a.holder || '').localeCompare(b.holder || '', 'pt-BR', { sensitivity: 'base' });
-            break;
-        }
-        case 'date':
-        default: {
-            result = a.timestamp - b.timestamp;
-            break;
-        }
+
+        return result;
     }
-
-    // Inverte a direção principal
-    if (sortDir === 'desc') result = -result;
-
-    // Desempate SEMPRE por data mais recente primeiro
-    if (result === 0) {
-        result = b.timestamp - a.timestamp;
-    }
-
-    return result;
-}
 
 function compareReviewTransactions(a, b) {
     let result = 0;
@@ -1712,123 +1752,263 @@ function compareReviewTransactions(a, b) {
     return result;
 }
 
-function renderTransactions() {
-    transactionsList.innerHTML = '';
-    const period = getPeriodTransactions();
+    function renderTransactions() {
+        if (!transactionsTableContainer) return;
 
-    transactionsCountEl.textContent = period.length === 1
-        ? '1 lançamento'
-        : `${period.length} lançamentos`;
+        const period = getPeriodTransactions();
 
-    if (period.length === 0) {
-        transactionsList.innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma transação cadastrada para este período</p></div>`;
-        return;
-    }
+        // Só despesas, conforme combinado
+        const despesas = period.filter(t => t.type === 'despesa');
 
-    [...period].sort(compareTransactions).forEach(tx => {
-        const li = document.createElement('li');
-        const cat = categories.find(c => c.id === tx.category);
-        const catColor = cat ? cat.color : '#95a5a6';
-        const catName = cat ? cat.name : tx.category;
-        const holderHtml = tx.holder ? `<span class="holder-badge"><i class="fas fa-user"></i> ${escapeHtml(tx.holder)}</span>` : '';
+        // Aplica o filtro de chips (todos / parceladas / à vista)
+        let despesasFiltradas = despesas;
+        if (txFilter === 'installment') {
+            despesasFiltradas = despesas.filter(isInstallmentTx);
+        } else if (txFilter === 'cash') {
+            despesasFiltradas = despesas.filter(t => !isInstallmentTx(t));
+        }
 
-        li.innerHTML = `
-            <div class="transaction-info">
-                <strong>${escapeHtml(tx.description)}</strong>
-                <small>
+        // Contador do topo — mantém coerência com o que está visível
+        if (transactionsCountEl) {
+            const totalDespesas = despesas.length;
+            const visiveis = despesasFiltradas.length;
+            if (txFilter === 'all') {
+                transactionsCountEl.textContent = totalDespesas === 1
+                    ? '1 lançamento'
+                    : `${totalDespesas} lançamentos`;
+            } else {
+                transactionsCountEl.textContent = `${visiveis} de ${totalDespesas} lançamentos`;
+            }
+        }
+
+        if (despesasFiltradas.length === 0) {
+            transactionsTableContainer.innerHTML =
+                `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma despesa para exibir com este filtro</p></div>`;
+            return;
+        }
+
+        // ===== Agrupa =====
+        const parceladas = despesasFiltradas.filter(isInstallmentTx);
+        const aVista     = despesasFiltradas.filter(t => !isInstallmentTx(t));
+
+        // Subtotal base para o % : sempre o total de DESPESAS do período
+        // (não muda com o filtro de chips — é a régua do usuário)
+        const totalDespesasPeriodo = despesas.reduce((s, t) => s + parseFloat(t.amount), 0);
+
+        // ===== Monta os grupos na ordem: parceladas primeiro =====
+        const grupos = [];
+        if (parceladas.length > 0) {
+            grupos.push({
+                key: 'installment',
+                label: 'Compras parceladas',
+                icon: 'fa-layer-group',
+                txs: parceladas
+            });
+        }
+        if (aVista.length > 0) {
+            grupos.push({
+                key: 'cash',
+                label: 'Compras à vista',
+                icon: 'fa-money-bill-wave',
+                txs: aVista
+            });
+        }
+
+        // ===== Renderiza =====
+        let html = '<table class="review-table tx-table"><thead><tr>';
+        html += `<th class="col-date review-th sortable${sortField === 'date' ? ' active' : ''}" data-sort="date">Data${arrowFor(sortField, 'date', sortDir)}</th>`;
+        html += `<th class="col-desc review-th sortable${sortField === 'description' ? ' active' : ''}" data-sort="description">Descrição${arrowFor(sortField, 'description', sortDir)}</th>`;
+        html += `<th class="col-amount review-th sortable${sortField === 'amount' ? ' active' : ''}" data-sort="amount">Valor${arrowFor(sortField, 'amount', sortDir)}</th>`;
+        html += `<th class="col-cat review-th sortable${sortField === 'category' ? ' active' : ''}" data-sort="category">Categoria${arrowFor(sortField, 'category', sortDir)}</th>`;
+        html += `<th class="col-holder review-th sortable${sortField === 'holder' ? ' active' : ''}" data-sort="holder">Portador${arrowFor(sortField, 'holder', sortDir)}</th>`;
+        html += `<th class="col-actions"></th>`;
+        html += '</tr></thead><tbody>';
+
+        grupos.forEach(grupo => {
+            const subtotal = grupo.txs.reduce((s, t) => s + parseFloat(t.amount), 0);
+            const pct = totalDespesasPeriodo > 0 ? (subtotal / totalDespesasPeriodo) * 100 : 0;
+
+            // Linha de cabeçalho do grupo
+            html += `<tr class="tx-group-header" data-group="${grupo.key}">
+                <td colspan="2">
+                    <i class="fas ${grupo.icon}"></i>
+                    <strong>${grupo.label}</strong>
+                    <span class="tx-group-count">(${grupo.txs.length})</span>
+                </td>
+                <td class="col-amount tx-group-subtotal">
+                    <div>${fmtBRL(subtotal)}</div>
+                    <div class="tx-group-pct">${pct.toFixed(1)}% das despesas</div>
+                </td>
+                <td colspan="3"></td>
+            </tr>`;
+
+            // Linhas do grupo, ordenadas conforme o usuário escolheu
+            const ordenadas = [...grupo.txs].sort(compareTransactions);
+
+            ordenadas.forEach(tx => {
+                const cat = categories.find(c => c.id === tx.category);
+                const catColor = cat ? cat.color : '#95a5a6';
+                const catName = cat ? cat.name : tx.category;
+                const holderHtml = tx.holder ? escapeHtml(tx.holder) : '<span class="quote-missing">—</span>';
+                const installmentTag = tx.installment
+                    ? ` <small class="tx-installment-tag">${escapeHtml(tx.installment)}</small>`
+                    : (tx.isInstallment ? ` <small class="tx-installment-tag">parc.</small>` : '');
+
+                html += `<tr class="tx-row" data-txid="${escapeHtml(String(tx.id))}">`;
+                html += `<td class="col-date" data-label="Data">${escapeHtml(tx.date)}</td>`;
+                html += `<td class="col-desc" data-label="Descrição"><strong>${escapeHtml(tx.description)}</strong>${installmentTag}</td>`;
+                html += `<td class="col-amount" data-label="Valor">${fmtBRL(parseFloat(tx.amount))}</td>`;
+                html += `<td class="col-cat" data-label="Categoria">
                     <span class="category-badge clickable"
                           style="background-color: ${catColor}"
                           data-id="${escapeHtml(String(tx.id))}"
                           data-cat="${escapeHtml(tx.category)}"
                           data-type="${tx.type}"
                           title="Clique para editar a categoria">${escapeHtml(catName)}</span>
-                    ${holderHtml}
-                    • ${tx.date}
-                </small>
-            </div>
-            <div class="transaction-amount" style="color: ${tx.type === 'receita' ? 'var(--accent-green)' : 'var(--accent-red)'}">
-                ${tx.type === 'receita' ? '+' : '-'} R$ ${tx.amount.toFixed(2)}
-            </div>
-            <div class="transaction-actions">
-                <button class="danger" onclick="window.deleteTransaction('${escapeHtml(String(tx.id))}')"><i class="fas fa-trash"></i></button>
-            </div>
-        `;
-        transactionsList.appendChild(li);
-    });
-}
+                </td>`;
+                html += `<td class="col-holder" data-label="Portador">${holderHtml}</td>`;
+                html += `<td class="col-actions">
+                    <button class="btn-icon danger" data-delete-txid="${escapeHtml(String(tx.id))}" title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>`;
+                html += `</tr>`;
+            });
+        });
 
-function updateTransactionCategory(id, newCategoryId) {
-    const tx = transactions.find(t => String(t.id) === String(id));
-    if (!tx) return;
-    if (tx.category === newCategoryId) return; // nada mudou
+        html += '</tbody></table>';
+        transactionsTableContainer.innerHTML = html;
 
-    const cat = categories.find(c => c.id === newCategoryId);
-    if (!cat) return;
+        // ===== Listeners internos =====
+        // Ordenação por clique no cabeçalho
+        transactionsTableContainer.querySelectorAll('th.review-th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const field = th.getAttribute('data-sort');
+                if (!field) return;
+                if (sortField === field) {
+                    sortDir = (sortDir === 'asc') ? 'desc' : 'asc';
+                } else {
+                    sortField = field;
+                    sortDir = 'asc';
+                }
+                localStorage.setItem('sortField', sortField);
+                localStorage.setItem('sortDir', sortDir);
+                if (sortFieldSelect) sortFieldSelect.value = sortField;
+                updateSortDirIcon();
+                renderTransactions();
+            });
+        });
 
-    // Regra: só aceita categoria do mesmo tipo da transação.
-    if (cat.type !== tx.type) {
-        showToast('Categoria incompatível com o tipo do lançamento.', 'error');
-        return;
+        // Edição inline de categoria (o clique no badge)
+        transactionsTableContainer.querySelectorAll('.category-badge.clickable').forEach(badge => {
+            badge.addEventListener('click', () => {
+                if (transactionsTableContainer.querySelector('.tx-category-select')) return;
+                openCategoryInlineEditor(badge);
+            });
+        });
+
+        // Exclusão de transação
+        transactionsTableContainer.querySelectorAll('button[data-delete-txid]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = e.currentTarget.getAttribute('data-delete-txid');
+                deleteTransaction(id);
+            });
+        });
     }
 
-    tx.category = newCategoryId;
-    saveTransactions();
-
-    renderTransactions();
-    updateSummary();
-    renderHolderTotals();
-
-    const rt = document.getElementById('reports-tab');
-    if (rt && rt.classList.contains('active')) {
-        renderCharts();
+    /**
+     * Devolve a setinha ▲/▼ para o cabeçalho de ordenação.
+     */
+    function arrowFor(currentField, thisField, dir) {
+        if (currentField !== thisField) return '';
+        return dir === 'asc' ? ' ▲' : ' ▼';
     }
 
-    showToast('Categoria atualizada.', 'success');
-}
+    function updateTransactionCategory(id, newCategoryId) {
+        const tx = transactions.find(t => String(t.id) === String(id));
+        if (!tx) return;
+        if (tx.category === newCategoryId) {
+            renderTransactions();
+            return;
+        }
 
-function openCategoryInlineEditor(badge) {
-    const id = badge.getAttribute('data-id');
-    const currentCat = badge.getAttribute('data-cat');
-    const type = badge.getAttribute('data-type');
+        const cat = categories.find(c => c.id === newCategoryId);
+        if (!cat) return;
 
-    // Monta as opções — só categorias do mesmo tipo
-    const options = categories
-        .filter(c => c.type === type)
-        .map(c => `<option value="${escapeHtml(c.id)}" ${c.id === currentCat ? 'selected' : ''}>${escapeHtml(c.name)}</option>`)
-        .join('');
+        if (cat.type !== tx.type) {
+            showToast('Categoria incompatível com o tipo do lançamento.', 'error');
+            return;
+        }
 
-    const select = document.createElement('select');
-    select.className = 'tx-category-select';
-    select.setAttribute('data-id', id);
-    select.innerHTML = options;
+        tx.category = newCategoryId;
+        saveTransactions();
 
-    // Substitui o badge pelo select
-    badge.replaceWith(select);
-    select.focus();
+        renderTransactions();
+        updateSummary();
+        renderHolderTotals();
 
-    // Abre o dropdown quando o navegador suportar
-    if (typeof select.showPicker === 'function') {
-        try { select.showPicker(); } catch (_) { /* alguns navegadores exigem gesto do usuário */ }
+        const rt = document.getElementById('reports-tab');
+        if (rt && rt.classList.contains('active')) {
+            renderCharts();
+        }
+
+        showToast('Categoria atualizada.', 'success');
     }
 
-    // Se perder o foco sem mudar, volta a ser badge
-    select.addEventListener('blur', () => {
-        if (!select.isConnected) return;
-        // Se ainda está no DOM, foi blur sem change → restaura badge
-        const cat = categories.find(c => c.id === currentCat);
-        const catColor = cat ? cat.color : '#95a5a6';
-        const catName = cat ? cat.name : currentCat;
-        const span = document.createElement('span');
-        span.className = 'category-badge clickable';
-        span.style.backgroundColor = catColor;
-        span.setAttribute('data-id', id);
-        span.setAttribute('data-cat', currentCat);
-        span.setAttribute('data-type', type);
-        span.setAttribute('title', 'Clique para editar a categoria');
-        span.textContent = catName;
-        select.replaceWith(span);
-    });
-}
+    function openCategoryInlineEditor(badge) {
+        const id = badge.getAttribute('data-id');
+        const currentCat = badge.getAttribute('data-cat');
+        const type = badge.getAttribute('data-type');
+
+        const options = categories
+            .filter(c => c.type === type)
+            .map(c => `<option value="${escapeHtml(c.id)}" ${c.id === currentCat ? 'selected' : ''}>${escapeHtml(c.name)}</option>`)
+            .join('');
+
+        const select = document.createElement('select');
+        select.className = 'tx-category-select';
+        select.setAttribute('data-id', id);
+        select.innerHTML = options;
+
+        badge.replaceWith(select);
+        select.focus();
+
+        if (typeof select.showPicker === 'function') {
+            try { select.showPicker(); } catch (_) { /* noop */ }
+        }
+
+        // Se o usuário confirmar com Enter ou mudar com clique fora:
+        let committed = false;
+
+        select.addEventListener('change', () => {
+            committed = true;
+            updateTransactionCategory(id, select.value);
+        });
+
+        // Se perder o foco SEM mudar, restaura o badge
+        select.addEventListener('blur', () => {
+            if (committed) return;
+            if (!select.isConnected) return;
+            const cat = categories.find(c => c.id === currentCat);
+            const catColor = cat ? cat.color : '#95a5a6';
+            const catName = cat ? cat.name : currentCat;
+            const span = document.createElement('span');
+            span.className = 'category-badge clickable';
+            span.style.backgroundColor = catColor;
+            span.setAttribute('data-id', id);
+            span.setAttribute('data-cat', currentCat);
+            span.setAttribute('data-type', type);
+            span.setAttribute('title', 'Clique para editar a categoria');
+            span.textContent = catName;
+            select.replaceWith(span);
+            // Recria o listener de clique
+            span.addEventListener('click', () => {
+                if (transactionsTableContainer.querySelector('.tx-category-select')) return;
+                openCategoryInlineEditor(span);
+            });
+        });
+    }
 
     function updateSummary() {
         const period = getPeriodTransactions();
