@@ -494,6 +494,29 @@ function generateId() {
         if (changed) saveCategories();
     }
 
+/**
+ * Migração única:
+ * Marca como `source: 'manual'` as receitas antigas que claramente foram
+ * cadastradas manualmente. Critérios: são receita, NÃO têm cardNumber e
+ * NÃO são lançamentos consolidados de créditos de fatura.
+ */
+function migrateManualRevenueSource() {
+    let alterou = false;
+    transactions.forEach(tx => {
+        if (tx.type !== 'receita') return;
+        if (tx.source) return;                                   // já marcada
+        if (tx.cardNumber) return;                               // veio de fatura
+        if (tx.isCreditAdjustment) return;                       // crédito consolidado da fatura
+        tx.source = 'manual';
+        alterou = true;
+    });
+    if (alterou) {
+        saveTransactions();
+        console.log('[app.js] Migração source=manual: receitas antigas ajustadas.');
+    }
+}
+
+    
     // ========== INICIALIZAÇÃO ==========
     init();
 
@@ -501,6 +524,7 @@ function generateId() {
         initTheme();
                 // Migração única: garante que todas as transações tenham registeredAt
         migrateTransactionsRegisteredAt();
+        migrateManualRevenueSource();
         if (!localStorage.getItem('categories')) localStorage.setItem('categories', JSON.stringify(categories));
         else categories = JSON.parse(localStorage.getItem('categories'));
 
@@ -557,14 +581,36 @@ function generateId() {
         if (rt.classList.contains('active')) renderCharts();
     }
 
-    function getPeriodTransactions() {
-        const s = getStartOfDay(new Date(customStartDate));
-        const e = getEndOfDay(new Date(customEndDate));
-        return transactions.filter(t => {
-            const ref = t.registeredAt || t.timestamp;
-            return ref >= s.getTime() && ref <= e.getTime();
-        });
-    }
+function getPeriodTransactions() {
+    const s = getStartOfDay(new Date(customStartDate));
+    const e = getEndOfDay(new Date(customEndDate));
+
+    // Fim do próximo período (mesmo dia do mês seguinte)
+    const proximoFim = new Date(customEndDate);
+    proximoFim.setMonth(proximoFim.getMonth() + 1);
+    const proximoFimTs = getEndOfDay(proximoFim).getTime();
+
+    return transactions.filter(t => {
+        // -----------------------------------------------------------------
+        // REGRA ESPECIAL: SOMENTE receitas MANUAIS
+        // A receita manual pertence a este período se a data de fim deste
+        // período for a data de fechamento mais recente ANTERIOR à data da
+        // receita. Em outras palavras: a receita é posterior a `e` (fim do
+        // período atual) e anterior ou igual ao fim do próximo período.
+        // -----------------------------------------------------------------
+        if (t.type === 'receita' && t.source === 'manual') {
+            const refTs = t.timestamp;
+            return refTs > e.getTime() && refTs <= proximoFimTs;
+        }
+
+        // -----------------------------------------------------------------
+        // LÓGICA ORIGINAL: despesas (manuais ou importadas) e receitas
+        // importadas de fatura usam registeredAt/timestamp dentro do período.
+        // -----------------------------------------------------------------
+        const ref = t.registeredAt || t.timestamp;
+        return ref >= s.getTime() && ref <= e.getTime();
+    });
+}
 
         /**
      * Uma transação é considerada "parcelada" se:
@@ -1617,25 +1663,26 @@ if (holderDetailSortDirBtn) {
     }
 
     // ========== TRANSAÇÕES ==========
-    function addTransaction(description, amount, type, category, date, holderName, holderId, isInstallment) {
-        transactions.push({
-            id: generateId(),
-            description, amount, type, category,
-            date: formatDateToDisplay(date),
-            timestamp: date.getTime(),
-            registeredAt: Date.now(),
-            month: date.getMonth(),
-            year: date.getFullYear(),
-            holder: holderName || null,
-            holderId: holderId || null,
-            installment: null,
-            isInstallment: !!isInstallment
-        });
-        saveTransactions();
-        renderTransactions();
-        updateSummary();
-        renderHolderTotals();
-    }
+function addTransaction(description, amount, type, category, date, holderName, holderId, isInstallment) {
+    transactions.push({
+        id: generateId(),
+        description, amount, type, category,
+        date: formatDateToDisplay(date),
+        timestamp: date.getTime(),
+        registeredAt: Date.now(),
+        month: date.getMonth(),
+        year: date.getFullYear(),
+        holder: holderName || null,
+        holderId: holderId || null,
+        installment: null,
+        isInstallment: !!isInstallment,
+        source: 'manual'   // <-- marca TODA transação manual (despesa ou receita)
+    });
+    saveTransactions();
+    renderTransactions();
+    updateSummary();
+    renderHolderTotals();
+}
 
     function deleteTransaction(id) {
         transactions = transactions.filter(t => t.id !== id);
