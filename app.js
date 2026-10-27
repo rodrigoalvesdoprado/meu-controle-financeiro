@@ -1799,170 +1799,162 @@ function compareReviewTransactions(a, b) {
     return result;
 }
 
-    function renderTransactions() {
-        if (!transactionsTableContainer) return;
+function renderTransactions() {
+    if (!transactionsTableContainer) return;
 
-        const period = getPeriodTransactions();
+    const period = getPeriodTransactions();
 
-        // Só despesas, conforme combinado
-        const despesas = period.filter(t => t.type === 'despesa');
+    // Agora inclui despesas E receitas
+    const despesas = period.filter(t => t.type === 'despesa');
+    const receitas = period.filter(t => t.type === 'receita');
 
-        // Aplica o filtro de chips (todos / parceladas / à vista)
-        let despesasFiltradas = despesas;
-        if (txFilter === 'installment') {
-            despesasFiltradas = despesas.filter(isInstallmentTx);
-        } else if (txFilter === 'cash') {
-            despesasFiltradas = despesas.filter(t => !isInstallmentTx(t));
-        }
-
-        // Contador do topo — mantém coerência com o que está visível
-        if (transactionsCountEl) {
-            const totalDespesas = despesas.length;
-            const visiveis = despesasFiltradas.length;
-            if (txFilter === 'all') {
-                transactionsCountEl.textContent = totalDespesas === 1
-                    ? '1 lançamento'
-                    : `${totalDespesas} lançamentos`;
-            } else {
-                transactionsCountEl.textContent = `${visiveis} de ${totalDespesas} lançamentos`;
-            }
-        }
-
-        if (despesasFiltradas.length === 0) {
-            transactionsTableContainer.innerHTML =
-                `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma despesa para exibir com este filtro</p></div>`;
-            return;
-        }
-
-        // ===== Agrupa =====
-        const parceladas = despesasFiltradas.filter(isInstallmentTx);
-        const aVista     = despesasFiltradas.filter(t => !isInstallmentTx(t));
-
-        // Subtotal base para o % : sempre o total de DESPESAS do período
-        // (não muda com o filtro de chips — é a régua do usuário)
-        const totalDespesasPeriodo = despesas.reduce((s, t) => s + parseFloat(t.amount), 0);
-
-        // ===== Monta os grupos na ordem: parceladas primeiro =====
-        const grupos = [];
-        if (parceladas.length > 0) {
-            grupos.push({
-                key: 'installment',
-                label: 'Compras parceladas',
-                icon: 'fa-layer-group',
-                txs: parceladas
-            });
-        }
-        if (aVista.length > 0) {
-            grupos.push({
-                key: 'cash',
-                label: 'Compras à vista',
-                icon: 'fa-money-bill-wave',
-                txs: aVista
-            });
-        }
-
-        // ===== Renderiza =====
-        let html = '<table class="review-table tx-table"><thead><tr>';
-        html += `<th class="col-date review-th sortable${sortField === 'date' ? ' active' : ''}" data-sort="date">Data${arrowFor(sortField, 'date', sortDir)}</th>`;
-        html += `<th class="col-desc review-th sortable${sortField === 'description' ? ' active' : ''}" data-sort="description">Descrição${arrowFor(sortField, 'description', sortDir)}</th>`;
-        html += `<th class="col-amount review-th sortable${sortField === 'amount' ? ' active' : ''}" data-sort="amount">Valor${arrowFor(sortField, 'amount', sortDir)}</th>`;
-        html += `<th class="col-cat review-th sortable${sortField === 'category' ? ' active' : ''}" data-sort="category">Categoria${arrowFor(sortField, 'category', sortDir)}</th>`;
-        html += `<th class="col-holder review-th sortable${sortField === 'holder' ? ' active' : ''}" data-sort="holder">Portador${arrowFor(sortField, 'holder', sortDir)}</th>`;
-        html += `<th class="col-actions"></th>`;
-        html += '</tr></thead><tbody>';
-
-        grupos.forEach(grupo => {
-            const subtotal = grupo.txs.reduce((s, t) => s + parseFloat(t.amount), 0);
-            const pct = totalDespesasPeriodo > 0 ? (subtotal / totalDespesasPeriodo) * 100 : 0;
-
-            // Linha de cabeçalho do grupo
-            html += `<tr class="tx-group-header" data-group="${grupo.key}">
-                <td colspan="2">
-                    <i class="fas ${grupo.icon}"></i>
-                    <strong>${grupo.label}</strong>
-                    <span class="tx-group-count">(${grupo.txs.length})</span>
-                </td>
-                <td class="col-amount tx-group-subtotal">
-                    <div>${fmtBRL(subtotal)}</div>
-                    <div class="tx-group-pct">${pct.toFixed(1)}% das despesas</div>
-                </td>
-                <td colspan="3"></td>
-            </tr>`;
-
-            // Linhas do grupo, ordenadas conforme o usuário escolheu
-            const ordenadas = [...grupo.txs].sort(compareTransactions);
-
-            ordenadas.forEach(tx => {
-                const cat = categories.find(c => c.id === tx.category);
-                const catColor = cat ? cat.color : '#95a5a6';
-                const catName = cat ? cat.name : tx.category;
-                const holderHtml = tx.holder ? escapeHtml(tx.holder) : '<span class="quote-missing">—</span>';
-                const installmentTag = tx.installment
-                    ? ` <small class="tx-installment-tag">${escapeHtml(tx.installment)}</small>`
-                    : (tx.isInstallment ? ` <small class="tx-installment-tag">parc.</small>` : '');
-
-                html += `<tr class="tx-row" data-txid="${escapeHtml(String(tx.id))}">`;
-                html += `<td class="col-date" data-label="Data">${escapeHtml(tx.date)}</td>`;
-                html += `<td class="col-desc" data-label="Descrição"><strong>${escapeHtml(tx.description)}</strong>${installmentTag}</td>`;
-                html += `<td class="col-amount" data-label="Valor">${fmtBRL(parseFloat(tx.amount))}</td>`;
-                html += `<td class="col-cat" data-label="Categoria">
-                    <span class="category-badge clickable"
-                          style="background-color: ${catColor}"
-                          data-id="${escapeHtml(String(tx.id))}"
-                          data-cat="${escapeHtml(tx.category)}"
-                          data-type="${tx.type}"
-                          title="Clique para editar a categoria">${escapeHtml(catName)}</span>
-                </td>`;
-                html += `<td class="col-holder" data-label="Portador">${holderHtml}</td>`;
-                html += `<td class="col-actions">
-                    <button class="btn-icon danger" data-delete-txid="${escapeHtml(String(tx.id))}" title="Excluir">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>`;
-                html += `</tr>`;
-            });
-        });
-
-        html += '</tbody></table>';
-        transactionsTableContainer.innerHTML = html;
-
-        // ===== Listeners internos =====
-        // Ordenação por clique no cabeçalho
-        transactionsTableContainer.querySelectorAll('th.review-th.sortable').forEach(th => {
-            th.addEventListener('click', () => {
-                const field = th.getAttribute('data-sort');
-                if (!field) return;
-                if (sortField === field) {
-                    sortDir = (sortDir === 'asc') ? 'desc' : 'asc';
-                } else {
-                    sortField = field;
-                    sortDir = 'asc';
-                }
-                localStorage.setItem('sortField', sortField);
-                localStorage.setItem('sortDir', sortDir);
-                if (sortFieldSelect) sortFieldSelect.value = sortField;
-                updateSortDirIcon();
-                renderTransactions();
-            });
-        });
-
-        // Edição inline de categoria (o clique no badge)
-        transactionsTableContainer.querySelectorAll('.category-badge.clickable').forEach(badge => {
-            badge.addEventListener('click', () => {
-                if (transactionsTableContainer.querySelector('.tx-category-select')) return;
-                openCategoryInlineEditor(badge);
-            });
-        });
-
-        // Exclusão de transação
-        transactionsTableContainer.querySelectorAll('button[data-delete-txid]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = e.currentTarget.getAttribute('data-delete-txid');
-                deleteTransaction(id);
-            });
-        });
+    // O filtro de chips (Todos / Parceladas / À vista) aplica-se APENAS às despesas
+    let despesasFiltradas = despesas;
+    if (txFilter === 'installment') {
+        despesasFiltradas = despesas.filter(isInstallmentTx);
+    } else if (txFilter === 'cash') {
+        despesasFiltradas = despesas.filter(t => !isInstallmentTx(t));
     }
+
+    // Contador do topo: total de lançamentos (despesas + receitas)
+    if (transactionsCountEl) {
+        const total = despesas.length + receitas.length;
+        const visiveis = despesasFiltradas.length + receitas.length;
+        if (txFilter === 'all') {
+            transactionsCountEl.textContent = total === 1
+                ? '1 lançamento'
+                : `${total} lançamentos`;
+        } else {
+            transactionsCountEl.textContent = `${visiveis} de ${total} lançamentos`;
+        }
+    }
+
+    if (despesasFiltradas.length === 0 && receitas.length === 0) {
+        transactionsTableContainer.innerHTML =
+            `<div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhum lançamento para exibir com este filtro</p></div>`;
+        return;
+    }
+
+    // ===== Agrupa despesas (parceladas / à vista) =====
+    const parceladas = despesasFiltradas.filter(isInstallmentTx);
+    const aVista     = despesasFiltradas.filter(t => !isInstallmentTx(t));
+
+    const totalDespesasPeriodo = despesas.reduce((s, t) => s + parseFloat(t.amount), 0);
+
+    const grupos = [];
+    if (parceladas.length > 0) {
+        grupos.push({ key: 'installment', label: 'Compras parceladas', icon: 'fa-layer-group', txs: parceladas });
+    }
+    if (aVista.length > 0) {
+        grupos.push({ key: 'cash', label: 'Compras à vista', icon: 'fa-money-bill-wave', txs: aVista });
+    }
+    // Novo grupo: receitas
+    if (receitas.length > 0) {
+        grupos.push({ key: 'receitas', label: 'Receitas', icon: 'fa-arrow-down', txs: receitas });
+    }
+
+    // ===== Renderiza =====
+    let html = '<table class="review-table tx-table"><thead><tr>';
+    html += `<th class="col-date review-th sortable${sortField === 'date' ? ' active' : ''}" data-sort="date">Data${arrowFor(sortField, 'date', sortDir)}</th>`;
+    html += `<th class="col-desc review-th sortable${sortField === 'description' ? ' active' : ''}" data-sort="description">Descrição${arrowFor(sortField, 'description', sortDir)}</th>`;
+    html += `<th class="col-amount review-th sortable${sortField === 'amount' ? ' active' : ''}" data-sort="amount">Valor${arrowFor(sortField, 'amount', sortDir)}</th>`;
+    html += `<th class="col-cat review-th sortable${sortField === 'category' ? ' active' : ''}" data-sort="category">Categoria${arrowFor(sortField, 'category', sortDir)}</th>`;
+    html += `<th class="col-holder review-th sortable${sortField === 'holder' ? ' active' : ''}" data-sort="holder">Portador${arrowFor(sortField, 'holder', sortDir)}</th>`;
+    html += `<th class="col-actions"></th>`;
+    html += '</tr></thead><tbody>';
+
+    grupos.forEach(grupo => {
+        const subtotal = grupo.txs.reduce((s, t) => s + parseFloat(t.amount), 0);
+        const pct = (totalDespesasPeriodo > 0 && grupo.key !== 'receitas')
+            ? (subtotal / totalDespesasPeriodo) * 100
+            : 0;
+
+        html += `<tr class="tx-group-header" data-group="${grupo.key}">
+            <td colspan="2">
+                <i class="fas ${grupo.icon}"></i>
+                <strong>${grupo.label}</strong>
+                <span class="tx-group-count">(${grupo.txs.length})</span>
+            </td>
+            <td class="col-amount tx-group-subtotal">
+                <div style="color: ${grupo.key === 'receitas' ? 'var(--accent-green)' : 'var(--accent-red)'}">${fmtBRL(subtotal)}</div>
+                ${grupo.key !== 'receitas' ? `<div class="tx-group-pct">${pct.toFixed(1)}% das despesas</div>` : ''}
+            </td>
+            <td colspan="3"></td>
+        </tr>`;
+
+        const ordenadas = [...grupo.txs].sort(compareTransactions);
+
+        ordenadas.forEach(tx => {
+            const cat = categories.find(c => c.id === tx.category);
+            const catColor = cat ? cat.color : '#95a5a6';
+            const catName = cat ? cat.name : tx.category;
+            const holderHtml = tx.holder ? escapeHtml(tx.holder) : '<span class="quote-missing">—</span>';
+            const installmentTag = tx.installment
+                ? ` <small class="tx-installment-tag">${escapeHtml(tx.installment)}</small>`
+                : (tx.isInstallment ? ` <small class="tx-installment-tag">parc.</small>` : '');
+
+            const valorCor = tx.type === 'receita' ? 'var(--accent-green)' : 'var(--accent-red)';
+            const valorPrefixo = tx.type === 'receita' ? '+ ' : '';
+
+            html += `<tr class="tx-row" data-txid="${escapeHtml(String(tx.id))}">`;
+            html += `<td class="col-date" data-label="Data">${escapeHtml(tx.date)}</td>`;
+            html += `<td class="col-desc" data-label="Descrição"><strong>${escapeHtml(tx.description)}</strong>${installmentTag}</td>`;
+            html += `<td class="col-amount" data-label="Valor" style="color:${valorCor}">${valorPrefixo}${fmtBRL(parseFloat(tx.amount))}</td>`;
+            html += `<td class="col-cat" data-label="Categoria">
+                <span class="category-badge clickable"
+                      style="background-color: ${catColor}"
+                      data-id="${escapeHtml(String(tx.id))}"
+                      data-cat="${escapeHtml(tx.category)}"
+                      data-type="${tx.type}"
+                      title="Clique para editar a categoria">${escapeHtml(catName)}</span>
+            </td>`;
+            html += `<td class="col-holder" data-label="Portador">${holderHtml}</td>`;
+            html += `<td class="col-actions">
+                <button class="btn-icon danger" data-delete-txid="${escapeHtml(String(tx.id))}" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>`;
+            html += `</tr>`;
+        });
+    });
+
+    html += '</tbody></table>';
+    transactionsTableContainer.innerHTML = html;
+
+    // ===== Listeners internos =====
+    transactionsTableContainer.querySelectorAll('th.review-th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const field = th.getAttribute('data-sort');
+            if (!field) return;
+            if (sortField === field) {
+                sortDir = (sortDir === 'asc') ? 'desc' : 'asc';
+            } else {
+                sortField = field;
+                sortDir = 'asc';
+            }
+            localStorage.setItem('sortField', sortField);
+            localStorage.setItem('sortDir', sortDir);
+            if (sortFieldSelect) sortFieldSelect.value = sortField;
+            updateSortDirIcon();
+            renderTransactions();
+        });
+    });
+
+    transactionsTableContainer.querySelectorAll('.category-badge.clickable').forEach(badge => {
+        badge.addEventListener('click', () => {
+            if (transactionsTableContainer.querySelector('.tx-category-select')) return;
+            openCategoryInlineEditor(badge);
+        });
+    });
+
+    transactionsTableContainer.querySelectorAll('button[data-delete-txid]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = e.currentTarget.getAttribute('data-delete-txid');
+            deleteTransaction(id);
+        });
+    });
+}
 
     /**
      * Devolve a setinha ▲/▼ para o cabeçalho de ordenação.
